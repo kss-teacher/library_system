@@ -36,7 +36,7 @@
       filter: drop-shadow(0 3px 10px rgba(245, 158, 11, 0.4));
     }
 
-    /* 순수 CSS 하늘과 구름 4대 감성 테마 */
+    /* 순수 CSS 하늘과 구름 4대 감성 테마 (0KB 초경량) */
     .bg-theme-a {
       background: radial-gradient(circle at 50% 0%, rgba(254, 240, 138, 0.16) 0%, transparent 60%),
                   radial-gradient(circle at 85% 30%, rgba(147, 197, 253, 0.12) 0%, transparent 50%),
@@ -384,7 +384,13 @@
             <i class="fa-solid fa-cloud text-amber-500"></i>
             <h4 class="font-bold text-sm text-slate-800">도서관 구글 클라우드(Google Sheet) 연동 센터</h4>
           </div>
-          <span id="cfgCloudStatusTag" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">로컬 모드</span>
+          <div class="flex items-center gap-2">
+            <a href="./guide_slides.html" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200/80 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 decoration-transparent" title="연동 방법 프레젠테이션 슬라이드 새 창 열기">
+              <i class="fa-solid fa-display text-[11px]"></i>
+              <span>슬라이드 가이드</span>
+            </a>
+            <span id="cfgCloudStatusTag" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">로컬 모드</span>
+          </div>
         </div>
         <p class="text-xs text-slate-500 leading-relaxed">
           Google Apps Script에서 [배포] ➔ [새 배포] ➔ [웹 앱]으로 발급받은 URL을 붙여넣고 저장하면 스프레드시트와 실시간 연동됩니다.
@@ -393,7 +399,10 @@
           <label class="block text-xs font-semibold text-slate-700">구글 웹앱 URL (https://script.google.com/macros/s/.../exec)</label>
           <div class="flex flex-col sm:flex-row gap-2">
             <input type="url" id="cfgGasUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="flex-1 p-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 text-xs font-mono focus:outline-hidden focus:ring-2 focus:ring-amber-500">
-            <div class="flex gap-1.5">
+            <div class="flex gap-1.5 flex-wrap">
+              <a href="./guide_slides.html" target="_blank" rel="noopener noreferrer" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 shrink-0 decoration-transparent">
+                <i class="fa-solid fa-display"></i> 슬라이드 안내
+              </a>
               <button onclick="pasteGasUrlFromClipboard()" type="button" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 shrink-0">
                 <i class="fa-regular fa-paste"></i> 붙여넣기
               </button>
@@ -851,9 +860,14 @@
             <li>[확장 프로그램] ➔ [Apps Script]를 누르고 아래 스크립트를 붙여넣은 뒤 [배포] ➔ [웹 앱]으로 배포합니다.</li>
             <li>발급받은 웹앱 URL을 관리자 설정에 등록하면 우리 도서관 세팅이 끝납니다.</li>
           </ol>
-          <button onclick="copyEmbeddedGasScriptCode()" class="mt-2 w-full py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-1.5">
-            <i class="fa-regular fa-copy"></i> Apps Script 표준 코드 1초 복사하기
-          </button>
+          <div class="pt-2 flex flex-col sm:flex-row gap-2">
+            <button onclick="copyEmbeddedGasScriptCode()" class="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5">
+              <i class="fa-regular fa-copy"></i> Apps Script 표준 코드 1초 복사하기
+            </button>
+            <a href="./guide_slides.html" target="_blank" rel="noopener noreferrer" class="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5 text-center decoration-transparent shadow-xs">
+              <i class="fa-solid fa-display"></i> 연동 슬라이드 보기
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -1060,6 +1074,9 @@
 
       const adminIdDisplay = document.getElementById('cfgCurrentAdminIdDisplay');
       if (adminIdDisplay) adminIdDisplay.textContent = `현재 ID: ${adminId}`;
+
+      const loginIdInput = document.getElementById('adminIdInput');
+      if (loginIdInput && adminId) loginIdInput.value = adminId;
 
       const cloudStatusTag = document.getElementById('cfgCloudStatusTag');
       if (cloudStatusTag) {
@@ -2093,6 +2110,12 @@
 
     // 20. 전역 유틸리티 함수들
     function showTab(tabId) {
+      // 비인가 관리자 설정 탭 직접 진입 차단 가드
+      if (tabId === 'admin' && !isAdminLoggedIn) {
+        openModal('adminLoginModal');
+        return;
+      }
+
       document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('border-amber-500', 'text-amber-600', 'font-bold');
@@ -2106,14 +2129,13 @@
         targetBtn.classList.remove('border-transparent', 'text-slate-500', 'font-semibold');
         targetBtn.classList.add('border-amber-500', 'text-amber-600', 'font-bold');
       }
-
-      if (tabId === 'stats') renderStatsTable();
     }
 
     function openModal(id) {
       const m = document.getElementById(id);
       if (m) m.classList.remove('hidden');
       if (id === 'statsModal') renderStatsTable();
+      if (id === 'membersModal') renderMembersTable();
     }
 
     function closeModal(id) {
