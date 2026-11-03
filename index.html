@@ -377,6 +377,34 @@
         </button>
       </div>
 
+      <!-- 구글 클라우드(Google Apps Script) 실시간 연동 센터 -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-cloud text-amber-500"></i>
+            <h4 class="font-bold text-sm text-slate-800">도서관 구글 클라우드(Google Sheet) 연동 센터</h4>
+          </div>
+          <span id="cfgCloudStatusTag" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">로컬 모드</span>
+        </div>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          Google Apps Script에서 [배포] ➔ [새 배포] ➔ [웹 앱]으로 발급받은 URL을 붙여넣고 저장하면 스프레드시트와 실시간 연동됩니다.
+        </p>
+        <div class="space-y-2">
+          <label class="block text-xs font-semibold text-slate-700">구글 웹앱 URL (https://script.google.com/macros/s/.../exec)</label>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <input type="url" id="cfgGasUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="flex-1 p-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 text-xs font-mono focus:outline-hidden focus:ring-2 focus:ring-amber-500">
+            <div class="flex gap-1.5">
+              <button onclick="pasteGasUrlFromClipboard()" type="button" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 shrink-0">
+                <i class="fa-regular fa-paste"></i> 붙여넣기
+              </button>
+              <button onclick="saveGasUrlFromSettings()" type="button" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-xs transition-colors flex items-center gap-1 shrink-0">
+                <i class="fa-solid fa-link"></i> 연동 저장
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- 기본 운영 설정 폼 -->
       <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
         <h4 class="font-bold text-sm text-slate-800 border-b border-slate-100 pb-2">기본 정보 & 운영 파라미터</h4>
@@ -411,17 +439,22 @@
         </div>
       </div>
 
-      <!-- 관리자 비밀번호 변경 섹션 (4대 복합 규칙 검증 센터) -->
+      <!-- 관리자 계정(ID / 비밀번호) 변경 섹션 (대소문자 무관 통합) -->
       <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
         <div class="flex items-center justify-between border-b border-slate-100 pb-2">
           <div class="flex items-center gap-2">
             <i class="fa-solid fa-shield-halved text-amber-500"></i>
-            <h4 class="font-bold text-sm text-slate-800">관리자 비밀번호 변경</h4>
+            <h4 class="font-bold text-sm text-slate-800">관리자 계정(ID / 비밀번호) 변경</h4>
           </div>
-          <span class="text-[11px] font-semibold text-slate-400">현재 계정: admin</span>
+          <span id="cfgCurrentAdminIdDisplay" class="text-[11px] font-semibold text-slate-500">현재 ID: admin</span>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">새 관리자 ID (대소문자 무관)</label>
+            <input type="text" id="cfgNewAdminId" placeholder="새 관리자 ID (영문/숫자 3자 이상)" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 font-semibold focus:outline-hidden focus:ring-2 focus:ring-amber-500">
+            <p class="text-[10px] text-slate-400 mt-1">로그인 시 대소문자를 구분하지 않습니다.</p>
+          </div>
           <div>
             <label class="block font-semibold text-slate-700 mb-1">새 비밀번호</label>
             <input type="password" id="cfgNewAdminPw" placeholder="새 비밀번호 입력" oninput="checkPasswordRuleDisplay(this.value, 'cfg')" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 font-semibold focus:outline-hidden focus:ring-2 focus:ring-amber-500">
@@ -437,14 +470,14 @@
           </div>
           <div>
             <label class="block font-semibold text-slate-700 mb-1">새 비밀번호 확인</label>
-            <input type="password" id="cfgNewAdminPwConfirm" placeholder="새 비밀번호 재입력" onkeydown="if(event.key==='Enter')saveAdminPasswordFromSettings()" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 font-semibold focus:outline-hidden focus:ring-2 focus:ring-amber-500">
+            <input type="password" id="cfgNewAdminPwConfirm" placeholder="새 비밀번호 재입력" onkeydown="if(event.key==='Enter')saveAdminAccountFromSettings()" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 font-semibold focus:outline-hidden focus:ring-2 focus:ring-amber-500">
           </div>
         </div>
 
         <div class="flex justify-end pt-1">
-          <button onclick="saveAdminPasswordFromSettings()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5">
+          <button onclick="saveAdminAccountFromSettings()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5">
             <i class="fa-solid fa-key text-[10px]"></i>
-            <span>새 비밀번호로 변경하기</span>
+            <span>새 계정 정보로 변경하기</span>
           </button>
         </div>
       </div>
@@ -594,6 +627,7 @@
         <div>
           <label class="block font-semibold text-slate-700 mb-1">관리자 아이디</label>
           <input type="text" id="adminIdInput" value="admin" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-amber-500 font-semibold">
+          <p class="text-[10px] text-slate-400 mt-1">※ 영문 대소문자를 구분하지 않습니다.</p>
         </div>
         <div>
           <label class="block font-semibold text-slate-700 mb-1">비밀번호</label>
@@ -609,18 +643,24 @@
     </div>
   </div>
 
-  <!-- [MODAL 2-1] 관리자 최초 비밀번호 강제 변경 모달 (#adminForcePasswordChangeModal) -->
+  <!-- [MODAL 2-1] 관리자 최초 계정 강제 설정 모달 (#adminForcePasswordChangeModal) -->
   <div id="adminForcePasswordChangeModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
     <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-amber-300">
       <div class="border-b border-slate-100 pb-3 text-center">
         <div class="w-10 h-10 mx-auto rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg mb-2">
           <i class="fa-solid fa-shield-halved"></i>
         </div>
-        <h3 class="font-extrabold text-base text-slate-900">새 관리자 비밀번호 설정</h3>
-        <p class="text-[11px] text-amber-700 font-medium mt-1">보안을 위해 초기 비밀번호를 반드시 변경해야 합니다.</p>
+        <h3 class="font-extrabold text-base text-slate-900">도서관 관리자 계정 초기 설정</h3>
+        <p class="text-[11px] text-amber-700 font-medium mt-1">보안을 위해 초기 ID와 비밀번호를 변경해 주세요.</p>
+        <p class="text-[10px] text-slate-400 mt-1">※ 시간 제한 없이 안전하고 여유롭게 설정하실 수 있습니다.</p>
       </div>
 
       <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">새 관리자 ID (대소문자 무관)</label>
+          <input type="text" id="adminNewIdInput" placeholder="새 관리자 ID (영문/숫자 3자 이상)" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 font-semibold focus:outline-hidden focus:ring-2 focus:ring-amber-500">
+          <p class="text-[10px] text-slate-400 mt-1">로그인 시 대소문자를 구분하지 않아 편리합니다.</p>
+        </div>
         <div>
           <label class="block font-semibold text-slate-700 mb-1">새 비밀번호</label>
           <input type="password" id="adminNewPasswordInput" placeholder="새 비밀번호 입력" oninput="checkPasswordRuleDisplay(this.value, 'admin')" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 font-semibold focus:outline-hidden focus:ring-2 focus:ring-amber-500">
@@ -642,7 +682,7 @@
 
       <div class="pt-2">
         <button onclick="submitForcedPasswordChange()" class="w-full py-2.5 text-xs font-extrabold rounded-xl bg-amber-500 hover:bg-amber-600 text-white shadow-xs transition-colors">
-          새 비밀번호로 저장하고 시작하기 💾
+          새 계정으로 저장하고 시작하기 💾
         </button>
         <button onclick="cancelForcedPasswordChange()" class="w-full mt-2 py-2 text-xs font-semibold rounded-xl text-slate-400 hover:text-slate-600">
           취소하고 돌아가기
@@ -875,12 +915,14 @@
     let currentCalDate = new Date();
     let signaturePadInstance = null;
     let currentActiveSlotKey = '';
+    let openedAdminFromCover = false;
 
     // 3. 앱 라이프사이클 진입부 (window.onload)
     window.onload = function() {
       initUrlParams();
       loadStoredCache();
       renderAllViews();
+      initModalBackdropAndKeyEvents();
       
       // 표지 감성 테마 복원
       const savedTheme = safeStorage.getItem('lib_cover_theme') || 'a';
@@ -1012,6 +1054,23 @@
       document.getElementById('cfgAdminName').value = adminName;
       document.getElementById('cfgCycleType').value = cycleType;
       document.getElementById('cfgAdminEmail').value = adminEmail;
+
+      const gasInp = document.getElementById('cfgGasUrlInput');
+      if (gasInp) gasInp.value = gasApiUrl || '';
+
+      const adminIdDisplay = document.getElementById('cfgCurrentAdminIdDisplay');
+      if (adminIdDisplay) adminIdDisplay.textContent = `현재 ID: ${adminId}`;
+
+      const cloudStatusTag = document.getElementById('cfgCloudStatusTag');
+      if (cloudStatusTag) {
+        if (gasApiUrl) {
+          cloudStatusTag.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800';
+          cloudStatusTag.textContent = '🟢 클라우드 연결됨';
+        } else {
+          cloudStatusTag.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600';
+          cloudStatusTag.textContent = '로컬 모드';
+        }
+      }
 
       // 공지사항 반영
       document.getElementById('noticeDisplayWrapper').textContent = noticeMemo;
@@ -1355,6 +1414,7 @@
     }
 
     function openAdminLoginFromGate() {
+      openedAdminFromCover = true;
       closeCoverModal();
       openModal('adminLoginModal');
     }
@@ -1386,7 +1446,10 @@
       const idInp = document.getElementById('adminIdInput').value.trim();
       const pwInp = document.getElementById('adminPasswordInput').value.trim();
 
-      if (idInp !== adminId) {
+      const cleanInputId = idInp.toLowerCase();
+      const cleanSavedId = (adminId || 'admin').toLowerCase();
+
+      if (cleanInputId !== cleanSavedId) {
         return showToast('관리자 아이디가 일치하지 않습니다.');
       }
       if (pwInp !== adminPassword) {
@@ -1423,6 +1486,8 @@
     }
 
     function openForcedPasswordChangeModal() {
+      const idInp = document.getElementById('adminNewIdInput');
+      if (idInp) idInp.value = adminId !== 'admin' ? adminId : '';
       document.getElementById('adminNewPasswordInput').value = '';
       document.getElementById('adminNewPasswordConfirmInput').value = '';
       checkPasswordRuleDisplay('', 'admin');
@@ -1491,10 +1556,19 @@
       return isValid;
     }
 
-    // 최초 로그인 시 강제 비밀번호 변경 제출
+    // 최초 로그인 시 강제 계정(ID + 비밀번호) 변경 제출
     function submitForcedPasswordChange() {
+      const newIdRaw = document.getElementById('adminNewIdInput') ? document.getElementById('adminNewIdInput').value.trim() : '';
       const newPw = document.getElementById('adminNewPasswordInput').value.trim();
       const confirmPw = document.getElementById('adminNewPasswordConfirmInput').value.trim();
+
+      if (newIdRaw) {
+        if (!/^[a-zA-Z0-9_]{3,20}$/.test(newIdRaw)) {
+          return showToast('관리자 ID는 영문, 숫자 조합 3~20자로 설정해 주세요.');
+        }
+      } else {
+        return showToast('새 관리자 ID를 입력해 주세요.');
+      }
 
       if (!validatePasswordComplexity(newPw)) {
         showToast('비밀번호 변경 규칙 (8자 이상, 영문소문자, 숫자, 특수문자 필수)');
@@ -1509,10 +1583,15 @@
         return;
       }
 
-      // 새 비밀번호 영구 저장
+      const finalId = newIdRaw.toLowerCase();
+      adminId = finalId;
       adminPassword = newPw;
+      safeStorage.setItem('lib_custom_admin_id', finalId);
       safeStorage.setItem('lib_custom_admin_pw', newPw);
       safeStorage.setItem('lib_admin_pw_changed', 'true');
+
+      const loginIdInput = document.getElementById('adminIdInput');
+      if (loginIdInput) loginIdInput.value = finalId;
 
       // 백엔드 시트 동기화
       if (gasApiUrl) {
@@ -1522,19 +1601,29 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'saveSystemConfig',
+            adminId: finalId,
             adminPassword: newPw
           })
         }).catch(e => console.warn(e));
       }
 
-      showToast('관리자 비밀번호가 안전하게 변경되었습니다.');
+      showToast('관리자 계정(ID/비밀번호)이 안전하게 변경되었습니다.');
       completeAdminLoginSuccess();
     }
 
-    // 도서관 설정 탭 내 상시 비밀번호 변경 제출
-    function saveAdminPasswordFromSettings() {
+    // 도서관 설정 탭 내 상시 계정(ID + 비밀번호) 변경 제출
+    function saveAdminAccountFromSettings() {
+      const newIdRaw = document.getElementById('cfgNewAdminId').value.trim();
       const newPw = document.getElementById('cfgNewAdminPw').value.trim();
       const confirmPw = document.getElementById('cfgNewAdminPwConfirm').value.trim();
+
+      let targetId = adminId;
+      if (newIdRaw) {
+        if (!/^[a-zA-Z0-9_]{3,20}$/.test(newIdRaw)) {
+          return showToast('관리자 ID는 영문, 숫자 조합 3~20자로 설정해 주세요.');
+        }
+        targetId = newIdRaw.toLowerCase();
+      }
 
       if (!validatePasswordComplexity(newPw)) {
         showToast('비밀번호 변경 규칙 (8자 이상, 영문소문자, 숫자, 특수문자 필수)');
@@ -1549,12 +1638,19 @@
         return;
       }
 
+      adminId = targetId;
       adminPassword = newPw;
+      safeStorage.setItem('lib_custom_admin_id', targetId);
       safeStorage.setItem('lib_custom_admin_pw', newPw);
       safeStorage.setItem('lib_admin_pw_changed', 'true');
 
+      const loginIdInput = document.getElementById('adminIdInput');
+      if (loginIdInput) loginIdInput.value = targetId;
+
+      document.getElementById('cfgNewAdminId').value = '';
       document.getElementById('cfgNewAdminPw').value = '';
       document.getElementById('cfgNewAdminPwConfirm').value = '';
+      document.getElementById('cfgCurrentAdminIdDisplay').textContent = `현재 ID: ${targetId}`;
       checkPasswordRuleDisplay('', 'cfg');
 
       if (gasApiUrl) {
@@ -1562,11 +1658,55 @@
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'saveSystemConfig', adminPassword: newPw })
+          body: JSON.stringify({ action: 'saveSystemConfig', adminId: targetId, adminPassword: newPw })
         }).catch(e => console.warn(e));
       }
 
-      showToast('관리자 비밀번호가 성공적으로 변경되었습니다.');
+      showToast('관리자 계정 정보가 성공적으로 변경되었습니다.');
+    }
+
+    // 구글 Apps Script 웹앱 URL 클립보드 붙여넣기 헬퍼
+    async function pasteGasUrlFromClipboard() {
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        try {
+          const text = await navigator.clipboard.readText();
+          if (text) {
+            document.getElementById('cfgGasUrlInput').value = text.trim();
+            showToast('클립보드 주소가 입력창에 붙여넣어졌습니다.');
+            return;
+          }
+        } catch (e) {}
+      }
+      showToast('입력창을 길게 눌러 주소를 붙여넣어 주세요.');
+    }
+
+    // 구글 Apps Script 웹앱 URL 저장 및 즉시 연결 테스트
+    async function saveGasUrlFromSettings() {
+      const inp = document.getElementById('cfgGasUrlInput');
+      const url = inp ? inp.value.trim() : '';
+
+      if (!url) {
+        gasApiUrl = '';
+        safeStorage.removeItem('lib_gas_url');
+        renderAllViews();
+        return showToast('구글 클라우드 연동이 해제되었습니다. (로컬 모드)');
+      }
+
+      if (!url.startsWith('https://script.google.com/macros/s/') || !url.endsWith('/exec')) {
+        return showToast('올바른 구글 웹앱 URL 형식(/exec 로 끝남)을 입력해 주세요.');
+      }
+
+      gasApiUrl = url;
+      safeStorage.setItem('lib_gas_url', url);
+      showToast('클라우드 연결을 확인하는 중입니다...');
+
+      try {
+        await fetchGasData();
+        showToast('구글 스프레드시트와 성공적으로 연결되었습니다!');
+      } catch (e) {
+        showToast('주소가 저장되었습니다. (네트워크 연결 대기 중)');
+      }
+      renderAllViews();
     }
 
     function logoutAdmin() {
@@ -1941,6 +2081,7 @@
         if (data.status === 'success') {
           if (data.libraryName) libraryName = data.libraryName;
           if (data.noticeMemo) noticeMemo = data.noticeMemo;
+          if (data.adminId) adminId = String(data.adminId).toLowerCase();
           if (Array.isArray(data.members) && data.members.length > 0) membersData = data.members;
           if (Array.isArray(data.roster) && data.roster.length > 0) rosterData = data.roster;
           renderAllViews();
@@ -1972,6 +2113,7 @@
     function openModal(id) {
       const m = document.getElementById(id);
       if (m) m.classList.remove('hidden');
+      if (id === 'statsModal') renderStatsTable();
     }
 
     function closeModal(id) {
@@ -1981,10 +2123,31 @@
       // Fail-Safe Rollback: 관리자 인증을 마치지 않은 상태에서 관리자 모달을 닫으면 표지로 복귀
       if ((id === 'adminLoginModal' || id === 'adminForcePasswordChangeModal') && !isAdminLoggedIn) {
         const savedName = safeStorage.getItem('lib_my_name');
-        if (!savedName) {
+        if (!savedName || openedAdminFromCover) {
+          openedAdminFromCover = false;
           openCoverModal();
         }
       }
+    }
+
+    // 전역 모달 백드롭 클릭 및 Escape 키 안전 롤백 가드
+    function initModalBackdropAndKeyEvents() {
+      window.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          const openModals = document.querySelectorAll('.modal-backdrop:not(.hidden)');
+          openModals.forEach(m => {
+            if (m.id !== 'coverModal') closeModal(m.id);
+          });
+        }
+      });
+
+      document.querySelectorAll('.modal-backdrop').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+          if (e.target === this && this.id !== 'coverModal') {
+            closeModal(this.id);
+          }
+        });
+      });
     }
 
     function changeTodayDate(delta) {
@@ -2079,35 +2242,39 @@
       }, 2500);
     }
 
-    // Apps Script 복사기 (배열 조인 방식으로 템플릿 리터럴 에러 원천 차단)
-    function copyEmbeddedGasScriptCode() {
-      const lines = [
-        '/**',
-        ' * [도서관 봉사단 관리시스템]',
-        ' * Google Apps Script 통합 엔진 v10.6',
-        ' */',
-        'function onOpen() {',
-        '  SpreadsheetApp.getUi().createMenu("📚 도서관 봉사 관리")',
-        '    .addItem("🌟 [최초 1회] 표준 5대 시트 탭 자동 구성", "setupNewSchoolTemplate")',
-        '    .addSeparator()',
-        '    .addItem("📅 이번 달 배정표 시트 생성", "menuCreateThisMonthSheet")',
-        '    .addItem("⏭️ 다음 달 배정표 시트 즉시 생성", "menuCreateNextMonthSheet")',
-        '    .addSeparator()',
-        '    .addItem("🔑 관리자 비밀번호 [admin1234] 리셋", "menuResetAdminPassword")',
-        '    .addToUi();',
-        '}',
-        'function doGet(e) {',
-        '  return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);',
-        '}'
-      ];
-      const code = lines.join('\n');
-      
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(code).then(() => {
-          showToast('Apps Script 표준 코드가 클립보드에 복사되었습니다!');
-        });
-      } else {
-        showToast('클립보드 복사 완료!');
+    // Apps Script 코드 비동기 복사 엔진 (GitHub 정적 파일 연동)
+    async function copyEmbeddedGasScriptCode() {
+      showToast('스크립트 코드를 불러오는 중입니다...');
+      try {
+        const response = await fetch('./google_apps_script_code.js');
+        if (!response.ok) {
+          throw new Error('파일을 불러올 수 없습니다. (HTTP ' + response.status + ')');
+        }
+        const codeText = await response.text();
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(codeText);
+          showToast('Apps Script 코드가 클립보드에 복사되었습니다!');
+        } else {
+          // Fallback 클립보드 복사 지원
+          const textArea = document.createElement('textarea');
+          textArea.value = codeText;
+          textArea.style.position = 'fixed';
+          textArea.style.opacity = '0';
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          const successful = document.execCommand('copy');
+          document.body.removeChild(textArea);
+          if (successful) {
+            showToast('Apps Script 코드가 클립보드에 복사되었습니다!');
+          } else {
+            showToast('클립보드 접근이 제한되었습니다. google_apps_script_code.js 파일을 직접 열어 복사해 주세요.');
+          }
+        }
+      } catch (err) {
+        console.warn('Apps Script 로드 오류:', err);
+        showToast('저장소의 google_apps_script_code.js 파일을 직접 열어 복사해 주세요.');
       }
     }
   </script>
