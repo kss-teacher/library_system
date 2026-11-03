@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>꿈빛 - 도서관 봉사인력 관리 시스템</title>
   
-  <!-- 웹 폰트 (Noto Sans KR, Inter) -->
+  <!-- 웹 폰트 (Noto Sans KR, Inter, Noto Serif KR) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@300;400;500;600;700;800&family=Noto+Serif+KR:wght@600;700;800&display=swap" rel="stylesheet">
@@ -13,10 +13,10 @@
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   
-  <!-- 폰트어썸 아이콘 -->
+  <!-- 폰트어썸 아이콘 CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   
-  <!-- SheetJS (XLSX 브라우저 엑셀 파서) -->
+  <!-- SheetJS (XLSX 브라우저 엑셀 파서 CDN) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <script>
@@ -433,6 +433,19 @@
             <span>5대 탭 원격 자동 생성</span>
           </button>
         </div>
+
+        <!-- 로컬 저장소 청소 도구 (로컬 고착 박멸) -->
+        <div class="p-4 rounded-xl bg-rose-50/60 border border-rose-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div>
+            <div class="text-[10px] font-bold text-rose-600 uppercase tracking-wider mb-0.5">로컬 저장소 청소 도구</div>
+            <div class="font-bold text-xs text-slate-900">기기 로컬 캐시 및 이전 활동 기록(출석/대타) 1초 완전 초기화</div>
+            <p class="text-[11px] text-slate-500">이 단말기 브라우저에 고착된 이전 전자서명, 대타 지정, 임시 캐시를 말끔히 비웁니다.</p>
+          </div>
+          <button onclick="clearLocalCacheAndLogs()" class="w-full sm:w-auto px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs shrink-0 flex items-center justify-center space-x-1.5">
+            <i class="fa-solid fa-trash-can"></i>
+            <span>로컬 기록 전체 초기화</span>
+          </button>
+        </div>
       </div>
 
       <!-- [순차 블록 2] 관리자 보안 계정(ID / 비밀번호) 변경 -->
@@ -621,7 +634,7 @@
 
       <!-- 하단 은은한 관리자 통로 -->
       <div class="pt-2 flex items-center justify-between text-[11px] text-slate-400 border-t border-white/10">
-        <span>꿈빛 v20.3</span>
+        <span>꿈빛 v21.3</span>
         <button onclick="openModal('adminLoginModal')" class="hover:text-amber-300 transition-colors flex items-center space-x-1">
           <i class="fa-solid fa-lock text-[10px]"></i>
           <span>사서교사 / 관리자</span>
@@ -630,7 +643,7 @@
     </div>
   </div>
 
-  <!-- 2. 관리자 로그인 모달 -->
+  <!-- 2. 관리자 로그인 모달 (초기 계정 안내 배지 & 👁️ 토글 탑재) -->
   <div id="adminLoginModal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
     <div class="bg-white w-full max-w-sm rounded-2xl p-6 border border-slate-200 shadow-xl space-y-4 text-slate-800">
       <div class="text-center space-y-1">
@@ -641,6 +654,12 @@
         <p class="text-xs text-slate-500">관리자 아이디와 비밀번호를 입력하세요.</p>
       </div>
 
+      <!-- 초기 기본 계정 안내 배지 -->
+      <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200/80 text-[11px] text-amber-800 flex items-center space-x-2">
+        <i class="fa-solid fa-circle-info text-amber-600 shrink-0"></i>
+        <span>초기 기본 계정: <b>admin</b> / <b>admin1234</b></span>
+      </div>
+
       <div class="space-y-2.5 text-left text-xs">
         <div>
           <label class="font-bold text-slate-700 block mb-1">관리자 아이디</label>
@@ -649,7 +668,12 @@
 
         <div>
           <label class="font-bold text-slate-700 block mb-1">비밀번호</label>
-          <input type="password" id="adminPwInput" placeholder="••••••••" class="w-full p-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/20">
+          <div class="relative">
+            <input type="password" id="adminPwInput" placeholder="••••••••" class="w-full p-2.5 pr-10 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900/20">
+            <button type="button" onclick="toggleAdminPwVisibility()" class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 focus:outline-none" title="비밀번호 표시/숨김">
+              <i id="adminPwEyeIcon" class="fa-solid fa-eye text-xs"></i>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -924,6 +948,7 @@
           safeStorage.removeItem('lib_cache_attendance');
           safeStorage.removeItem('lib_cache_overrides');
           safeStorage.removeItem('lib_my_name');
+          safeStorage.removeItem('lib_consent_volunteer');
           safeStorage.removeItem('lib_custom_admin_id');
           safeStorage.removeItem('lib_custom_admin_pw');
           safeStorage.removeItem('lib_gas_url');
@@ -1136,6 +1161,19 @@
     // -------------------------------------------------------------
     // [6] 관리자 로그인 / 로그아웃 & 안전 롤백
     // -------------------------------------------------------------
+    function toggleAdminPwVisibility() {
+      const pwInput = document.getElementById('adminPwInput');
+      const eyeIcon = document.getElementById('adminPwEyeIcon');
+      if (!pwInput) return;
+      if (pwInput.type === 'password') {
+        pwInput.type = 'text';
+        if (eyeIcon) eyeIcon.className = 'fa-solid fa-eye-slash text-xs text-amber-600';
+      } else {
+        pwInput.type = 'password';
+        if (eyeIcon) eyeIcon.className = 'fa-solid fa-eye text-xs text-slate-400';
+      }
+    }
+
     function verifyAdminLogin() {
       const idInput = document.getElementById('adminIdInput');
       const pwInput = document.getElementById('adminPwInput');
@@ -1148,6 +1186,7 @@
       if (inputId === targetId && inputPw === targetPw) {
         isAdminLoggedIn = true;
         closeModal('adminLoginModal');
+        closeModal('coverModal'); // 🌟 대문 갇힘(Cover Trap) 완전 해결
         
         document.getElementById('adminLoginBtn').classList.add('hidden');
         document.getElementById('adminLogoutBtn').classList.remove('hidden');
@@ -2103,7 +2142,7 @@
     }
 
     // -------------------------------------------------------------
-    // [19] 구글 Apps Script 연동 데이터 비동기 조회 (Cloud-First)
+    // [19] 구글 Apps Script 연동 데이터 비동기 조회 (Cloud-First 진실의 원천)
     // -------------------------------------------------------------
     async function fetchGasData() {
       if (!gasApiUrl) return;
@@ -2124,12 +2163,13 @@
           if (data.cycleType) cycleType = data.cycleType;
           if (data.noticeMemo) noticeMemo = data.noticeMemo;
 
-          if (Array.isArray(data.members) && data.members.length > 0) {
+          // 구글 시트 우선 원칙: 시트 데이터가 있으면 로컬 캐시를 100% 덮어씀 (빈 배열도 온전히 수용)
+          if (Array.isArray(data.members)) {
             membersData = data.members;
             safeStorage.setItem('lib_cache_members', JSON.stringify(membersData));
           }
 
-          if (Array.isArray(data.roster) && data.roster.length > 0) {
+          if (Array.isArray(data.roster)) {
             rosterData = data.roster;
             safeStorage.setItem('lib_cache_roster', JSON.stringify(rosterData));
           }
@@ -2172,12 +2212,19 @@
       if (!val) {
         gasApiUrl = '';
         safeStorage.removeItem('lib_gas_url');
+        // 연동 해제 시 이전 클라우드 캐시도 깨끗이 비워 혼선 차단
+        safeStorage.removeItem('lib_cache_attendance');
+        safeStorage.removeItem('lib_cache_overrides');
+        attendanceLog = {};
+        overrideLog = {};
+
         const badge = document.getElementById('gasStatusBadge');
         if (badge) {
           badge.textContent = '연동 해제됨';
           badge.className = 'text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-500';
         }
-        showToast('구글 연동 URL이 해제되었습니다.');
+        showToast('구글 연동 URL이 해제되었으며 로컬 임시 기록이 정리되었습니다.');
+        renderAllViews();
         return;
       }
 
@@ -2190,6 +2237,49 @@
       safeStorage.setItem('lib_gas_url', gasApiUrl);
       showToast('구글 웹앱 URL이 저장되었습니다. 연동을 테스트합니다.');
       fetchGasData();
+    }
+
+    // -------------------------------------------------------------
+    // [20] 기기 로컬 캐시 및 이전 활동 기록 완전 초기화
+    // -------------------------------------------------------------
+    function clearLocalCacheAndLogs() {
+      const isOk = confirm(
+        "⚠️ [기기 로컬 캐시 및 활동 기록 완전 초기화]\n\n" +
+        "이 기기 브라우저에 고착되어 있는 이전 출석 서명 기록, 대타 배정 내역, 임시 명부 캐시를 완전히 비우시겠습니까?\n\n" +
+        "※ 구글 시트가 연결되어 있다면 시트 원본 데이터는 안전하게 보존되며, 시트의 최신 데이터를 다시 동기화합니다."
+      );
+      if (!isOk) return;
+
+      // 로컬 스토리지 키 전수 정리
+      safeStorage.removeItem('lib_cache_attendance');
+      safeStorage.removeItem('lib_cache_overrides');
+      safeStorage.removeItem('lib_cache_members');
+      safeStorage.removeItem('lib_cache_roster');
+      safeStorage.removeItem('lib_my_name');
+      safeStorage.removeItem('lib_consent_volunteer');
+
+      // 메모리 상태 초기화
+      attendanceLog = {};
+      overrideLog = {};
+      myVolunteerName = '';
+
+      if (gasApiUrl) {
+        showToast('로컬 기록을 비우고 구글 시트 최신 데이터를 다시 불러옵니다...');
+        fetchGasData();
+      } else {
+        // 기본 초기 샘플로 리셋
+        membersData = [
+          { id: 1, name: '김도서', phone: '010-1234-5678' },
+          { id: 2, name: '이하늘', phone: '010-2345-6789' },
+          { id: 3, name: '박꿈빛', phone: '010-3456-7890' },
+          { id: 4, name: '최은혜', phone: '010-4567-8901' },
+          { id: 5, name: '정지혜', phone: '010-5678-9012' }
+        ];
+        rosterData = [];
+        initDefaultRosterIfEmpty();
+        renderAllViews();
+        showToast('기기 로컬 캐시 및 이전 활동 기록이 깨끗이 초기화되었습니다.');
+      }
     }
 
     async function triggerSetupSheetsFromUI() {
@@ -2252,7 +2342,7 @@
     }
 
     // -------------------------------------------------------------
-    // [20] 종합 뷰 일괄 동기화 및 유틸리티
+    // [21] 종합 뷰 일괄 동기화 및 유틸리티
     // -------------------------------------------------------------
     function renderAllViews() {
       document.getElementById('topBarOrgName').textContent = orgName;
@@ -2294,7 +2384,19 @@
       bindEnter('gateNameInput', submitGateFirstRegistration);
       bindEnter('gatePhoneLast4', submitGateFirstRegistration);
       bindEnter('cfgGasUrlInput', saveGasUrlFromSettings);
+      bindEnter('cfgAdminPwConfirmInput', saveAdminAccountFromSettings);
+      bindEnter('cfgOrgNameInput', saveBasicSettingsFromUI);
       bindEnter('newMemberPhoneInput', addNewMemberFromUI);
+
+      // Escape 키 감지 시 관리자 로그인 창 안전 닫힘 & 대문 롤백 가드
+      window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          const adminModal = document.getElementById('adminLoginModal');
+          if (adminModal && !adminModal.classList.contains('hidden')) {
+            cancelAdminLogin();
+          }
+        }
+      });
     }
 
     function openModal(id) {
