@@ -59,7 +59,7 @@
       .no-print { display: none !important; }
     }
 
-    /* 순수 CSS 하늘·구름 4대 감성 테마 프리셋 (0KB, 고화질 앰비언트) */
+    /* 순수 CSS 하늘·구름 4대 감성 테마 프리셋 */
     .bg-theme-a {
       background: radial-gradient(circle at 50% 0%, rgba(254, 240, 138, 0.14) 0%, transparent 60%),
                   radial-gradient(circle at 85% 30%, rgba(147, 197, 253, 0.10) 0%, transparent 50%),
@@ -225,7 +225,7 @@
 
       <!-- 오늘 활동 슬롯 카드 리스트 -->
       <div id="todaySlotsContainer" class="space-y-4">
-        <!-- JS로 동적 렌더링 -->
+        <!-- 동적 렌더링 -->
       </div>
 
       <!-- 하단 A4 인쇄 버튼 -->
@@ -266,7 +266,7 @@
           <div class="text-blue-600">토</div>
         </div>
         <div id="calendarDaysGrid" class="grid grid-cols-7 divide-x divide-y divide-slate-100">
-          <!-- JS 캘린더 셀 렌더링 -->
+          <!-- 캘린더 셀 동적 렌더링 -->
         </div>
       </div>
     </section>
@@ -300,7 +300,7 @@
               </tr>
             </thead>
             <tbody id="rosterTableBody" class="divide-y divide-slate-100">
-              <!-- JS 렌더링 -->
+              <!-- 순번표 렌더링 -->
             </tbody>
           </table>
         </div>
@@ -314,7 +314,7 @@
         <div class="space-y-2">
           <label class="block text-xs font-bold text-slate-700">내 성함 선택</label>
           <select id="myVolunteerSelect" onchange="saveMyVolunteerName(this.value)" class="w-full p-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-medium">
-            <!-- JS 옵션 추가 -->
+            <!-- 옵션 목록 -->
           </select>
           <p class="text-[11px] text-slate-400">선택하신 위원님의 봉사 일정에 [나] 강조 배지가 켜집니다.</p>
         </div>
@@ -354,12 +354,12 @@
       <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
         <h4 class="font-bold text-sm text-slate-800 border-b border-slate-100 pb-2">나의 이번 달 봉사 배정일</h4>
         <div id="myUpcomingSlotsList" class="space-y-2 text-xs text-slate-600">
-          <!-- JS 렌더링 -->
+          <!-- 일정 목록 -->
         </div>
       </div>
     </section>
 
-    <!-- [탭 5] 도서관 설정 (관리자 전용: 4대 순차 파이프라인) -->
+    <!-- [탭 5] 도서관 설정 (관리자 전용: 관장님 맞춤형 순차 파이프라인) -->
     <section id="tabContent-admin" class="hidden space-y-6">
 
       <!-- [순차 블록 1] 구글 클라우드 원스톱 5단계 순차 연동 센터 -->
@@ -370,7 +370,7 @@
               <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs">1</span>
               <span>도서관 구글 클라우드(Google Sheet) 원스톱 연동 센터</span>
             </h4>
-            <p class="text-xs text-slate-500 mt-0.5">우리 도서관만의 구글 시트에 1:1로 연결하여 데이터를 안전하게 독립 보관합니다.</p>
+            <p class="text-xs text-slate-500 mt-0.5">우리 도서관만의 구글 시트에 연결하여 데이터를 안전하게 독립 보관합니다.</p>
           </div>
           <span id="gasStatusBadge" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-500">
             연동 대기
@@ -403,30 +403,47 @@
               <span>8장 슬라이드 설명서</span>
               <i class="fa-solid fa-chalkboard-user text-amber-500 text-[11px]"></i>
             </div>
-            <div class="text-[11px] text-slate-500 mt-0.5">배포 가이드 새 탭 보기</div>
+            <div class="text-[11px] text-slate-500 mt-0.5">배포 가이드 새 창 보기</div>
           </button>
         </div>
 
-        <!-- STEP 04. 웹앱 URL 입력 및 저장 (듀얼 URL 지원) -->
-        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
+        <!-- 🌟 STEP 04. 웹앱 URL 입력 및 연동 즉시 내 구글 시트 확인 카드 (관장님 지시 반영: 일체형 직결) -->
+        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3">
           <div class="flex items-center justify-between">
-            <label class="text-xs font-bold text-slate-700">STEP 04. 우리 도서관 발급 웹 앱 URL 등록</label>
-            <span class="text-[11px] text-slate-400">/exec 웹앱 또는 시트 주소 지원</span>
+            <label class="text-xs font-bold text-slate-700">STEP 04. 우리 도서관 발급 웹 앱 URL 등록 & 연동</label>
+            <span class="text-[11px] text-slate-400">/exec 웹앱 배포 주소 입력</span>
           </div>
           <div class="flex space-x-2">
-            <input type="url" id="cfgGasUrlInput" placeholder="https://script.google.com/macros/s/.../exec 또는 구글 시트 주소" class="flex-grow p-2.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-white">
+            <input type="url" id="cfgGasUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="flex-grow p-2.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-white">
             <button onclick="saveGasUrlFromSettings()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors shrink-0 shadow-xs">
               연동 저장
             </button>
           </div>
+
+          <!-- 연동 즉시 나타나는 내 구글 시트 확인 카드 -->
+          <div id="connectedSheetCard" class="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200/90 flex flex-col sm:flex-row items-center justify-between gap-3 mt-1">
+            <div class="space-y-0.5 flex-grow">
+              <div class="font-bold text-xs text-slate-900 flex items-center space-x-1.5">
+                <i class="fa-solid fa-table-cells text-emerald-600"></i>
+                <span>내 구글 스프레드시트 연결 확인</span>
+              </div>
+              <p id="connectedSheetStatusText" class="text-[11px] text-slate-600 leading-tight">
+                웹 앱 URL을 등록하면 연결된 구글 시트 주소가 자동으로 감지되어 새 창으로 열 수 있습니다.
+              </p>
+            </div>
+            <button type="button" onclick="openConnectedGoogleSheet()" class="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs shrink-0 flex items-center justify-center space-x-1.5">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i>
+              <span>내 구글 시트 열기</span>
+            </button>
+          </div>
         </div>
 
-        <!-- STEP 05. 필수 5대 탭 자동 구성 원격 트리거 -->
+        <!-- 🌟 STEP 05. 필수 5대 탭 자동 구성 원격 트리거 (시트 연결 확인 후 진행!) -->
         <div class="p-4 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div>
             <div class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider mb-0.5">STEP 05 (원클릭 자동 구성)</div>
             <div class="font-bold text-xs text-slate-900">내 구글 시트에 표준 5대 탭 자동 구성하기</div>
-            <p class="text-[11px] text-slate-500">1.설정, 2.순번, 3.정보, 4.출석, 5.동의이력 탭을 시트에 원격 생성합니다.</p>
+            <p class="text-[11px] text-slate-500">확인된 내 시트에 1.설정, 2.순번, 3.정보, 4.출석, 5.동의이력 탭을 원격 자동 생성합니다.</p>
           </div>
           <button onclick="triggerSetupSheetsFromUI()" class="w-full sm:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs shrink-0 flex items-center justify-center space-x-1.5">
             <i class="fa-solid fa-wand-magic-sparkles"></i>
@@ -434,29 +451,7 @@
           </button>
         </div>
 
-        <!-- 🌟 내 구글 시트 확인하기 (진단 피드백 & 직결 도구) -->
-        <div id="connectedSheetCard" class="p-4 rounded-xl bg-emerald-50/50 border border-emerald-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div class="space-y-0.5 flex-grow">
-            <div class="flex items-center space-x-2">
-              <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">연동 시트 바로가기</span>
-              <button onclick="promptSetSpreadsheetUrl()" class="text-[10px] text-slate-400 hover:text-emerald-700 font-semibold underline flex items-center space-x-0.5" title="시트 주소 직접 입력/수정">
-                <i class="fa-solid fa-pen-to-square"></i>
-                <span>시트 주소 직접 지정</span>
-              </button>
-            </div>
-            <div class="font-bold text-xs text-slate-900 flex items-center space-x-1.5">
-              <i class="fa-solid fa-table-cells text-emerald-600"></i>
-              <span>내 구글 스프레드시트 확인하기</span>
-            </div>
-            <p id="connectedSheetStatusText" class="text-[11px] text-slate-500 leading-tight">연동된 구글 스프레드시트 원본 문서를 새 창에서 열어 확인합니다.</p>
-          </div>
-          <button type="button" onclick="openConnectedGoogleSheet()" class="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs shrink-0 flex items-center justify-center space-x-1.5">
-            <i class="fa-solid fa-arrow-up-right-from-square"></i>
-            <span>내 구글 시트 열기</span>
-          </button>
-        </div>
-
-        <!-- 로컬 저장소 청소 도구 (로컬 고착 박멸) -->
+        <!-- 로컬 저장소 청소 도구 (로컬 고착 방어) -->
         <div class="p-4 rounded-xl bg-rose-50/60 border border-rose-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div>
             <div class="text-[10px] font-bold text-rose-600 uppercase tracking-wider mb-0.5">로컬 저장소 청소 도구</div>
@@ -506,7 +501,7 @@
         </div>
 
         <div class="flex justify-between items-center pt-2">
-          <p class="text-[11px] text-slate-400">계정 정보는 오직 본 도서관의 구글 스프레드시트에만 보관되며 개발자가 열람할 수 없습니다.</p>
+          <p class="text-[11px] text-slate-400">계정 정보는 본 도서관의 구글 스프레드시트에 안전하게 보관됩니다.</p>
           <button onclick="saveAdminAccountFromSettings()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold shadow-xs transition-colors shrink-0">
             계정 변경 저장
           </button>
@@ -564,7 +559,7 @@
           </button>
         </div>
 
-        <!-- 엑셀 파일 드래그 앤 드롭 영역 (버블링 차단 및 자식 간섭 방지) -->
+        <!-- 엑셀 파일 드래그 앤 드롭 영역 -->
         <div id="dropZone" 
              ondragover="event.preventDefault(); this.classList.add('border-amber-500', 'bg-amber-50/40');" 
              ondragleave="event.preventDefault(); this.classList.remove('border-amber-500', 'bg-amber-50/40');" 
@@ -656,7 +651,7 @@
 
       <!-- 하단 은은한 관리자 통로 -->
       <div class="pt-2 flex items-center justify-between text-[11px] text-slate-400 border-t border-white/10">
-        <span>꿈빛 v23.1</span>
+        <span>꿈빛 v24.3</span>
         <button onclick="openModal('adminLoginModal')" class="hover:text-amber-300 transition-colors flex items-center space-x-1">
           <i class="fa-solid fa-lock text-[10px]"></i>
           <span>사서교사 / 관리자</span>
@@ -665,7 +660,7 @@
     </div>
   </div>
 
-  <!-- 2. 관리자 로그인 모달 (초기 계정 안내 배지 & 👁️ 토글 탑재) -->
+  <!-- 2. 관리자 로그인 모달 -->
   <div id="adminLoginModal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
     <div class="bg-white w-full max-w-sm rounded-2xl p-6 border border-slate-200 shadow-xl space-y-4 text-slate-800">
       <div class="text-center space-y-1">
@@ -746,7 +741,7 @@
         <div>
           <label class="font-bold text-slate-700 block mb-1">대타로 활동할 위원 선택</label>
           <select id="overrideMemberSelect" class="w-full p-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20">
-            <!-- JS 옵션 추가 -->
+            <!-- 위원 선택 옵션 -->
           </select>
         </div>
 
@@ -788,7 +783,7 @@
             </tr>
           </thead>
           <tbody id="statsTableBody" class="divide-y divide-slate-100">
-            <!-- JS 렌더링 -->
+            <!-- 실적 통계 동적 렌더링 -->
           </tbody>
         </table>
       </div>
@@ -834,7 +829,7 @@
             </tr>
           </thead>
           <tbody id="membersTableBody" class="divide-y divide-slate-100">
-            <!-- JS 렌더링 -->
+            <!-- 명부 행 -->
           </tbody>
         </table>
       </div>
@@ -852,7 +847,7 @@
       </div>
 
       <div class="text-xs text-slate-600 space-y-2.5 leading-relaxed">
-        <p><b>1. 봉사위원 접속:</b> 처음 1회 본인 성함과 연락처 뒷자리로 인증하시면 다음 접속부터는 간편하게 입장됩니다.</p>
+        <p><b>1. 봉사위원 접속:</b> 처음 1회 본인 성함과 연락처 뒷자리로 인증하시면 다음 접속부터는 간편하게 바로 입장됩니다.</p>
         <p><b>2. 출석 확인:</b> 당일 활동일 데스크에서 [출석 서명]을 눌러 자필 전자서명을 남겨주세요.</p>
         <p><b>3. 관리자 설정:</b> 우측 상단 자물쇠 버튼을 통해 기본 계정(admin / admin1234)으로 로그인하여 시트 연동을 마칠 수 있습니다.</p>
       </div>
@@ -876,7 +871,7 @@
   <!-- ================================================================= -->
   <script>
     // -------------------------------------------------------------
-    // [1] 안전 저장소 래퍼 (safeStorage: iFrame 및 쿠키 차단 환경 대비)
+    // [1] 안전 저장소 래퍼 (safeStorage)
     // -------------------------------------------------------------
     const memoryStorage = {};
     const safeStorage = {
@@ -1211,7 +1206,7 @@
       if (inputId === targetId && inputPw === targetPw) {
         isAdminLoggedIn = true;
         closeModal('adminLoginModal');
-        closeModal('coverModal'); // 대문 갇힘(Cover Trap) 완전 해결
+        closeModal('coverModal'); // 대문 갇힘 해결
         
         document.getElementById('adminLoginBtn').classList.add('hidden');
         document.getElementById('adminLogoutBtn').classList.remove('hidden');
@@ -1692,7 +1687,7 @@
         await fetch(gasApiUrl, {
           method: 'POST',
           mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ action: 'setOverride', slotKey, name })
         });
       } catch (e) {
@@ -1857,7 +1852,7 @@
         await fetch(gasApiUrl, {
           method: 'POST',
           mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ action: 'saveMembers', members })
         });
       } catch (e) {
@@ -1929,7 +1924,7 @@
           await fetch(gasApiUrl, {
             method: 'POST',
             mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({
               action: 'saveSystemConfig',
               adminId: adminId,
@@ -1974,7 +1969,7 @@
         fetch(gasApiUrl, {
           method: 'POST',
           mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
             action: 'saveSystemConfig',
             libraryName: orgName,
@@ -2018,7 +2013,7 @@
         fetch(gasApiUrl, {
           method: 'POST',
           mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({ action: 'saveNoticeMemo', noticeMemo })
         }).catch(() => {});
       }
@@ -2029,7 +2024,7 @@
     // -------------------------------------------------------------
     function downloadExcelTemplate() {
       if (typeof XLSX === 'undefined') {
-        showToast('엑셀 처리 엔진(SheetJS)을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
+        showToast('엑셀 처리 엔진을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
         return;
       }
       const wb = XLSX.utils.book_new();
@@ -2116,7 +2111,7 @@
     }
 
     // -------------------------------------------------------------
-    // [18] A4 일일 활동일지 인쇄 (완전 봉합 템플릿 리터럴)
+    // [18] A4 일일 활동일지 인쇄
     // -------------------------------------------------------------
     function printA4DailyLog() {
       const pDate = currentDateStr;
@@ -2167,19 +2162,20 @@
     }
 
     // -------------------------------------------------------------
-    // [19] 구글 Apps Script 연동 데이터 비동기 조회 (스마트 진단 및 5초 타임아웃)
+    // [19] 구글 Apps Script 연동 데이터 비동기 조회 (Cloud-First 진실의 원천)
     // -------------------------------------------------------------
     async function fetchGasData() {
       if (!gasApiUrl) return;
       const badge = document.getElementById('gasStatusBadge');
       if (badge) {
-        badge.textContent = '동기화 중...';
-        badge.className = 'text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 animate-pulse';
+        badge.textContent = '클라우드 동기화 중...';
+        badge.className = 'text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 animate-pulse border border-amber-200';
       }
+      updateConnectedSheetUI(false, true);
 
-      // 5초 타임아웃 컨트롤러 (무한 대기 방지)
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      // 구글 Apps Script 콜드 스타트(Cold Start: 최초 기동 6~10초)를 여유롭게 보장하는 15초 타임아웃
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
 
       try {
         const resp = await fetch(gasApiUrl, { signal: controller.signal });
@@ -2187,17 +2183,33 @@
         const data = await resp.json();
 
         if (data.status === 'success') {
+          // 백엔드 Apps Script에서 자동으로 넘겨준 스프레드시트 원본 주소 바인딩
           if (data.spreadsheetUrl) {
             connectedSpreadsheetUrl = data.spreadsheetUrl;
             safeStorage.setItem('lib_spreadsheet_url', connectedSpreadsheetUrl);
           }
-          if (data.libraryName) orgName = data.libraryName;
-          if (data.adminId) adminId = String(data.adminId).trim().toLowerCase();
-          if (data.adminPassword) adminPassword = data.adminPassword;
-          if (data.cycleType) cycleType = data.cycleType;
-          if (data.noticeMemo) noticeMemo = data.noticeMemo;
+          if (data.libraryName) {
+            orgName = data.libraryName;
+            safeStorage.setItem('lib_org_name', orgName);
+          }
+          if (data.adminId) {
+            adminId = String(data.adminId).trim().toLowerCase();
+            safeStorage.setItem('lib_custom_admin_id', adminId);
+          }
+          if (data.adminPassword) {
+            adminPassword = data.adminPassword;
+            safeStorage.setItem('lib_custom_admin_pw', adminPassword);
+          }
+          if (data.cycleType) {
+            cycleType = data.cycleType;
+            safeStorage.setItem('lib_cycle_type', cycleType);
+          }
+          if (data.noticeMemo) {
+            noticeMemo = data.noticeMemo;
+            safeStorage.setItem('lib_notice_memo', noticeMemo);
+          }
 
-          // 구글 시트 우선 원칙: 시트 데이터가 있으면 로컬 캐시를 100% 덮어씀 (빈 배열도 온전히 수용)
+          // Cloud-First: 구글 시트의 최신 명부와 순번표를 로컬 캐시보다 1순위로 확정
           if (Array.isArray(data.members)) {
             membersData = data.members;
             safeStorage.setItem('lib_cache_members', JSON.stringify(membersData));
@@ -2217,18 +2229,13 @@
             safeStorage.setItem('lib_cache_overrides', JSON.stringify(overrideLog));
           }
 
-          safeStorage.setItem('lib_org_name', orgName);
-          safeStorage.setItem('lib_custom_admin_id', adminId);
-          safeStorage.setItem('lib_custom_admin_pw', adminPassword);
-          safeStorage.setItem('lib_cycle_type', cycleType);
-          safeStorage.setItem('lib_notice_memo', noticeMemo);
-
           if (badge) {
             badge.textContent = '🟢 클라우드 연결됨';
             badge.className = 'text-xs font-bold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200';
           }
 
           renderAllViews();
+          updateConnectedSheetUI(false, false);
         }
       } catch (err) {
         clearTimeout(timeoutId);
@@ -2237,7 +2244,7 @@
           badge.textContent = '⚠️ 연동 확인 필요';
           badge.className = 'text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-300';
         }
-        updateConnectedSheetUI(true);
+        updateConnectedSheetUI(true, false);
       }
     }
 
@@ -2257,73 +2264,39 @@
 
         const badge = document.getElementById('gasStatusBadge');
         if (badge) {
-          badge.textContent = '연동 해제됨';
+          badge.textContent = '연동 대기';
           badge.className = 'text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-500';
         }
-        showToast('구글 연동 URL이 해제되었으며 로컬 임시 기록이 정리되었습니다.');
+        showToast('구글 연동 URL이 해제되었습니다.');
         renderAllViews();
         return;
       }
 
-      // [스마트 파서 1]: 스프레드시트 URL(docs.google.com/spreadsheets/d/...) 직접 입력 감지
-      if (rawVal.includes('docs.google.com/spreadsheets/d/')) {
-        const match = rawVal.match(/https:\/\/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-        if (match) {
-          connectedSpreadsheetUrl = match[0];
-          safeStorage.setItem('lib_spreadsheet_url', connectedSpreadsheetUrl);
-          updateConnectedSheetUI();
-          showToast('구글 시트 원본 주소가 등록되었습니다! 시스템 연동을 위해 [배포]에서 발급받은 웹 앱 URL(/exec)도 등록해 주세요.');
-          return;
-        }
-      }
-
-      // [스마트 파서 2]: 웹 앱 배포 URL (/exec) 검증
       if (!rawVal.startsWith('http') || !rawVal.includes('/exec')) {
-        showToast('올바른 웹 앱 배포 URL(/exec) 또는 스프레드시트 주소를 입력해 주세요.');
+        showToast('올바른 웹 앱 배포 URL(/exec)을 입력해 주세요.');
         return;
       }
 
       gasApiUrl = rawVal;
       safeStorage.setItem('lib_gas_url', gasApiUrl);
-      showToast('구글 웹앱 URL이 저장되었습니다. 연동을 테스트합니다.');
+      showToast('웹 앱 URL이 저장되었습니다. 구글 클라우드 연결을 확인합니다.');
       fetchGasData();
     }
 
-    function promptSetSpreadsheetUrl() {
-      const current = connectedSpreadsheetUrl || '';
-      const input = prompt(
-        "우리 도서관 구글 스프레드시트 주소(URL)를 입력해 주세요:\n" +
-        "(예: https://docs.google.com/spreadsheets/d/...)",
-        current
-      );
-      if (input === null) return;
-      const clean = input.trim();
-      if (!clean) {
-        connectedSpreadsheetUrl = '';
-        safeStorage.removeItem('lib_spreadsheet_url');
-        updateConnectedSheetUI();
-        showToast('시트 주소 연결이 초기화되었습니다.');
-        return;
-      }
-      const match = clean.match(/https:\/\/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
-      connectedSpreadsheetUrl = match ? match[0] : clean;
-      safeStorage.setItem('lib_spreadsheet_url', connectedSpreadsheetUrl);
-      updateConnectedSheetUI();
-      showToast('내 구글 시트 주소가 안전하게 저장되었습니다!');
-    }
-
-    function updateConnectedSheetUI(isError = false) {
+    function updateConnectedSheetUI(isError = false, isLoading = false) {
       const textEl = document.getElementById('connectedSheetStatusText');
       if (!textEl) return;
 
       if (connectedSpreadsheetUrl) {
-        textEl.innerHTML = `<span class="text-emerald-700 font-bold">🟢 시트 연결됨:</span> <span class="font-mono text-[10px] text-slate-600 truncate max-w-[260px] inline-block align-bottom">${connectedSpreadsheetUrl}</span>`;
+        textEl.innerHTML = `<span class="text-emerald-700 font-bold">🟢 시트 연결 성공:</span> <a href="${connectedSpreadsheetUrl}" target="_blank" class="font-mono text-[10px] text-emerald-600 hover:underline truncate max-w-[280px] inline-block align-bottom">${connectedSpreadsheetUrl}</a>`;
+      } else if (isLoading) {
+        textEl.innerHTML = `<span class="text-amber-600 font-bold">🔄 구글 클라우드 응답 대기 중...</span> <span class="text-[10px] text-slate-500">(최초 기동 시 약 6~8초 소요될 수 있습니다)</span>`;
       } else if (isError) {
-        textEl.innerHTML = `<span class="text-rose-600 font-bold">⚠️ 응답 지연/차단:</span> <span class="text-[10px] text-slate-600">Apps Script [배포 관리]에서 [액세스 권한: 모든 사용자] 설정인지 확인하거나, 상단 [시트 주소 직접 지정]을 눌러주세요.</span>`;
+        textEl.innerHTML = `<span class="text-rose-600 font-bold">⚠️ 응답 지연/확인 필요:</span> <span class="text-[10px] text-slate-600">Apps Script [배포 관리]에서 [액세스 권한: 모든 사용자] 설정인지 확인해 주세요.</span>`;
       } else if (gasApiUrl) {
-        textEl.innerHTML = `<span class="text-amber-600 font-semibold">🔄 동기화 확인 중...</span> <span class="text-[10px] text-slate-500">연결 시 주소가 자동으로 표시됩니다. (상단 연필 아이콘으로 직접 지정 가능)</span>`;
+        textEl.innerHTML = `<span class="text-amber-600 font-semibold">🔄 시트 주소 수신 준비 중...</span> <span class="text-[10px] text-slate-500">연결된 스프레드시트 주소를 감지합니다.</span>`;
       } else {
-        textEl.textContent = '구글 시트가 아직 연동되지 않았습니다. STEP 04에서 URL을 먼저 등록해 주세요.';
+        textEl.textContent = '웹 앱 URL을 등록하면 연결된 구글 시트 주소가 자동으로 감지되어 새 창으로 열 수 있습니다.';
       }
     }
 
@@ -2331,16 +2304,16 @@
       if (connectedSpreadsheetUrl) {
         window.open(connectedSpreadsheetUrl, '_blank');
       } else if (gasApiUrl) {
-        showToast('시트 주소를 찾는 중입니다. 잠시만 기다려 주세요...');
+        showToast('구글 시트 주소를 확인하고 있습니다. 잠시만 기다려 주세요...');
         fetchGasData().then(() => {
           if (connectedSpreadsheetUrl) {
             window.open(connectedSpreadsheetUrl, '_blank');
           } else {
-            promptSetSpreadsheetUrl();
+            showToast('구글 시트 응답 대기 중입니다. Apps Script 배포 설정을 확인해 주세요.');
           }
         });
       } else {
-        promptSetSpreadsheetUrl();
+        showToast('먼저 STEP 04에 웹 앱 URL을 등록하고 저장해 주세요.');
       }
     }
 
@@ -2349,13 +2322,12 @@
     // -------------------------------------------------------------
     function clearLocalCacheAndLogs() {
       const isOk = confirm(
-        "⚠️ [기기 로컬 캐시 및 활동 기록 완전 초기화]\n\n" +
+        "⚠️ [기기 로컬 캐시 및 활동 기록 전체 초기화]\n\n" +
         "이 기기 브라우저에 고착되어 있는 이전 출석 서명 기록, 대타 배정 내역, 임시 명부 캐시를 완전히 비우시겠습니까?\n\n" +
         "※ 구글 시트가 연결되어 있다면 시트 원본 데이터는 안전하게 보존되며, 시트의 최신 데이터를 다시 동기화합니다."
       );
       if (!isOk) return;
 
-      // 로컬 스토리지 키 전수 정리
       safeStorage.removeItem('lib_cache_attendance');
       safeStorage.removeItem('lib_cache_overrides');
       safeStorage.removeItem('lib_cache_members');
@@ -2363,7 +2335,6 @@
       safeStorage.removeItem('lib_my_name');
       safeStorage.removeItem('lib_consent_volunteer');
 
-      // 메모리 상태 초기화
       attendanceLog = {};
       overrideLog = {};
       myVolunteerName = '';
@@ -2372,7 +2343,6 @@
         showToast('로컬 기록을 비우고 구글 시트 최신 데이터를 다시 불러옵니다...');
         fetchGasData();
       } else {
-        // 기본 초기 샘플로 리셋
         membersData = [
           { id: 1, name: '김도서', phone: '010-1234-5678' },
           { id: 2, name: '이하늘', phone: '010-2345-6789' },
@@ -2383,22 +2353,23 @@
         rosterData = [];
         initDefaultRosterIfEmpty();
         renderAllViews();
-        showToast('기기 로컬 캐시 및 이전 활동 기록이 깨끗이 초기화되었습니다.');
+        showToast('기기 로컬 캐시 및 활동 기록이 초기화되었습니다.');
       }
     }
 
+    // 🌟 STEP 05. 원격 5대 탭 자동 구성 통신 복구
     async function triggerSetupSheetsFromUI() {
       if (!gasApiUrl) {
         showToast('상단 STEP 04에 발급받은 웹 앱 URL을 먼저 등록하고 저장해 주세요.');
         return;
       }
 
-      showToast('구글 시트에 표준 5대 탭 자동 구성을 원격 요청합니다...');
+      showToast('구글 시트에 표준 5대 탭 자동 생성을 원격 요청합니다...');
       try {
         await fetch(gasApiUrl, {
           method: 'POST',
           mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
             action: 'setupStandardSheets',
             libraryName: orgName,
@@ -2406,10 +2377,13 @@
             timeSlots: timeSlots
           })
         });
-        showToast('성공: 구글 시트에 5대 표준 탭이 원격 생성되었습니다!');
-        fetchGasData();
+        showToast('성공: 구글 시트에 5대 표준 탭 생성을 요청했습니다! 데이터를 동기화합니다.');
+        setTimeout(() => {
+          fetchGasData();
+        }, 3000);
       } catch (e) {
-        showToast('원격 명령 전송 실패. 네트워크를 확인해 주세요.');
+        console.error(e);
+        showToast('원격 명령 전송 실패. 네트워크 연결을 확인해 주세요.');
       }
     }
 
@@ -2427,7 +2401,6 @@
     }
 
     async function openGuideSlides() {
-      // 깃허브 저장소에 업로드된 슬라이드 파일명 자동 탐지 (google_slide.html, google_slide 등)
       const candidateUrls = [
         './google_slide.html',
         './google_slide',
@@ -2443,7 +2416,6 @@
           }
         } catch (e) {}
       }
-      // 직접 열기 기본 폴백
       window.open('./google_slide.html', '_blank');
     }
 
@@ -2453,7 +2425,7 @@
         await fetch(gasApiUrl, {
           method: 'POST',
           mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
             action: 'saveConsentLog',
             userType: '정규봉사위원',
@@ -2515,7 +2487,6 @@
       bindEnter('cfgOrgNameInput', saveBasicSettingsFromUI);
       bindEnter('newMemberPhoneInput', addNewMemberFromUI);
 
-      // Escape 키 감지 시 관리자 로그인 창 안전 닫힘 & 대문 롤백 가드
       window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
           const adminModal = document.getElementById('adminLoginModal');
