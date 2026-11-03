@@ -434,6 +434,22 @@
           </button>
         </div>
 
+        <!-- 🌟 [신설] 내 구글 시트 확인하기 (스프레드시트 원본 바로가기) -->
+        <div id="connectedSheetCard" class="p-4 rounded-xl bg-emerald-50/50 border border-emerald-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div class="space-y-0.5">
+            <div class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">연동 시트 바로가기</div>
+            <div class="font-bold text-xs text-slate-900 flex items-center space-x-1.5">
+              <i class="fa-solid fa-table-cells text-emerald-600"></i>
+              <span>내 구글 스프레드시트 확인하기</span>
+            </div>
+            <p id="connectedSheetStatusText" class="text-[11px] text-slate-500">연동된 구글 스프레드시트 원본 문서를 새 창에서 열어 확인합니다.</p>
+          </div>
+          <button type="button" onclick="openConnectedGoogleSheet()" class="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs shrink-0 flex items-center justify-center space-x-1.5">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+            <span>내 구글 시트 열기</span>
+          </button>
+        </div>
+
         <!-- 로컬 저장소 청소 도구 (로컬 고착 박멸) -->
         <div class="p-4 rounded-xl bg-rose-50/60 border border-rose-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div>
@@ -888,6 +904,7 @@
     let adminId = 'admin';
     let adminPassword = 'admin1234';
     let gasApiUrl = '';
+    let connectedSpreadsheetUrl = '';
     let cycleType = '2주';
     let cycleBaseDate = '2026-03-02';
     let cycleBaseWeek = 1;
@@ -969,6 +986,7 @@
       adminId = safeStorage.getItem('lib_custom_admin_id') || adminId;
       adminPassword = safeStorage.getItem('lib_custom_admin_pw') || adminPassword;
       gasApiUrl = safeStorage.getItem('lib_gas_url') || gasApiUrl;
+      connectedSpreadsheetUrl = safeStorage.getItem('lib_spreadsheet_url') || '';
       cycleType = safeStorage.getItem('lib_cycle_type') || cycleType;
       noticeMemo = safeStorage.getItem('lib_notice_memo') || noticeMemo;
       myVolunteerName = safeStorage.getItem('lib_my_name') || '';
@@ -2157,6 +2175,10 @@
         const data = await resp.json();
 
         if (data.status === 'success') {
+          if (data.spreadsheetUrl) {
+            connectedSpreadsheetUrl = data.spreadsheetUrl;
+            safeStorage.setItem('lib_spreadsheet_url', connectedSpreadsheetUrl);
+          }
           if (data.libraryName) orgName = data.libraryName;
           if (data.adminId) adminId = String(data.adminId).trim().toLowerCase();
           if (data.adminPassword) adminPassword = data.adminPassword;
@@ -2211,7 +2233,9 @@
 
       if (!val) {
         gasApiUrl = '';
+        connectedSpreadsheetUrl = '';
         safeStorage.removeItem('lib_gas_url');
+        safeStorage.removeItem('lib_spreadsheet_url');
         // 연동 해제 시 이전 클라우드 캐시도 깨끗이 비워 혼선 차단
         safeStorage.removeItem('lib_cache_attendance');
         safeStorage.removeItem('lib_cache_overrides');
@@ -2237,6 +2261,31 @@
       safeStorage.setItem('lib_gas_url', gasApiUrl);
       showToast('구글 웹앱 URL이 저장되었습니다. 연동을 테스트합니다.');
       fetchGasData();
+    }
+
+    function updateConnectedSheetUI() {
+      const textEl = document.getElementById('connectedSheetStatusText');
+      if (!textEl) return;
+      if (connectedSpreadsheetUrl) {
+        textEl.innerHTML = `<span class="text-emerald-700 font-semibold">🟢 연결됨:</span> <span class="font-mono text-[10px] text-slate-600 truncate max-w-[260px] inline-block align-bottom">${connectedSpreadsheetUrl}</span>`;
+      } else if (gasApiUrl) {
+        textEl.textContent = '웹 앱 연동 상태 확인 중... (연결 시 주소가 자동으로 표시됩니다)';
+      } else {
+        textEl.textContent = '구글 시트가 아직 연동되지 않았습니다. STEP 04에서 URL을 먼저 등록해 주세요.';
+      }
+    }
+
+    function openConnectedGoogleSheet() {
+      if (connectedSpreadsheetUrl) {
+        window.open(connectedSpreadsheetUrl, '_blank');
+      } else if (gasApiUrl) {
+        showToast('연동된 시트 주소를 확인 중입니다. 잠시 후 다시 시도해 주세요.');
+        fetchGasData().then(() => {
+          if (connectedSpreadsheetUrl) window.open(connectedSpreadsheetUrl, '_blank');
+        });
+      } else {
+        showToast('먼저 STEP 04에서 웹 앱 URL을 등록하고 연동 저장해 주세요.');
+      }
     }
 
     // -------------------------------------------------------------
@@ -2388,6 +2437,7 @@
       renderMembersTable();
       updateMyVolunteerSelect();
       renderStatsTable();
+      updateConnectedSheetUI();
     }
 
     function setupKeyboardShortcuts() {
