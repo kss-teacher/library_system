@@ -397,14 +397,14 @@
             <div class="text-[11px] text-slate-500 mt-0.5">Apps Script 코드 1초 복사</div>
           </button>
 
-          <a href="./guide_slides.html" target="_blank" class="p-3 rounded-xl border border-amber-200 hover:bg-amber-50/50 bg-amber-50/20 text-left transition-colors block">
+          <button type="button" onclick="openGuideSlides()" class="p-3 rounded-xl border border-amber-200 hover:bg-amber-50/50 bg-amber-50/20 text-left transition-colors block w-full">
             <div class="text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-0.5">STEP 03</div>
             <div class="font-bold text-xs text-slate-800 flex items-center justify-between">
               <span>8장 슬라이드 설명서</span>
               <i class="fa-solid fa-chalkboard-user text-amber-500 text-[11px]"></i>
             </div>
             <div class="text-[11px] text-slate-500 mt-0.5">배포 가이드 새 탭 보기</div>
-          </a>
+          </button>
         </div>
 
         <!-- STEP 04. 웹앱 URL 입력 및 저장 -->
@@ -836,10 +836,10 @@
       </div>
 
       <div class="pt-2">
-        <a href="./guide_slides.html" target="_blank" class="w-full py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-xl text-xs font-bold border border-amber-200 flex items-center justify-center space-x-1.5 transition-colors">
+        <button type="button" onclick="openGuideSlides()" class="w-full py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-xl text-xs font-bold border border-amber-200 flex items-center justify-center space-x-1.5 transition-colors">
           <i class="fa-solid fa-chalkboard-user"></i>
           <span>8장 연동방법 프레젠테이션 슬라이드 보기</span>
-        </a>
+        </button>
       </div>
     </div>
   </div>
@@ -2319,6 +2319,27 @@
         window.open('./google_apps_script_code.js', '_blank');
         showToast('새 탭에서 열린 스크립트 코드를 전체 복사(Ctrl+A)하세요.');
       }
+    }
+
+    async function openGuideSlides() {
+      // 깃허브 저장소에 업로드된 슬라이드 파일명 자동 탐지 (google_slide.html, google_slide 등)
+      const candidateUrls = [
+        './google_slide.html',
+        './google_slide',
+        './guide_slides.html',
+        './ggumbit_apps_script_guide_slides.html'
+      ];
+      for (const url of candidateUrls) {
+        try {
+          const resp = await fetch(url, { method: 'HEAD' });
+          if (resp.ok) {
+            window.open(url, '_blank');
+            return;
+          }
+        } catch (e) {}
+      }
+      // 직접 열기 기본 폴백
+      window.open('./google_slide.html', '_blank');
     }
 
     async function logConsentToGas(userName, phoneLast4) {
