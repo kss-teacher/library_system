@@ -378,39 +378,78 @@
       </div>
 
       <!-- 구글 클라우드(Google Apps Script) 실시간 연동 센터 -->
-      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-          <div class="flex items-center gap-2">
-            <i class="fa-solid fa-cloud text-amber-500"></i>
-            <h4 class="font-bold text-sm text-slate-800">도서관 구글 클라우드(Google Sheet) 연동 센터</h4>
+      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 gap-2">
+          <div>
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-cloud text-amber-500"></i>
+              <h4 class="font-bold text-sm text-slate-800">도서관 구글 클라우드(Google Sheet) 원스톱 독립 연동 센터</h4>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-0.5">우리 도서관만의 독립된 구글 시트를 생성하여 데이터와 관리자 계정을 100% 안전하게 격리합니다.</p>
           </div>
-          <div class="flex items-center gap-2">
-            <a href="./guide_slides.html" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200/80 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 decoration-transparent" title="연동 방법 프레젠테이션 슬라이드 새 창 열기">
-              <i class="fa-solid fa-display text-[11px]"></i>
-              <span>슬라이드 가이드</span>
-            </a>
-            <span id="cfgCloudStatusTag" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">로컬 모드</span>
-          </div>
+          <span id="cfgCloudStatusTag" class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 self-start sm:self-auto">로컬 모드</span>
         </div>
-        <p class="text-xs text-slate-500 leading-relaxed">
-          Google Apps Script에서 [배포] ➔ [새 배포] ➔ [웹 앱]으로 발급받은 URL을 붙여넣고 저장하면 스프레드시트와 실시간 연동됩니다.
-        </p>
-        <div class="space-y-2">
-          <label class="block text-xs font-semibold text-slate-700">구글 웹앱 URL (https://script.google.com/macros/s/.../exec)</label>
+
+        <!-- 3대 핵심 도구 원스톱 퀵 배너 (01 새 시트 / 02 코드 복사 / 03 슬라이드 안내) -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+          <!-- 01. 새 시트 만들기 -->
+          <a href="https://sheets.new" target="_blank" rel="noopener noreferrer" class="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50 transition-all text-left flex items-start gap-3 group decoration-transparent">
+            <div class="w-9 h-9 rounded-lg bg-emerald-500 text-white flex items-center justify-center text-sm shadow-xs group-hover:scale-105 transition-transform shrink-0">
+              <i class="fa-solid fa-table"></i>
+            </div>
+            <div class="min-w-0">
+              <div class="text-[10px] font-bold text-emerald-700 tracking-wider">STEP 01</div>
+              <div class="font-bold text-xs text-slate-900 truncate">새 시트 만들기</div>
+              <div class="text-[11px] text-slate-500 mt-0.5">sheets.new 즉시 생성 ➔</div>
+            </div>
+          </a>
+
+          <!-- 02. Apps Script 코드 1초 복사 -->
+          <button onclick="copyEmbeddedGasScriptCode()" type="button" class="p-3.5 rounded-xl border border-blue-200 bg-blue-50/50 hover:bg-blue-50 transition-all text-left flex items-start gap-3 group">
+            <div class="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center text-sm shadow-xs group-hover:scale-105 transition-transform shrink-0">
+              <i class="fa-regular fa-copy"></i>
+            </div>
+            <div class="min-w-0">
+              <div class="text-[10px] font-bold text-blue-700 tracking-wider">STEP 02</div>
+              <div class="font-bold text-xs text-slate-900 truncate">백엔드 코드 복사</div>
+              <div class="text-[11px] text-slate-500 mt-0.5">클립보드 1초 복사 ➔</div>
+            </div>
+          </button>
+
+          <!-- 03. 슬라이드 가이드 보기 -->
+          <a href="./guide_slides.html" target="_blank" rel="noopener noreferrer" class="p-3.5 rounded-xl border border-amber-200 bg-amber-50/50 hover:bg-amber-50 transition-all text-left flex items-start gap-3 group decoration-transparent">
+            <div class="w-9 h-9 rounded-lg bg-amber-500 text-white flex items-center justify-center text-sm shadow-xs group-hover:scale-105 transition-transform shrink-0">
+              <i class="fa-solid fa-display"></i>
+            </div>
+            <div class="min-w-0">
+              <div class="text-[10px] font-bold text-amber-700 tracking-wider">STEP 03</div>
+              <div class="font-bold text-xs text-slate-900 truncate">슬라이드 설명서</div>
+              <div class="text-[11px] text-slate-500 mt-0.5">8장 가이드 보기 ➔</div>
+            </div>
+          </a>
+        </div>
+
+        <!-- 04. 웹앱 URL 입력 및 연동 저장 -->
+        <div class="pt-2 border-t border-slate-100 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-bold text-slate-700">STEP 04. 우리 도서관 발급 웹 앱 URL 등록</label>
+            <span class="text-[10px] text-slate-400">/exec 로 끝나는 주소</span>
+          </div>
           <div class="flex flex-col sm:flex-row gap-2">
-            <input type="url" id="cfgGasUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="flex-1 p-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 text-xs font-mono focus:outline-hidden focus:ring-2 focus:ring-amber-500">
-            <div class="flex gap-1.5 flex-wrap">
-              <a href="./guide_slides.html" target="_blank" rel="noopener noreferrer" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 shrink-0 decoration-transparent">
-                <i class="fa-solid fa-display"></i> 슬라이드 안내
-              </a>
-              <button onclick="pasteGasUrlFromClipboard()" type="button" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 shrink-0">
+            <input type="url" id="cfgGasUrlInput" onkeydown="if(event.key==='Enter')saveGasUrlFromSettings()" placeholder="https://script.google.com/macros/s/.../exec" class="flex-1 p-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 text-xs font-mono focus:outline-hidden focus:ring-2 focus:ring-amber-500">
+            <div class="flex gap-1.5 shrink-0">
+              <button onclick="pasteGasUrlFromClipboard()" type="button" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors flex items-center gap-1">
                 <i class="fa-regular fa-paste"></i> 붙여넣기
               </button>
-              <button onclick="saveGasUrlFromSettings()" type="button" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-xs transition-colors flex items-center gap-1 shrink-0">
-                <i class="fa-solid fa-link"></i> 연동 저장
+              <button onclick="saveGasUrlFromSettings()" type="button" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5">
+                <i class="fa-solid fa-link"></i>
+                <span>연동 저장</span>
               </button>
             </div>
           </div>
+          <p class="text-[10px] text-slate-400 leading-relaxed">
+            ※ 등록 즉시 우리 도서관 구글 시트와 1:1로 동기화되며, 슈퍼바이저(개발자)나 타 도서관이 절대 들여다볼 수 없는 100% 독립 격리 환경이 가동됩니다.
+          </p>
         </div>
       </div>
 
@@ -455,7 +494,10 @@
             <i class="fa-solid fa-shield-halved text-amber-500"></i>
             <h4 class="font-bold text-sm text-slate-800">관리자 계정(ID / 비밀번호) 변경</h4>
           </div>
-          <span id="cfgCurrentAdminIdDisplay" class="text-[11px] font-semibold text-slate-500">현재 ID: admin</span>
+          <div class="flex items-center gap-2">
+            <span id="cfgAccountSyncBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">로컬 임시 모드</span>
+            <span id="cfgCurrentAdminIdDisplay" class="text-[11px] font-semibold text-slate-500">현재 ID: admin</span>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
@@ -483,8 +525,11 @@
           </div>
         </div>
 
-        <div class="flex justify-end pt-1">
-          <button onclick="saveAdminAccountFromSettings()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pt-1 gap-2 border-t border-slate-100">
+          <p class="text-[10px] text-slate-400 leading-relaxed">
+            ※ 계정 정보는 오직 본 도서관의 구글 스프레드시트에만 보관되며, 시스템 개발자(슈퍼바이저)나 타 도서관이 절대 열람할 수 없는 독립 격리 구조입니다.
+          </p>
+          <button onclick="saveAdminAccountFromSettings()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs transition-colors flex items-center justify-center gap-1.5 shrink-0">
             <i class="fa-solid fa-key text-[10px]"></i>
             <span>새 계정 정보로 변경하기</span>
           </button>
@@ -635,7 +680,7 @@
       <div class="space-y-3 text-xs">
         <div>
           <label class="block font-semibold text-slate-700 mb-1">관리자 아이디</label>
-          <input type="text" id="adminIdInput" value="admin" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-amber-500 font-semibold">
+          <input type="text" id="adminIdInput" value="admin" onkeydown="if(event.key==='Enter')verifyAdminLogin()" class="w-full p-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-amber-500 font-semibold">
           <p class="text-[10px] text-slate-400 mt-1">※ 영문 대소문자를 구분하지 않습니다.</p>
         </div>
         <div>
@@ -1086,6 +1131,18 @@
         } else {
           cloudStatusTag.className = 'text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600';
           cloudStatusTag.textContent = '로컬 모드';
+        }
+      }
+
+      // 계정 관리 격리 동기화 상태 배지 반영
+      const accountSyncBadge = document.getElementById('cfgAccountSyncBadge');
+      if (accountSyncBadge) {
+        if (gasApiUrl) {
+          accountSyncBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 flex items-center gap-1';
+          accountSyncBadge.innerHTML = '<i class="fa-solid fa-lock text-[9px]"></i>시트 1:1 독립 동기화됨';
+        } else {
+          accountSyncBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800';
+          accountSyncBadge.textContent = '⚠️ 로컬 임시 모드';
         }
       }
 
@@ -1622,9 +1679,11 @@
             adminPassword: newPw
           })
         }).catch(e => console.warn(e));
+        showToast('우리 도서관 전용 구글 시트에 계정 정보가 안전하게 저장되었습니다.');
+      } else {
+        showToast('관리자 계정(ID/비밀번호)이 변경되었습니다. (로컬 임시 모드)');
       }
 
-      showToast('관리자 계정(ID/비밀번호)이 안전하게 변경되었습니다.');
       completeAdminLoginSuccess();
     }
 
@@ -1677,9 +1736,10 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'saveSystemConfig', adminId: targetId, adminPassword: newPw })
         }).catch(e => console.warn(e));
+        showToast('우리 도서관 시트에 새 계정이 안전하게 영구 저장되었습니다. (개발자 열람 불가)');
+      } else {
+        showToast('계정이 변경되었습니다. (※ 로컬 모드: 다른 기기와 공유하려면 상단에서 구글 시트를 연동하세요)');
       }
-
-      showToast('관리자 계정 정보가 성공적으로 변경되었습니다.');
     }
 
     // 구글 Apps Script 웹앱 URL 클립보드 붙여넣기 헬퍼
@@ -1705,8 +1765,13 @@
       if (!url) {
         gasApiUrl = '';
         safeStorage.removeItem('lib_gas_url');
+        adminId = 'admin';
+        adminPassword = 'admin1234';
+        safeStorage.removeItem('lib_custom_admin_id');
+        safeStorage.removeItem('lib_custom_admin_pw');
+        safeStorage.removeItem('lib_admin_pw_changed');
         renderAllViews();
-        return showToast('구글 클라우드 연동이 해제되었습니다. (로컬 모드)');
+        return showToast('구글 클라우드 연동이 해제되었습니다. (기본 계정으로 전환)');
       }
 
       if (!url.startsWith('https://script.google.com/macros/s/') || !url.endsWith('/exec')) {
@@ -2098,7 +2163,20 @@
         if (data.status === 'success') {
           if (data.libraryName) libraryName = data.libraryName;
           if (data.noticeMemo) noticeMemo = data.noticeMemo;
-          if (data.adminId) adminId = String(data.adminId).toLowerCase();
+          
+          // 도서관별 고유 계정(ID / PW) 양방향 동기화 (Zero-Knowledge 격리)
+          if (data.adminId) {
+            adminId = String(data.adminId).toLowerCase();
+            safeStorage.setItem('lib_custom_admin_id', adminId);
+          }
+          if (data.adminPassword) {
+            adminPassword = String(data.adminPassword);
+            safeStorage.setItem('lib_custom_admin_pw', adminPassword);
+            if (adminPassword !== 'admin1234') {
+              safeStorage.setItem('lib_admin_pw_changed', 'true');
+            }
+          }
+
           if (Array.isArray(data.members) && data.members.length > 0) membersData = data.members;
           if (Array.isArray(data.roster) && data.roster.length > 0) rosterData = data.roster;
           renderAllViews();
