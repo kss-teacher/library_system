@@ -727,6 +727,8 @@ function doPost(e) {
       if (postData.adminPassword) updateKey('adminPassword', postData.adminPassword);
       if (postData.adminEmail !== undefined) updateKey('adminEmail', postData.adminEmail);
       if (postData.cycleType) updateKey('cycleType', postData.cycleType);
+      if (postData.cycleBaseDate) updateKey('cycleBaseDate', postData.cycleBaseDate);
+      if (postData.cycleBaseWeek !== undefined) updateKey('cycleBaseWeek', String(postData.cycleBaseWeek));
 
       return ContentService.createTextOutput(JSON.stringify({ status: 'success' })).setMimeType(ContentService.MimeType.JSON);
     }
