@@ -687,6 +687,8 @@ function doPost(e) {
       if (postData.cycleType) updateKey('cycleType', postData.cycleType);
 
       return ContentService.createTextOutput(JSON.stringify({ status: 'success' })).setMimeType(ContentService.MimeType.JSON);
+    }
+
     // 4. 대타 지정 및 해제 로그 (관리자 직권 교체 사유 연동 강화)
     if (action === 'setOverride') {
       let logSheet = ss.getSheetByName('출석 및 변경 기록') || ss.insertSheet('출석 및 변경 기록');
