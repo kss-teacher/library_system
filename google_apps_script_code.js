@@ -548,7 +548,8 @@ function doGet(e) {
       for (let i = 1; i < logData.length; i++) {
         const k = String(logData[i][0] || '').trim();
         const ovr = String(logData[i][4] || '').trim();
-        if (k && ovr) overrides[k] = { name: ovr };
+        const rsn = String(logData[i][5] || '').trim();
+        if (k && ovr) overrides[k] = { name: ovr, reason: rsn };
       }
     }
 
@@ -686,9 +687,7 @@ function doPost(e) {
       if (postData.cycleType) updateKey('cycleType', postData.cycleType);
 
       return ContentService.createTextOutput(JSON.stringify({ status: 'success' })).setMimeType(ContentService.MimeType.JSON);
-    }
-
-    // 4. 대타 지정 및 해제 로그
+    // 4. 대타 지정 및 해제 로그 (관리자 직권 교체 사유 연동 강화)
     if (action === 'setOverride') {
       let logSheet = ss.getSheetByName('출석 및 변경 기록') || ss.insertSheet('출석 및 변경 기록');
       const data = logSheet.getDataRange().getDisplayValues();
@@ -705,11 +704,13 @@ function doPost(e) {
         const tm = parts[1] || '';
         const role = parts[2] === '1' ? '봉사위원 1' : '봉사위원 2';
         const nowStr = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss');
+        const rsn = postData.reason || '대타/직권 교체';
         if (foundRow > 0) {
           logSheet.getRange(foundRow, 5).setValue(postData.name);
+          logSheet.getRange(foundRow, 6).setValue(rsn);
           logSheet.getRange(foundRow, 7).setValue(nowStr);
         } else {
-          logSheet.appendRow([postData.slotKey, dt, tm, role, postData.name, '대타 지정', nowStr]);
+          logSheet.appendRow([postData.slotKey, dt, tm, role, postData.name, rsn, nowStr]);
         }
       } else {
         if (foundRow > 0) logSheet.deleteRow(foundRow);
