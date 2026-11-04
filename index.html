@@ -620,6 +620,68 @@
           </div>
         </div>
 
+        <!-- [신설] 순번 기준 주차 재정렬 (캘리브레이션) 패널 -->
+        <div class="p-4 rounded-xl bg-amber-50/50 border border-amber-200/80 space-y-3 mt-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs shadow-2xs">
+                <i class="fa-solid fa-calendar-week"></i>
+              </span>
+              <div>
+                <h5 class="font-bold text-xs sm:text-sm text-slate-900">순번 기준 주차 재정렬 (주차 순환 캘리브레이션)</h5>
+                <p class="text-[11px] text-slate-500">연휴·방학 등으로 주차가 꼬였을 때, 기존 배정표는 유지하면서 기준 일자와 주차를 바로잡습니다.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div class="space-y-1">
+              <label class="block text-xs font-bold text-slate-700">기준 일자 선택 (과거/현재/미래)</label>
+              <input type="date" id="cfgCycleBaseDateInput" onchange="updateCycleCalibrationPreview()" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white font-medium focus:ring-2 focus:ring-amber-500/20 focus:outline-none">
+              <p class="text-[10px] text-slate-400">지정한 날짜가 속한 주를 기준으로 순환 주차가 다시 줄을 섭니다.</p>
+            </div>
+
+            <div class="space-y-1">
+              <label class="block text-xs font-bold text-slate-700">해당 일자의 순번 주차 지정</label>
+              <select id="cfgCycleBaseWeekSelect" onchange="updateCycleCalibrationPreview()" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white font-medium focus:ring-2 focus:ring-amber-500/20 focus:outline-none">
+                <option value="1">1주차 팀 활동</option>
+                <option value="2">2주차 팀 활동</option>
+                <option value="3">3주차 팀 활동 (1달 순환 시)</option>
+                <option value="4">4주차 팀 활동 (1달 순환 시)</option>
+              </select>
+              <p class="text-[10px] text-slate-400">해당 기준 주에 활동할 순번 주차를 선택하세요.</p>
+            </div>
+          </div>
+
+          <div class="p-2.5 rounded-lg bg-white/80 border border-amber-200/60 text-[11px] text-slate-600 flex items-center justify-between flex-wrap gap-2">
+            <span id="cycleCalibrationPreviewText" class="truncate max-w-[280px] sm:max-w-md font-medium text-slate-700">
+              💡 기준일 주차를 재정렬하면 모든 캘린더와 슬롯에 즉시 실시간 반영됩니다.
+            </span>
+            <button type="button" onclick="setCycleCalibrationToCurrentWeek()" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-[11px] font-bold shrink-0 transition-colors">
+              이번 주로 맞추기
+            </button>
+          </div>
+        </div>
+
+        <!-- [신설] 신학기 설정 (봉사단 안전 초기화 패널) -->
+        <div class="p-4 rounded-xl bg-rose-50/50 border border-rose-200/80 space-y-3 mt-3">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div class="flex items-start space-x-2.5">
+              <span class="w-7 h-7 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center text-xs shadow-2xs shrink-0 mt-0.5">
+                <i class="fa-solid fa-graduation-cap"></i>
+              </span>
+              <div>
+                <h5 class="font-bold text-xs sm:text-sm text-slate-900">신학기 설정 (봉사단 리셋 & 새 학년 맞이)</h5>
+                <p class="text-[11px] text-slate-500 leading-snug">새 학기 시작 시 기존 명부·순번·출석 기록을 안전하게 백업 및 초기화하고 새로운 봉사단을 맞이합니다.</p>
+              </div>
+            </div>
+            <button type="button" onclick="openNewSemesterResetModal()" class="w-full sm:w-auto px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs shrink-0 flex items-center justify-center space-x-1.5">
+              <i class="fa-solid fa-rotate-right"></i>
+              <span>신학기 리셋 마법사</span>
+            </button>
+          </div>
+        </div>
+
         <div class="flex justify-end pt-2">
           <button onclick="saveBasicSettingsFromUI()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold shadow-xs transition-colors">
             기본 설정 저장
@@ -743,7 +805,7 @@
 
       <!-- 하단 은은한 관리자 통로 -->
       <div class="pt-2 flex items-center justify-between text-[11px] text-slate-400 border-t border-white/10">
-        <span>꿈빛 v29.1</span>
+        <span>꿈빛 v30.0</span>
         <button onclick="openModal('adminLoginModal')" class="hover:text-amber-300 transition-colors flex items-center space-x-1">
           <i class="fa-solid fa-lock text-[10px]"></i>
           <span>사서교사 / 관리자</span>
@@ -1008,6 +1070,95 @@
     </div>
   </div>
 
+  <!-- 7. 신학기 봉사단 안전 초기화 마법사 모달 -->
+  <div id="newSemesterResetModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-lg rounded-2xl p-6 border border-slate-200 shadow-2xl space-y-4 text-slate-800 max-h-[90vh] flex flex-col overflow-y-auto">
+      
+      <!-- 상단 헤더 -->
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-2.5">
+          <span class="w-8 h-8 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center text-sm shadow-2xs">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </span>
+          <div>
+            <h3 class="font-bold text-base text-slate-900">신학기 봉사단 안전 초기화 마법사</h3>
+            <p class="text-xs text-slate-500">새 학년도 봉사단 출범을 위해 이전 활동 데이터를 안전하게 정리합니다.</p>
+          </div>
+        </div>
+        <button onclick="closeModal('newSemesterResetModal')" class="text-slate-400 hover:text-slate-600 text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- 1. [필수 권고] 사전 백업 안내 배너 -->
+      <div class="p-3.5 rounded-xl bg-amber-50 border border-amber-200 space-y-2 text-xs text-amber-900">
+        <div class="font-extrabold flex items-center space-x-1.5 text-amber-800">
+          <i class="fa-solid fa-triangle-exclamation text-amber-600"></i>
+          <span>[필수 권고] 초기화 전 구글 시트 백업본을 반드시 만들어 두세요!</span>
+        </div>
+        <p class="text-[11px] text-amber-800/90 leading-relaxed">
+          초기화가 진행되면 이전 학년도의 출석 확인 및 봉사 활동 기록이 영구 삭제됩니다. 
+          연결된 구글 스프레드시트 상단 메뉴에서 <b>[파일] ➔ [사본 만들기]</b>를 눌러 <b>'이전학년도_봉사활동기록_백업'</b>으로 사본을 보관해 두시는 것을 강력히 권장합니다.
+        </p>
+        <div class="pt-1 flex justify-end">
+          <button type="button" onclick="openConnectedGoogleSheet()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[11px] font-bold shadow-2xs flex items-center space-x-1 transition-colors">
+            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+            <span>내 구글 시트 열기 (백업하러 가기)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. 초기화 대상 선택 체크박스 -->
+      <div class="space-y-2 text-xs">
+        <label class="block font-bold text-slate-800">초기화 대상 범위 설정</label>
+        
+        <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2">
+          <label class="flex items-start space-x-2.5 cursor-pointer">
+            <input type="checkbox" id="resetLocalAppCheck" checked disabled class="mt-0.5 rounded text-rose-600 focus:ring-0">
+            <div>
+              <span class="font-bold text-slate-800">[필수] 기기 웹앱 봉사단 데이터 초기화</span>
+              <p class="text-[11px] text-slate-500">등록된 위원 명부, 주차별 순번 배정, 당일 출석 확인(O/X), 대타 요청/수락 내역을 모두 비웁니다.</p>
+            </div>
+          </label>
+
+          <div class="border-t border-slate-200/70 pt-2">
+            <label class="flex items-start space-x-2.5 cursor-pointer">
+              <input type="checkbox" id="resetGoogleSheetCheck" class="mt-0.5 rounded text-rose-600 focus:ring-0" onchange="toggleResetSheetWarning(this.checked)">
+              <div>
+                <span class="font-bold text-rose-700">연결된 내 구글 스프레드시트 탭도 함께 리셋</span>
+                <p class="text-[11px] text-slate-500">내 구글 시트의 [봉사자 순번], [봉사자 정보], [출석부], [출석 및 변경 기록] 탭 내용도 새 학년을 위해 깨끗한 공백으로 리셋합니다.</p>
+              </div>
+            </label>
+            <div id="resetSheetWarningText" class="hidden mt-1.5 p-2 rounded-lg bg-rose-50 border border-rose-200 text-[11px] text-rose-800 font-semibold">
+              ⚠️ 주의: 구글 시트의 출석부와 명부 원본 데이터가 모두 비워집니다. 사본을 미리 만들어 두셨는지 다시 한번 확인하세요!
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. 오작동 방지 '초기화' 2중 안전 잠금 장치 -->
+      <div class="space-y-1.5 text-xs">
+        <label class="block font-bold text-slate-800">
+          오작동 방지 안전 확인 (<span class="text-rose-600 font-extrabold">'초기화'</span>를 직접 타이핑하세요)
+        </label>
+        <input type="text" id="resetKeywordInput" oninput="validateResetKeywordLive(this.value)" placeholder="'초기화' 세 글자 입력" class="w-full p-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/30 text-center font-bold tracking-widest text-slate-900 bg-white">
+        <p class="text-[10px] text-slate-400 text-center">정확히 '초기화'를 입력해야 아래 실행 버튼이 활성화됩니다.</p>
+      </div>
+
+      <!-- 하단 버튼 -->
+      <div class="flex space-x-2 pt-2 border-t border-slate-100">
+        <button type="button" onclick="closeModal('newSemesterResetModal')" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-colors">
+          취소
+        </button>
+        <button type="button" id="btnExecuteNewSemesterReset" disabled onclick="executeNewSemesterReset()" class="flex-1 py-2.5 bg-slate-300 text-slate-500 rounded-xl text-xs font-extrabold transition-all shadow-xs cursor-not-allowed flex items-center justify-center space-x-1.5">
+          <i class="fa-solid fa-triangle-exclamation text-[11px]"></i>
+          <span>신학기 안전 초기화 실행</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- 토스트 알림창 -->
   <div id="toastBox" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 bg-slate-900/90 text-white text-xs font-semibold rounded-2xl shadow-xl transition-all duration-300 opacity-0 pointer-events-none max-w-sm text-center">
     알림 내용
@@ -1146,6 +1297,9 @@
       gasApiUrl = safeStorage.getItem('lib_gas_url') || gasApiUrl;
       connectedSpreadsheetUrl = safeStorage.getItem('lib_spreadsheet_url') || '';
       cycleType = safeStorage.getItem('lib_cycle_type') || cycleType;
+      cycleBaseDate = safeStorage.getItem('lib_cycle_base_date') || cycleBaseDate;
+      const savedBaseWeek = safeStorage.getItem('lib_cycle_base_week');
+      if (savedBaseWeek) cycleBaseWeek = parseInt(savedBaseWeek, 10) || 1;
       noticeMemo = safeStorage.getItem('lib_notice_memo') || noticeMemo;
       myVolunteerName = safeStorage.getItem('lib_my_name') || '';
 
@@ -3122,9 +3276,31 @@
     // -------------------------------------------------------------
     // [17] 기본 운영 설정 & 공지사항 저장
     // -------------------------------------------------------------
+    function setCycleCalibrationToCurrentWeek() {
+      const now = new Date();
+      const input = document.getElementById('cfgCycleBaseDateInput');
+      if (input) {
+        input.value = formatDate(now);
+        updateCycleCalibrationPreview();
+      }
+    }
+
+    function updateCycleCalibrationPreview() {
+      const baseDateInput = document.getElementById('cfgCycleBaseDateInput');
+      const baseWeekSelect = document.getElementById('cfgCycleBaseWeekSelect');
+      const previewEl = document.getElementById('cycleCalibrationPreviewText');
+      if (!baseDateInput || !baseWeekSelect || !previewEl) return;
+
+      const dVal = baseDateInput.value || cycleBaseDate;
+      const wVal = baseWeekSelect.value || cycleBaseWeek;
+      previewEl.innerHTML = `💡 <b>${dVal}</b>이 속한 주를 <b>${wVal}주차</b>로 설정하여 전역 주차 순환이 정렬됩니다.`;
+    }
+
     function saveBasicSettingsFromUI() {
       const orgInput = document.getElementById('cfgOrgNameInput');
       const cycleSelect = document.getElementById('cfgCycleTypeSelect');
+      const baseDateInput = document.getElementById('cfgCycleBaseDateInput');
+      const baseWeekSelect = document.getElementById('cfgCycleBaseWeekSelect');
 
       if (orgInput && orgInput.value.trim()) {
         orgName = orgInput.value.trim();
@@ -3134,11 +3310,19 @@
         cycleType = cycleSelect.value;
         safeStorage.setItem('lib_cycle_type', cycleType);
       }
+      if (baseDateInput && baseDateInput.value) {
+        cycleBaseDate = baseDateInput.value;
+        safeStorage.setItem('lib_cycle_base_date', cycleBaseDate);
+      }
+      if (baseWeekSelect && baseWeekSelect.value) {
+        cycleBaseWeek = parseInt(baseWeekSelect.value, 10) || 1;
+        safeStorage.setItem('lib_cycle_base_week', cycleBaseWeek);
+      }
 
       document.getElementById('topBarOrgName').textContent = orgName;
       document.getElementById('coverOrgName').textContent = orgName;
 
-      showToast('도서관 기본 설정이 저장되었습니다.');
+      showToast('도서관 기본 설정 및 주차 순환 기준이 저장되었습니다.');
       renderAllViews();
 
       if (gasApiUrl) {
@@ -3149,9 +3333,105 @@
           body: JSON.stringify({
             action: 'saveSystemConfig',
             libraryName: orgName,
-            cycleType: cycleType
+            cycleType: cycleType,
+            cycleBaseDate: cycleBaseDate,
+            cycleBaseWeek: cycleBaseWeek
           })
         }).catch(() => {});
+      }
+    }
+
+    // -------------------------------------------------------------
+    // [17-1] 신학기 봉사단 안전 초기화 컨트롤러 (3중 가드 장착)
+    // -------------------------------------------------------------
+    function openNewSemesterResetModal() {
+      if (!isAdminLoggedIn) {
+        showToast('신학기 초기화는 사서 관리자 로그인이 필요합니다.');
+        openModal('adminLoginModal');
+        return;
+      }
+      const kwInput = document.getElementById('resetKeywordInput');
+      const sheetCheck = document.getElementById('resetGoogleSheetCheck');
+      const warnEl = document.getElementById('resetSheetWarningText');
+      const btn = document.getElementById('btnExecuteNewSemesterReset');
+
+      if (kwInput) kwInput.value = '';
+      if (sheetCheck) sheetCheck.checked = false;
+      if (warnEl) warnEl.classList.add('hidden');
+      if (btn) {
+        btn.disabled = true;
+        btn.className = 'flex-1 py-2.5 bg-slate-300 text-slate-500 rounded-xl text-xs font-extrabold transition-all shadow-xs cursor-not-allowed flex items-center justify-center space-x-1.5';
+      }
+      openModal('newSemesterResetModal');
+    }
+
+    function toggleResetSheetWarning(checked) {
+      const warnEl = document.getElementById('resetSheetWarningText');
+      if (warnEl) {
+        warnEl.classList.toggle('hidden', !checked);
+      }
+    }
+
+    function validateResetKeywordLive(val) {
+      const btn = document.getElementById('btnExecuteNewSemesterReset');
+      if (!btn) return;
+      if (val && val.trim() === '초기화') {
+        btn.disabled = false;
+        btn.className = 'flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-extrabold transition-all shadow-md cursor-pointer flex items-center justify-center space-x-1.5';
+      } else {
+        btn.disabled = true;
+        btn.className = 'flex-1 py-2.5 bg-slate-300 text-slate-500 rounded-xl text-xs font-extrabold transition-all shadow-xs cursor-not-allowed flex items-center justify-center space-x-1.5';
+      }
+    }
+
+    async function executeNewSemesterReset() {
+      const kwInput = document.getElementById('resetKeywordInput');
+      if (!kwInput || kwInput.value.trim() !== '초기화') {
+        showToast("'초기화'를 정확히 입력해 주세요.");
+        return;
+      }
+
+      const sheetCheck = document.getElementById('resetGoogleSheetCheck');
+      const includeGas = !!(sheetCheck && sheetCheck.checked);
+
+      // 1. 기기 앱 봉사단 데이터 초기화
+      membersData = [];
+      rosterData = [];
+      attendanceLog = {};
+      overrideLog = {};
+      myVolunteerName = '';
+
+      safeStorage.removeItem('lib_cache_members');
+      safeStorage.removeItem('lib_cache_roster');
+      safeStorage.removeItem('lib_cache_attendance');
+      safeStorage.removeItem('lib_cache_overrides');
+      safeStorage.removeItem('lib_my_name');
+      safeStorage.removeItem('lib_consent_volunteer');
+
+      initDefaultRosterIfEmpty();
+      renderAllViews();
+      closeModal('newSemesterResetModal');
+
+      if (includeGas && gasApiUrl) {
+        showToast('🌸 신학기 초기화 완료: 연결된 구글 시트 탭 초기화를 요청합니다...');
+        syncNewSemesterResetToGas();
+      } else {
+        showToast('🌸 신학기 봉사단 데이터가 안전하게 초기화되었습니다.');
+      }
+    }
+
+    async function syncNewSemesterResetToGas() {
+      if (!gasApiUrl) return;
+      try {
+        await fetch(gasApiUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ action: 'resetNewSemester' })
+        });
+        showToast('구글 시트 탭 초기화 원격 전송 완료');
+      } catch (e) {
+        console.warn('구글 시트 신학기 리셋 통신 지연:', e);
       }
     }
 
@@ -3355,7 +3635,13 @@
       try {
         const resp = await fetch(gasApiUrl, { signal: controller.signal });
         clearTimeout(timeoutId);
-        const data = await resp.json();
+
+        let data;
+        try {
+          data = await resp.json();
+        } catch (jsonErr) {
+          throw new Error('응답을 JSON 형식으로 해석할 수 없습니다 (권한 승인 대기 또는 오류 HTML 회신)');
+        }
 
         if (data.status === 'success') {
           if (data.spreadsheetUrl) {
@@ -3377,6 +3663,14 @@
           if (data.cycleType) {
             cycleType = data.cycleType;
             safeStorage.setItem('lib_cycle_type', cycleType);
+          }
+          if (data.cycleBaseDate) {
+            cycleBaseDate = data.cycleBaseDate;
+            safeStorage.setItem('lib_cycle_base_date', cycleBaseDate);
+          }
+          if (data.cycleBaseWeek) {
+            cycleBaseWeek = parseInt(data.cycleBaseWeek, 10) || 1;
+            safeStorage.setItem('lib_cycle_base_week', cycleBaseWeek);
           }
           if (data.noticeMemo) {
             noticeMemo = data.noticeMemo;
@@ -3430,6 +3724,10 @@
 
           renderAllViews();
           updateConnectedSheetUI(false, false);
+          showToast('구글 스프레드시트와 성공적으로 연결되었습니다!');
+        } else {
+          const errMsg = data.message || '알 수 없는 백엔드 응답 오류';
+          throw new Error(`백엔드 오류: ${errMsg}`);
         }
       } catch (err) {
         clearTimeout(timeoutId);
@@ -3438,7 +3736,7 @@
           badge.textContent = '⚠️ 연동 확인 필요';
           badge.className = 'text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-300';
         }
-        updateConnectedSheetUI(true, false);
+        updateConnectedSheetUI(true, false, err);
       }
     }
 
@@ -3477,19 +3775,72 @@
       fetchGasData();
     }
 
-    function updateConnectedSheetUI(isError = false, isLoading = false) {
+    function updateConnectedSheetUI(isError = false, isLoading = false, errObj = null) {
       const textEl = document.getElementById('connectedSheetStatusText');
+      const cardEl = document.getElementById('connectedSheetCard');
       if (!textEl) return;
 
-      if (connectedSpreadsheetUrl) {
+      if (connectedSpreadsheetUrl && !isError) {
+        if (cardEl) {
+          cardEl.className = 'p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200/90 flex flex-col sm:flex-row items-center justify-between gap-3 mt-1';
+        }
         textEl.innerHTML = `<span class="text-emerald-700 font-bold">🟢 시트 연결 성공:</span> <a href="${connectedSpreadsheetUrl}" target="_blank" class="font-mono text-[10px] text-emerald-600 hover:underline truncate max-w-[280px] inline-block align-bottom">${connectedSpreadsheetUrl}</a>`;
       } else if (isLoading) {
-        textEl.innerHTML = `<span class="text-amber-600 font-bold">🔄 구글 클라우드 응답 대기 중...</span> <span class="text-[10px] text-slate-500">(최초 기동 시 약 6~8초 소요될 수 있습니다)</span>`;
+        if (cardEl) {
+          cardEl.className = 'p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/90 flex flex-col sm:flex-row items-center justify-between gap-3 mt-1';
+        }
+        textEl.innerHTML = `<span class="text-amber-700 font-bold flex items-center gap-1.5"><i class="fa-solid fa-spinner animate-spin"></i><span>구글 클라우드 응답 대기 중...</span></span> <span class="text-[10px] text-slate-500">(최초 기동 시 서버 부팅에 약 6~10초 소요될 수 있습니다)</span>`;
       } else if (isError) {
-        textEl.innerHTML = `<span class="text-rose-600 font-bold">⚠️ 응답 지연/확인 필요:</span> <span class="text-[10px] text-slate-600">Apps Script [배포 관리]에서 [액세스 권한: 모든 사용자] 설정인지 확인해 주세요.</span>`;
+        if (cardEl) {
+          cardEl.className = 'p-3.5 rounded-xl bg-rose-50/80 border border-rose-200 flex flex-col sm:flex-row items-start justify-between gap-3 mt-1';
+        }
+        
+        let errDesc = '';
+        const rawMsg = errObj ? (errObj.message || String(errObj)) : '';
+        const isTimeout = (errObj && errObj.name === 'AbortError') || rawMsg.includes('aborted');
+
+        if (isTimeout) {
+          errDesc = `<span class="text-rose-700 font-bold block mb-1">⏱️ 구글 서버 응답 시간 초과 (15초 경과)</span>
+            <span class="text-[11px] text-slate-600 leading-relaxed block">구글 서버가 아직 기동(부팅) 중일 수 있습니다. <b>[다시 연결 시도]</b> 버튼을 한 번 더 눌러주세요.</span>`;
+        } else if (rawMsg.includes('백엔드 오류')) {
+          errDesc = `<span class="text-rose-700 font-bold block mb-1">🚨 구글 Apps Script 오류</span>
+            <span class="text-[11px] text-slate-600 leading-relaxed block">${rawMsg}</span>`;
+        } else {
+          errDesc = `
+            <div class="space-y-1">
+              <span class="text-rose-700 font-bold flex items-center gap-1">
+                <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
+                <span>통신 응답 없음 (Failed to fetch) - 아래 2가지를 1분 만에 점검해 주세요:</span>
+              </span>
+              <ul class="text-[11px] text-slate-600 list-disc list-inside space-y-0.5 pt-0.5 leading-snug">
+                <li><b>Apps Script [배포 관리] ➔ [새 버전] 재배포:</b> 직전 구문오류 수술 후 [새 버전]으로 배포하지 않았다면 이전 오류 버전이 유지됩니다. [배포 관리] ➔ [✏️편집] ➔ 버전: <b>[새 버전]</b>을 선택해 다시 배포해 주세요.</li>
+                <li><b>최초 권한 승인:</b> Apps Script 창 상단에서 <b>testSystem</b> 함수 선택 후 <b>[실행]</b>을 눌러 구글 계정 권한 검토(고급 ➔ 안전하지 않은 페이지로 이동 ➔ 허용)를 완료해 주세요.</li>
+                <li><b>배포 권한:</b> [액세스 권한: <b>모든 사용자</b>], [다음 사용자 권한으로 실행: <b>나(내 계정)</b>]인지 다시 확인해 주세요.</li>
+              </ul>
+            </div>
+          `;
+        }
+
+        textEl.innerHTML = `
+          <div class="w-full">
+            ${errDesc}
+            <div class="pt-2 flex items-center gap-2">
+              <button type="button" onclick="fetchGasData()" class="px-3 py-1 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-[11px] font-bold transition-all shadow-2xs flex items-center gap-1">
+                <i class="fa-solid fa-rotate text-[10px]"></i>
+                <span>🔄 다시 연결 시도</span>
+              </button>
+            </div>
+          </div>
+        `;
       } else if (gasApiUrl) {
-        textEl.innerHTML = `<span class="text-amber-600 font-semibold">🔄 시트 주소 수신 준비 중...</span> <span class="text-[10px] text-slate-500">연결된 스프레드시트 주소를 감지합니다.</span>`;
+        if (cardEl) {
+          cardEl.className = 'p-3.5 rounded-xl bg-slate-50 border border-slate-200/90 flex flex-col sm:flex-row items-center justify-between gap-3 mt-1';
+        }
+        textEl.innerHTML = `<span class="text-slate-700 font-semibold">🔄 시트 연결 대기 중...</span> <button type="button" onclick="fetchGasData()" class="ml-1 text-[11px] text-emerald-600 underline font-bold">지금 연결 시도</button>`;
       } else {
+        if (cardEl) {
+          cardEl.className = 'p-3.5 rounded-xl bg-slate-50 border border-slate-200/90 flex flex-col sm:flex-row items-center justify-between gap-3 mt-1';
+        }
         textEl.textContent = '웹 앱 URL을 등록하면 연결된 구글 시트 주소가 자동으로 감지되어 새 창으로 열 수 있습니다.';
       }
     }
@@ -3652,6 +4003,14 @@
       const cycleSelect = document.getElementById('cfgCycleTypeSelect');
       if (cycleSelect) cycleSelect.value = cycleType;
 
+      const baseDateInput = document.getElementById('cfgCycleBaseDateInput');
+      if (baseDateInput) baseDateInput.value = cycleBaseDate;
+
+      const baseWeekSelect = document.getElementById('cfgCycleBaseWeekSelect');
+      if (baseWeekSelect) baseWeekSelect.value = String(cycleBaseWeek);
+
+      updateCycleCalibrationPreview();
+
       renderTodaySlots();
       renderCalendar();
       renderRosterTable();
@@ -3678,8 +4037,13 @@
       bindEnter('cfgGasUrlInput', saveGasUrlFromSettings);
       bindEnter('cfgAdminPwConfirmInput', saveAdminAccountFromSettings);
       bindEnter('cfgOrgNameInput', saveBasicSettingsFromUI);
+      bindEnter('cfgCycleBaseDateInput', saveBasicSettingsFromUI);
       bindEnter('newMemberPhoneInput', addNewMemberFromUI);
       bindEnter('myProfilePhoneInput', saveMyProfileFromUI);
+      bindEnter('resetKeywordInput', () => {
+        const btn = document.getElementById('btnExecuteNewSemesterReset');
+        if (btn && !btn.disabled) executeNewSemesterReset();
+      });
 
       window.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
