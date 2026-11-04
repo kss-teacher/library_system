@@ -1,7 +1,7 @@
 /**
  * ==============================================================================
  * [꿈빛 - 도서관 봉사인력 관리 시스템]
- * Google Apps Script 클라우드 통합 백엔드 엔진 v15.0 최종본
+ * Google Apps Script 클라우드 통합 백엔드 엔진 v15.0
  * ==============================================================================
  * 
  * [주요 기능]
@@ -155,7 +155,19 @@ function createOrResetStandardSheets(ss, cycleType, libraryName, adminName, admi
   memSheet.getRange('A1:C1').setValues([['순번', '이름', '연락처']])
     .setBackground('#0369a1').setFontColor('#ffffff').setFontWeight('bold').setHorizontalAlignment('center');
 
-  // 4. [출석 및 변경 기록] 시트
+  // 4. [출석부] 시트 (관장님 지정 4대 표준 컬럼: 날짜 | 시간 | 이름 | 출석확인)
+  let attSheet = ss.getSheetByName('출석부');
+  if (!attSheet) attSheet = ss.insertSheet('출석부');
+  attSheet.clear();
+  attSheet.setColumnWidth(1, 130);
+  attSheet.setColumnWidth(2, 220);
+  attSheet.setColumnWidth(3, 130);
+  attSheet.setColumnWidth(4, 100);
+  attSheet.getRange('A1:D1').setValues([['날짜', '시간', '이름', '출석확인']])
+    .setBackground('#047857').setFontColor('#ffffff').setFontWeight('bold').setHorizontalAlignment('center');
+  // ※ 더미 데이터 0% 철칙: 샘플 데이터는 일절 넣지 않고 헤더만 구성하여 순수 실시간 데이터만 적재
+
+  // 5. [출석 및 변경 기록] 시트
   let logSheet = ss.getSheetByName('출석 및 변경 기록');
   if (!logSheet) logSheet = ss.insertSheet('출석 및 변경 기록');
   logSheet.clear();
@@ -540,6 +552,23 @@ function doGet(e) {
       }
     }
 
+    // 출석부 동기화 데이터 조회 (O / X 상태)
+    const attSheet = ss.getSheetByName('출석부');
+    const attendance = {};
+    if (attSheet) {
+      const attData = attSheet.getDataRange().getDisplayValues();
+      for (let i = 1; i < attData.length; i++) {
+        const d = String(attData[i][0] || '').trim();
+        const t = String(attData[i][1] || '').trim();
+        const n = String(attData[i][2] || '').trim();
+        const st = String(attData[i][3] || '').trim();
+        const k = attData[i][4] ? String(attData[i][4]).trim() : '';
+        if (k) {
+          attendance[k] = { status: st, name: n, time: '' };
+        }
+      }
+    }
+
     const payload = {
       status: 'success',
       spreadsheetUrl: ss.getUrl(),
@@ -555,7 +584,8 @@ function doGet(e) {
       cycleBaseWeek: config.cycleBaseWeek,
       members: members,
       roster: roster,
-      overrides: overrides
+      overrides: overrides,
+      attendance: attendance
     };
 
     return ContentService.createTextOutput(JSON.stringify(payload))
@@ -576,6 +606,23 @@ function doPost(e) {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const postData = JSON.parse(e.postData.contents);
     const action = postData.action;
+
+    // 0. 표준 5대 시트 탭 원격 자동 구성 (웹앱 STEP 05 연동)
+    if (action === 'setupStandardSheets' || action === 'setupSheets') {
+      const res = createOrResetStandardSheets(
+        ss,
+        postData.cycleType || '2주',
+        postData.libraryName || '도서관',
+        postData.adminName || '관리자',
+        postData.adminEmail || '',
+        postData.timeSlots || getDefaultTimeSlots()
+      );
+      return ContentService.createTextOutput(JSON.stringify({
+        status: 'success',
+        message: '표준 5대 탭이 성공적으로 자동 구성되었습니다.',
+        details: res
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
 
     // 1. 개인정보 동의 감사로그 저장 (PIPA)
     if (action === 'saveConsentLog') {
@@ -681,6 +728,88 @@ function doPost(e) {
       });
       rSheet.getRange(1, 1, rows.length, 6).setValues(rows).setHorizontalAlignment('center');
       return ContentService.createTextOutput(JSON.stringify({ status: 'success' })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // 6. 봉사자 명부 실시간 일괄 저장 (CRUD 동기화 - 신설)
+    if (action === 'saveMembers' && Array.isArray(postData.members)) {
+      let memSheet = ss.getSheetByName('봉사자 정보');
+      if (!memSheet) {
+        memSheet = ss.insertSheet('봉사자 정보');
+        memSheet.setColumnWidth(1, 60);
+        memSheet.setColumnWidth(2, 120);
+        memSheet.setColumnWidth(3, 160);
+      }
+      memSheet.clear();
+      memSheet.getRange('A1:C1').setValues([['순번', '이름', '연락처']])
+        .setBackground('#0369a1').setFontColor('#ffffff').setFontWeight('bold').setHorizontalAlignment('center');
+
+      const rows = [];
+      postData.members.forEach((m, idx) => {
+        if (m && m.name) {
+          rows.push([idx + 1, String(m.name).trim(), String(m.phone || '').trim()]);
+        }
+      });
+      if (rows.length > 0) {
+        memSheet.getRange(2, 1, rows.length, 3).setValues(rows).setHorizontalAlignment('center');
+      }
+      return ContentService.createTextOutput(JSON.stringify({ status: 'success', count: rows.length }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // 7. 출석부 실시간 저장 (날짜 | 시간 | 이름 | 출석확인 4대 표준 규격 - 신설)
+    if (action === 'saveAttendanceCheck' || action === 'saveAttendance') {
+      let attSheet = ss.getSheetByName('출석부');
+      if (!attSheet) {
+        attSheet = ss.insertSheet('출석부');
+        attSheet.setColumnWidth(1, 130);
+        attSheet.setColumnWidth(2, 220);
+        attSheet.setColumnWidth(3, 130);
+        attSheet.setColumnWidth(4, 100);
+        attSheet.getRange('A1:D1').setValues([['날짜', '시간', '이름', '출석확인']])
+          .setBackground('#047857').setFontColor('#ffffff').setFontWeight('bold').setHorizontalAlignment('center');
+      }
+
+      const dateVal = String(postData.date || '').trim();
+      const timeVal = String(postData.time || '').trim();
+      const nameVal = String(postData.name || '').trim();
+      const statusVal = String(postData.status || 'O').trim();
+      const slotKeyVal = String(postData.slotKey || '').trim();
+
+      const data = attSheet.getDataRange().getDisplayValues();
+      let foundRow = -1;
+
+      for (let i = 1; i < data.length; i++) {
+        const rowSlotKey = data[i][4] ? String(data[i][4]).trim() : '';
+        const rowDate = String(data[i][0] || '').trim();
+        const rowTime = String(data[i][1] || '').trim();
+        const rowName = String(data[i][2] || '').trim();
+
+        if (slotKeyVal && rowSlotKey === slotKeyVal) {
+          foundRow = i + 1;
+          break;
+        } else if (rowDate === dateVal && rowTime.includes(timeVal.split(' ')[0]) && (rowName === nameVal || !nameVal)) {
+          foundRow = i + 1;
+          break;
+        }
+      }
+
+      if (foundRow > 0) {
+        attSheet.getRange(foundRow, 3).setValue(nameVal);
+        attSheet.getRange(foundRow, 4).setValue(statusVal).setHorizontalAlignment('center').setFontWeight('bold');
+        if (slotKeyVal) attSheet.getRange(foundRow, 5).setValue(slotKeyVal);
+      } else {
+        attSheet.appendRow([dateVal, timeVal, nameVal, statusVal, slotKeyVal]);
+        const lastRow = attSheet.getLastRow();
+        attSheet.getRange(lastRow, 1, 1, 4).setHorizontalAlignment('center');
+        attSheet.getRange(lastRow, 4).setFontWeight('bold');
+      }
+
+      return ContentService.createTextOutput(JSON.stringify({
+        status: 'success',
+        date: dateVal,
+        name: nameVal,
+        attendance: statusVal
+      })).setMimeType(ContentService.MimeType.JSON);
     }
 
     return ContentService.createTextOutput(JSON.stringify({ status: 'unknown_action' })).setMimeType(ContentService.MimeType.JSON);
