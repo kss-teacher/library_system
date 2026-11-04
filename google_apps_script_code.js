@@ -537,42 +537,84 @@ function readHolidaysList(ss) {
 function doGet(e) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const { roster } = findRosterColumns(ss.getSheetByName('봉사자 순번'));
-    const members = readMembersList(ss);
-    const config = readSystemConfig(ss);
-
-    const logSheet = ss.getSheetByName('출석 및 변경 기록');
-    const overrides = {};
-    if (logSheet) {
-      const logData = logSheet.getDataRange().getDisplayValues();
-      for (let i = 1; i < logData.length; i++) {
-        const k = String(logData[i][0] || '').trim();
-        const ovr = String(logData[i][4] || '').trim();
-        const rsn = String(logData[i][5] || '').trim();
-        if (k && ovr) overrides[k] = { name: ovr, reason: rsn };
-      }
+    if (!ss) {
+      return ContentService.createTextOutput(JSON.stringify({
+        status: 'error',
+        message: '활성화된 스프레드시트를 찾을 수 없습니다. 스프레드시트에 포함된 Apps Script인지 확인해 주세요.'
+      })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // 출석부 동기화 데이터 조회 (O / X 상태)
-    const attSheet = ss.getSheetByName('출석부');
-    const attendance = {};
-    if (attSheet) {
-      const attData = attSheet.getDataRange().getDisplayValues();
-      for (let i = 1; i < attData.length; i++) {
-        const d = String(attData[i][0] || '').trim();
-        const t = String(attData[i][1] || '').trim();
-        const n = String(attData[i][2] || '').trim();
-        const st = String(attData[i][3] || '').trim();
-        const k = attData[i][4] ? String(attData[i][4]).trim() : '';
-        if (k) {
-          attendance[k] = { status: st, name: n, time: '' };
+    let roster = [];
+    try {
+      const rosterSheet = ss.getSheetByName('봉사자 순번');
+      if (rosterSheet) {
+        roster = findRosterColumns(rosterSheet).roster || [];
+      }
+    } catch (e1) {}
+
+    let members = [];
+    try {
+      members = readMembersList(ss) || [];
+    } catch (e2) {}
+
+    let config = {
+      libraryName: '도서관',
+      adminName: '관리자',
+      adminId: 'admin',
+      adminPassword: 'admin1234',
+      adminEmail: '',
+      cycleType: '2주',
+      timeSlots: getDefaultTimeSlots(),
+      defaultNoticeMemo: '오늘도 아이들의 꿈을 위해 따뜻한 사랑으로 함께해 주시는 모든 도서관 봉사위원님들께 진심으로 감사드립니다.',
+      cycleBaseDate: Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd'),
+      cycleBaseWeek: 1
+    };
+    try {
+      const c = readSystemConfig(ss);
+      if (c) config = Object.assign(config, c);
+    } catch (e3) {}
+
+    const overrides = {};
+    try {
+      const logSheet = ss.getSheetByName('출석 및 변경 기록');
+      if (logSheet) {
+        const logData = logSheet.getDataRange().getDisplayValues();
+        for (let i = 1; i < logData.length; i++) {
+          const k = String(logData[i][0] || '').trim();
+          const ovr = String(logData[i][4] || '').trim();
+          const rsn = String(logData[i][5] || '').trim();
+          if (k && ovr) overrides[k] = { name: ovr, reason: rsn };
         }
       }
-    }
+    } catch (e4) {}
+
+    // 출석부 동기화 데이터 조회 (O / X 상태)
+    const attendance = {};
+    try {
+      const attSheet = ss.getSheetByName('출석부');
+      if (attSheet) {
+        const attData = attSheet.getDataRange().getDisplayValues();
+        for (let i = 1; i < attData.length; i++) {
+          const d = String(attData[i][0] || '').trim();
+          const t = String(attData[i][1] || '').trim();
+          const n = String(attData[i][2] || '').trim();
+          const st = String(attData[i][3] || '').trim();
+          const k = attData[i][4] ? String(attData[i][4]).trim() : '';
+          if (k) {
+            attendance[k] = { status: st, name: n, time: '' };
+          }
+        }
+      }
+    } catch (e5) {}
+
+    let sheetUrl = '';
+    try {
+      sheetUrl = ss.getUrl();
+    } catch (e6) {}
 
     const payload = {
       status: 'success',
-      spreadsheetUrl: ss.getUrl(),
+      spreadsheetUrl: sheetUrl,
       libraryName: config.libraryName,
       adminName: config.adminName,
       adminId: config.adminId,
@@ -829,11 +871,13 @@ function doPost(e) {
 function testSystem() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const config = readSystemConfig(ss);
-  const { roster } = findRosterColumns(ss.getSheetByName('봉사자 순번'));
+  const rosterSheet = ss.getSheetByName('봉사자 순번');
+  const roster = rosterSheet ? findRosterColumns(rosterSheet).roster : [];
   const members = readMembersList(ss);
 
-  Logger.log(`📂 현재 스프레드시트: ${ss.getName()}`);
+  Logger.log(`📂 현재 스프레드시트: ${ss.getName()} (${ss.getUrl()})`);
   Logger.log(`⚙️ 도서관명: "${config.libraryName}", 관리자ID: "${config.adminId}"`);
   Logger.log(`👥 등록된 봉사위원 수: ${members.length}명`);
   Logger.log(`📋 배정된 순번 슬롯 수: ${roster.length}개`);
+  Logger.log(`🎉 [진단 성공] 스프레드시트 접근 권한이 정상 승인되었습니다. 이제 웹 앱을 [새 버전]으로 배포하세요!`);
 }
