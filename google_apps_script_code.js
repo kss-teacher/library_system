@@ -20,6 +20,7 @@ function onOpen() {
   const ui = SpreadsheetApp.getUi();
   ui.createMenu('📚 꿈빛 도서관 봉사 관리')
     .addItem('🌟 [최초 1회] 표준 5대 시트 탭 자동 구성', 'setupNewSchoolTemplate')
+    .addItem('🌸 [신학기] 봉사단 시트 안전 초기화', 'menuResetNewSemester')
     .addSeparator()
     .addItem('📅 이번 달 배정표 시트 생성', 'menuCreateThisMonthSheet')
     .addItem('⏭️ 다음 달 배정표 시트 즉시 생성', 'menuCreateNextMonthSheet')
@@ -260,6 +261,57 @@ function menuResetAdminAccount() {
     '웹앱에 접속하여 최초 로그인 후 새 비밀번호를 변경하세요.',
     SpreadsheetApp.getUi().ButtonSet.OK
   );
+}
+
+// ==========================================
+// 3-1. 신학기 봉사단 시트 탭 안전 초기화 마법사
+// ==========================================
+
+function menuResetNewSemester() {
+  const ui = SpreadsheetApp.getUi();
+  const resp = ui.alert(
+    '🌸 신학기 봉사단 시트 초기화',
+    '새 학년도 봉사단 출범을 위해 이전 활동 데이터\n' +
+    '([봉사자 순번 배정], [봉사자 정보], [출석부], [출석 및 변경 기록])를 깨끗이 초기화하시겠습니까?\n\n' +
+    '※ 주의: 스프레드시트 상단 메뉴 [파일] ➔ [사본 만들기]로 이전 학기 백업본을 먼저 만들어 두시는 것을 강력히 권장합니다.',
+    ui.ButtonSet.YES_NO
+  );
+
+  if (resp === ui.Button.YES) {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    resetNewSemesterSheets(ss);
+    ui.alert(
+      '✅ 신학기 초기화 완료',
+      '봉사단 명부, 순번 배정, 출석부, 변경 기록이 새 학년을 위해 깨끗하게 초기화되었습니다.',
+      ui.ButtonSet.OK
+    );
+  }
+}
+
+function resetNewSemesterSheets(ss) {
+  // 1) 봉사자 정보 탭 초기화 (헤더 1행 보존, 2행 이하 공백화)
+  let memSheet = ss.getSheetByName('봉사자 정보');
+  if (memSheet && memSheet.getLastRow() > 1) {
+    memSheet.getRange(2, 1, memSheet.getLastRow() - 1, memSheet.getLastColumn()).clearContent();
+  }
+
+  // 2) 출석부 탭 초기화 (헤더 1행 보존, 2행 이하 공백화)
+  let attSheet = ss.getSheetByName('출석부');
+  if (attSheet && attSheet.getLastRow() > 1) {
+    attSheet.getRange(2, 1, attSheet.getLastRow() - 1, attSheet.getLastColumn()).clearContent();
+  }
+
+  // 3) 출석 및 변경 기록 탭 초기화 (헤더 1행 보존, 2행 이하 공백화)
+  let logSheet = ss.getSheetByName('출석 및 변경 기록');
+  if (logSheet && logSheet.getLastRow() > 1) {
+    logSheet.getRange(2, 1, logSheet.getLastRow() - 1, logSheet.getLastColumn()).clearContent();
+  }
+
+  // 4) 봉사자 순번 탭의 봉사위원1(E열), 봉사위원2(F열) 공백화 (헤더 및 순번/주차/요일/시간 구조 100% 보존)
+  let rSheet = ss.getSheetByName('봉사자 순번');
+  if (rSheet && rSheet.getLastRow() > 1) {
+    rSheet.getRange(2, 5, rSheet.getLastRow() - 1, 2).clearContent();
+  }
 }
 
 // ==========================================
@@ -856,6 +908,15 @@ function doPost(e) {
         date: dateVal,
         name: nameVal,
         attendance: statusVal
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // 8. 신학기 봉사단 안전 초기화 원격 트리거
+    if (action === 'resetNewSemester') {
+      resetNewSemesterSheets(ss);
+      return ContentService.createTextOutput(JSON.stringify({
+        status: 'success',
+        message: '신학기 봉사단 시트가 깨끗하게 초기화되었습니다.'
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
