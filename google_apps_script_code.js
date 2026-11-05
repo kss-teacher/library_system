@@ -22,8 +22,8 @@ function onOpen() {
     .addItem('🌟 [최초 1회] 표준 5대 시트 탭 자동 구성', 'setupNewSchoolTemplate')
     .addItem('🌸 [신학기] 봉사단 시트 안전 초기화', 'menuResetNewSemester')
     .addSeparator()
-    .addItem('📅 이번 달 배정표 시트 생성', 'menuCreateThisMonthSheet')
-    .addItem('⏭️ 다음 달 배정표 시트 즉시 생성', 'menuCreateNextMonthSheet')
+    .addItem('📅 이번 달 배정표(목록+달력) 시트 생성', 'menuCreateThisMonthSheet')
+    .addItem('⏭️ 다음 달 배정표(목록+달력) 시트 즉시 생성', 'menuCreateNextMonthSheet')
     .addSeparator()
     .addItem('⏰ [자동화] 매달 말일 배정표 자동 생성 예약', 'setupAutoMonthlyTrigger')
     .addItem('🔑 관리자 계정 초기화 (admin / admin1234)', 'menuResetAdminAccount')
@@ -357,15 +357,17 @@ function calculateContinuousWeekCycle(date, baseDateStr, baseWeekNum, cycleType)
 
 function menuCreateThisMonthSheet() {
   const now = new Date();
-  const created = createMonthlySheet(now.getFullYear(), now.getMonth() + 1);
-  SpreadsheetApp.getUi().alert('✅ 시트 생성 완료', `[${created}] 탭이 성공적으로 생성되었습니다.`, SpreadsheetApp.getUi().ButtonSet.OK);
+  const sName = createMonthlySheet(now.getFullYear(), now.getMonth() + 1);
+  const cName = createMonthlyCalendarGridSheet(now.getFullYear(), now.getMonth() + 1);
+  SpreadsheetApp.getUi().alert('✅ 시트 생성 완료', `[${sName}] 및 [${cName}] 탭이 성공적으로 생성되었습니다.`, SpreadsheetApp.getUi().ButtonSet.OK);
 }
 
 function menuCreateNextMonthSheet() {
   const now = new Date();
   const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-  const created = createMonthlySheet(nextMonth.getFullYear(), nextMonth.getMonth() + 1);
-  SpreadsheetApp.getUi().alert('✅ 시트 생성 완료', `[${created}] 탭이 성공적으로 생성되었습니다.`, SpreadsheetApp.getUi().ButtonSet.OK);
+  const sName = createMonthlySheet(nextMonth.getFullYear(), nextMonth.getMonth() + 1);
+  const cName = createMonthlyCalendarGridSheet(nextMonth.getFullYear(), nextMonth.getMonth() + 1);
+  SpreadsheetApp.getUi().alert('✅ 시트 생성 완료', `[${sName}] 및 [${cName}] 탭이 성공적으로 생성되었습니다.`, SpreadsheetApp.getUi().ButtonSet.OK);
 }
 
 function setupAutoMonthlyTrigger() {
@@ -385,6 +387,7 @@ function checkAndRunLastDayTrigger() {
   if (tomorrow.getDate() === 1) {
     const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
     createMonthlySheet(nextMonth.getFullYear(), nextMonth.getMonth() + 1);
+    createMonthlyCalendarGridSheet(nextMonth.getFullYear(), nextMonth.getMonth() + 1);
   }
 }
 
@@ -487,6 +490,202 @@ function createMonthlySheet(year, month, clientRows, libName) {
   }
 
   ss.setActiveSheet(targetSheet);
+  return sheetName;
+}
+
+/**
+ * 7열 격자형 월간 벽걸이 달력 시트 자동 생성 (A4 가로 인쇄 최적화)
+ */
+function createMonthlyCalendarGridSheet(year, month, clientRows, libName) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const monthStr = year + '-' + String(month).padStart(2, '0');
+  const sheetName = monthStr + ' 달력';
+
+  // 1. 기존 동일 명칭 탭이 있을 경우 선 삭제 후 재생성 (병합 셀 충돌 방지)
+  let targetSheet = ss.getSheetByName(sheetName);
+  if (targetSheet) {
+    try {
+      ss.deleteSheet(targetSheet);
+    } catch (e) {
+      targetSheet.clear();
+      try { targetSheet.getRange('A1:G1').breakApart(); } catch (e2) {}
+    }
+  }
+  targetSheet = ss.insertSheet(sheetName);
+
+  // 2. 가로 A4 인쇄에 최적인 7개 열(일~토) 너비 균등 설정
+  for (let c = 1; c <= 7; c++) {
+    targetSheet.setColumnWidth(c, 138);
+  }
+
+  const displayLibName = libName || (readSystemConfig(ss).libraryName || '도서관');
+
+  // 3. 상단 대형 타이틀
+  targetSheet.getRange('A1:G1').merge()
+    .setValue(`[${displayLibName}] ${year}년 ${month}월 도서관 봉사활동 달력`)
+    .setBackground('#1e293b').setFontColor('#ffffff').setFontWeight('bold').setFontSize(14)
+    .setHorizontalAlignment('center').setVerticalAlignment('middle');
+  targetSheet.setRowHeight(1, 40);
+
+  // 4. 요일 헤더 (일~토)
+  const daysHeader = ['일 (Sun)', '월 (Mon)', '화 (Tue)', '수 (Wed)', '목 (Thu)', '금 (Fri)', '토 (Sat)'];
+  targetSheet.getRange('A2:G2').setValues([daysHeader])
+    .setFontWeight('bold').setHorizontalAlignment('center').setVerticalAlignment('middle');
+  targetSheet.setRowHeight(2, 28);
+  
+  targetSheet.getRange('A2').setBackground('#ffe4e6').setFontColor('#be123c'); // 일요일 (레드)
+  targetSheet.getRange('B2:F2').setBackground('#f1f5f9').setFontColor('#334155'); // 평일 (슬레이트)
+  targetSheet.getRange('G2').setBackground('#dbeafe').setFontColor('#1d4ed8'); // 토요일 (블루)
+
+  // 5. 당월 데이터 맵 구성
+  const scheduleMap = {};
+  if (clientRows && Array.isArray(clientRows) && clientRows.length > 0) {
+    clientRows.forEach(r => {
+      const dStr = String(r[0] || '').trim();
+      if (!dStr) return;
+      if (!scheduleMap[dStr]) {
+        scheduleMap[dStr] = {
+          isClosed: (r[2] === '-'),
+          title: r[6] || '',
+          weekCycle: r[2] || '',
+          slots: []
+        };
+      }
+      if (r[2] !== '-') {
+        const timePart = String(r[3] || '').split(' ')[0];
+        const n1 = String(r[4] || '공석').trim();
+        const n2 = String(r[5] || '공석').trim();
+        scheduleMap[dStr].slots.push({
+          time: timePart,
+          worker1: n1,
+          worker2: n2
+        });
+      }
+    });
+  } else {
+    const rosterSheet = ss.getSheetByName('봉사자 순번') || ss.getSheets()[0];
+    const { roster } = findRosterColumns(rosterSheet);
+    const holidays = readHolidaysList(ss);
+    const config = readSystemConfig(ss);
+    const timeSlots = config.timeSlots || getDefaultTimeSlots();
+
+    const logSheet = ss.getSheetByName('출석 및 변경 기록');
+    const overrides = {};
+    if (logSheet) {
+      const logData = logSheet.getDataRange().getDisplayValues();
+      for (let i = 1; i < logData.length; i++) {
+        const k = String(logData[i][0] || '').trim();
+        const ovr = String(logData[i][4] || '').trim();
+        if (k && ovr) overrides[k] = ovr;
+      }
+    }
+
+    const lastDate = new Date(year, month, 0).getDate();
+    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+
+    for (let d = 1; d <= lastDate; d++) {
+      const curDate = new Date(year, month - 1, d);
+      const dateStr = Utilities.formatDate(curDate, 'Asia/Seoul', 'yyyy-MM-dd');
+      const dayOfWeek = curDate.getDay();
+      const dayName = dayNames[dayOfWeek];
+      const status = checkDayStatus(curDate, dateStr, holidays);
+
+      scheduleMap[dateStr] = {
+        isClosed: status.isClosed,
+        title: status.title,
+        weekCycle: status.isClosed ? '' : `${calculateContinuousWeekCycle(curDate, config.cycleBaseDate, config.cycleBaseWeek, config.cycleType)}주차`,
+        slots: []
+      };
+
+      if (!status.isClosed) {
+        const weekCycle = calculateContinuousWeekCycle(curDate, config.cycleBaseDate, config.cycleBaseWeek, config.cycleType);
+        timeSlots.forEach(slot => {
+          const sNorm = normalizeTimeStr(slot.startTime);
+          const rMatch = roster.find(r => r.week === weekCycle && r.day.startsWith(dayName) && normalizeTimeStr(r.time) === sNorm);
+          const ovr1 = overrides[`${dateStr}_${sNorm}_1`];
+          const ovr2 = overrides[`${dateStr}_${sNorm}_2`];
+          const n1 = ovr1 || (rMatch ? rMatch.name1 : '') || '공석';
+          const n2 = ovr2 || (rMatch ? rMatch.name2 : '') || '(1인)';
+          scheduleMap[dateStr].slots.push({
+            time: sNorm,
+            worker1: n1,
+            worker2: n2
+          });
+        });
+      }
+    }
+  }
+
+  // 6. 달력 그리드 행/열 배치
+  const firstDayOfWeek = new Date(year, month - 1, 1).getDay();
+  const lastDateNum = new Date(year, month, 0).getDate();
+
+  let curRow = 3;
+  let dayCounter = 1;
+
+  while (dayCounter <= lastDateNum) {
+    const dateNumRow = [];
+    const contentRow = [];
+
+    for (let col = 0; col < 7; col++) {
+      if ((curRow === 3 && col < firstDayOfWeek) || dayCounter > lastDateNum) {
+        dateNumRow.push('');
+        contentRow.push('');
+      } else {
+        const curDate = new Date(year, month - 1, dayCounter);
+        const dateStr = Utilities.formatDate(curDate, 'Asia/Seoul', 'yyyy-MM-dd');
+        const info = scheduleMap[dateStr];
+
+        dateNumRow.push(dayCounter);
+
+        if (!info) {
+          contentRow.push('');
+        } else if (info.isClosed) {
+          contentRow.push(`\n[${info.title || '휴관'}]`);
+        } else {
+          let lines = [];
+          if (info.weekCycle) lines.push(`[${info.weekCycle}]`);
+          info.slots.forEach(s => {
+            lines.push(`${s.time} ${s.worker1}, ${s.worker2}`);
+          });
+          contentRow.push(lines.join('\n'));
+        }
+
+        dayCounter++;
+      }
+    }
+
+    // 날짜 번호 행 (높이 24)
+    const dateRange = targetSheet.getRange(curRow, 1, 1, 7);
+    dateRange.setValues([dateNumRow])
+      .setFontWeight('bold').setFontSize(10).setHorizontalAlignment('left').setVerticalAlignment('middle')
+      .setBackground('#f8fafc');
+    targetSheet.setRowHeight(curRow, 24);
+
+    targetSheet.getRange(curRow, 1).setFontColor('#be123c'); // 일요일 레드
+    targetSheet.getRange(curRow, 7).setFontColor('#1d4ed8'); // 토요일 블루
+
+    // 배정 내용 행 (높이 88, 자동 줄바꿈)
+    const contentRange = targetSheet.getRange(curRow + 1, 1, 1, 7);
+    contentRange.setValues([contentRow])
+      .setFontSize(9).setHorizontalAlignment('center').setVerticalAlignment('top')
+      .setWrap(true);
+    targetSheet.setRowHeight(curRow + 1, 88);
+
+    // 격자 테두리
+    targetSheet.getRange(curRow, 1, 2, 7)
+      .setBorder(true, true, true, true, true, true, '#cbd5e1', SpreadsheetApp.BorderStyle.SOLID);
+
+    curRow += 2;
+  }
+
+  // 7. 하단 A4 인쇄 가이드 배너
+  targetSheet.getRange(curRow, 1, 1, 7).merge()
+    .setValue('💡 [인쇄 팁] 상단 메뉴 [파일] ➔ [인쇄]에서 [가로 방향] 및 [페이지에 맞춤]으로 설정하시면 A4 1장에 꼭 맞게 인쇄됩니다.')
+    .setFontColor('#64748b').setFontSize(9).setHorizontalAlignment('center').setVerticalAlignment('middle')
+    .setBackground('#f8fafc');
+  targetSheet.setRowHeight(curRow, 28);
+
   return sheetName;
 }
 
@@ -946,11 +1145,15 @@ function doPost(e) {
       const targetMonth = parseInt(postData.month, 10) || (new Date().getMonth() + 1);
       const libName = postData.libraryName || '도서관';
       const clientRows = Array.isArray(postData.scheduleRows) ? postData.scheduleRows : null;
+      
       const createdSheetName = createMonthlySheet(targetYear, targetMonth, clientRows, libName);
+      const createdCalName = createMonthlyCalendarGridSheet(targetYear, targetMonth, clientRows, libName);
+
       return ContentService.createTextOutput(JSON.stringify({
         status: 'success',
         sheetName: createdSheetName,
-        message: `[${createdSheetName}] 탭이 구글 시트에 성공적으로 생성되었습니다.`
+        calSheetName: createdCalName,
+        message: `[${createdSheetName}] 및 [${createdCalName}] 탭이 구글 시트에 성공적으로 동시 생성되었습니다.`
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
