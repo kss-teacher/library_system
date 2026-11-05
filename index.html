@@ -3,7 +3,7 @@
 <!--
   ==============================================================================
   [프로그램 정보(Program Information)]
-  Project: 꿈길 (Ggumgil) - 도서관 봉사인력 자원관리 프로그램
+  Project: 꿈빛 (Ggumbit) - 도서관 봉사인력 자원관리 프로그램
   Version: v1.00
   Author / Copyright: (c) 2026 Sung soo Kim. All Rights Reserved.
   License: Open Education License (Based on MIT License with Non-Commercial Recommendation)
@@ -28,7 +28,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>꿈길 - 도서관 봉사인력 관리 시스템 v1.00</title>
+  <title>꿈빛 - 도서관 봉사인력 관리 시스템 v1.01</title>
   
   <!-- 웹 폰트 (Noto Sans KR, Inter, Noto Serif KR) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -100,17 +100,17 @@
   <header class="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-xs backdrop-blur-md bg-white/95">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
       
-      <!-- 좌측: 브랜드 로고 및 도서관 명칭 (꿈길 v1.00 공식 명명) -->
+      <!-- 좌측: 브랜드 로고 및 도서관 명칭 (꿈빛 v1.00 공식 명명) -->
       <div class="flex items-center space-x-3 cursor-pointer" onclick="openCoverModal()">
         <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white shadow-md shadow-amber-500/20">
           <i class="fa-solid fa-book-open-reader text-lg"></i>
         </div>
         <div>
           <div class="flex items-center space-x-1.5">
-            <span class="font-extrabold text-lg text-slate-900 tracking-tight">꿈길</span>
-            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-md border border-amber-200/60 font-mono">v1.00</span>
+            <span class="font-extrabold text-lg text-slate-900 tracking-tight">꿈빛</span>
+            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-md border border-amber-200/60 font-mono">v1.01</span>
           </div>
-          <p id="topBarOrgName" class="text-xs text-slate-500 font-medium truncate max-w-[180px] sm:max-w-xs">꿈길도서관</p>
+          <p id="topBarOrgName" class="text-xs text-slate-500 font-medium truncate max-w-[180px] sm:max-w-xs">꿈빛도서관</p>
         </div>
       </div>
 
@@ -579,14 +579,14 @@
             <span class="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">3</span>
             <span>기본 운영 파라미터 (전국 표준 설정 센터)</span>
           </h4>
-          <span class="text-[11px] text-slate-400 font-medium">꿈길 v1.01 가변 엔진</span>
+          <span class="text-[11px] text-slate-400 font-medium">꿈빛 v1.01 가변 엔진</span>
         </div>
         
         <!-- 기본 명칭, 순환 주기, 슬롯당 정원 (3열 배치) -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
           <div class="space-y-1.5">
             <label class="block text-xs font-bold text-slate-700">도서관 공식 명칭</label>
-            <input type="text" id="cfgOrgNameInput" placeholder="예: 홍남초등학교 꿈길도서관" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-medium">
+            <input type="text" id="cfgOrgNameInput" placeholder="예: 홍남초등학교 꿈빛도서관" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-medium">
           </div>
 
           <div class="space-y-1.5">
@@ -842,7 +842,7 @@
   <!-- 모달 창 컬렉션                                                    -->
   <!-- ================================================================= -->
 
-  <!-- 1. 봉사처 표지 (웰컴 게이트) 모달 - [꿈길 v1.00 화이트 미니멀 & Sung soo Kim 라이선스] -->
+  <!-- 1. 봉사처 표지 (웰컴 게이트) 모달 - [꿈빛 v1.00 화이트 미니멀 & Sung soo Kim 라이선스] -->
   <div id="coverModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div id="coverCardContainer" class="bg-white w-full max-w-md rounded-3xl p-6 sm:p-8 text-slate-800 border border-slate-200 shadow-2xl relative overflow-hidden flex flex-col justify-between min-h-[520px]">
       
@@ -851,7 +851,7 @@
         <div class="w-12 h-12 mx-auto rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center text-xl shadow-xs">
           <i class="fa-solid fa-landmark"></i>
         </div>
-        <p id="coverOrgName" class="text-xs font-bold tracking-wider text-amber-700 uppercase">꿈길도서관</p>
+        <p id="coverOrgName" class="text-xs font-bold tracking-wider text-amber-700 uppercase">꿈빛도서관</p>
         <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">꿈 길</h2>
         <p class="text-xs text-slate-500 font-medium">도서관 봉사인력 자원관리 솔루션</p>
       </div>
@@ -915,7 +915,7 @@
       <!-- 하단 은은한 저작권(Sung soo Kim) 및 관리자 통로 -->
       <div class="pt-2 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-400 border-t border-slate-100 gap-1.5">
         <div class="flex items-center space-x-1.5">
-          <span class="font-bold text-slate-600">꿈길 v1.00</span>
+          <span class="font-bold text-slate-600">꿈빛 v1.01</span>
           <span>·</span>
           <span>© 2026 Sung soo Kim</span>
         </div>
@@ -1183,7 +1183,7 @@
           <span class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">
             <i class="fa-solid fa-book-bookmark"></i>
           </span>
-          <h3 class="font-bold text-base text-slate-900">꿈길 도서관 시스템 안내</h3>
+          <h3 class="font-bold text-base text-slate-900">꿈빛 도서관 시스템 안내</h3>
         </div>
         <button onclick="closeModal('manualModal')" class="text-slate-400 hover:text-slate-600 text-lg">
           <i class="fa-solid fa-xmark"></i>
@@ -1206,7 +1206,7 @@
           <span>지적재산권(IP) 및 라이선스 고지</span>
         </div>
         <div class="space-y-1 text-[11px]">
-          <p>• <b>솔루션 명칭:</b> 꿈길 (Ggumgil) v1.00</p>
+          <p>• <b>솔루션 명칭:</b> 꿈빛 (Ggumbit) v1.00</p>
           <p>• <b>원작자 / 저작권:</b> © 2026 <b>Sung soo Kim</b>. All Rights Reserved.</p>
           <p>• <b>이용 허락 (License):</b> 본 시스템은 전국 초·중·고교 및 공공도서관의 봉사 활성화를 위해 비영리 교육기관 무상 이용 라이선스(MIT License 기반)로 배포됩니다.</p>
           <p class="text-[10px] text-slate-500 pt-1 leading-normal">
@@ -1353,7 +1353,7 @@
     // -------------------------------------------------------------
     // [2] 전역 상태 변수
     // -------------------------------------------------------------
-    let orgName = '꿈길도서관';
+    let orgName = '꿈빛도서관';
     let adminId = 'admin';
     let adminPassword = 'admin1234';
     let gasApiUrl = '';
@@ -2237,6 +2237,7 @@
 
       const lastDate = new Date(calendarYear, calendarMonth, 0).getDate();
       const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+      const cap = Math.max(1, parseInt(slotCapacity, 10) || 2);
       const scheduleRows = [];
 
       for (let d = 1; d <= lastDate; d++) {
@@ -2247,38 +2248,43 @@
         const status = checkDayStatusClient(curDate, dateStr);
 
         if (status.isClosed) {
-          scheduleRows.push([dateStr, `${dayName}요일`, '-', '-', '-', '-', status.title]);
+          const closedRow = [dateStr, `${dayName}요일`, '-', '-'];
+          for (let r = 1; r <= cap; r++) closedRow.push('-');
+          closedRow.push(status.title);
+          scheduleRows.push(closedRow);
         } else {
           const weekCycle = calculateContinuousWeekCycle(curDate, cycleBaseDate, cycleBaseWeek, cycleType);
           timeSlots.forEach(slot => {
             const sNorm = slot.startTime;
             const rMatch = rosterData.find(r => r.week === weekCycle && r.day.startsWith(dayName) && r.time === sNorm);
-            const k1 = `${dateStr}_${sNorm}_1`;
-            const k2 = `${dateStr}_${sNorm}_2`;
-            const rec1 = getOverrideRecord(k1);
-            const rec2 = getOverrideRecord(k2);
 
-            const n1 = (rec1 && rec1.status === 'ACCEPTED' && rec1.substitute) ? rec1.substitute : (rec1?.requester || (rMatch ? rMatch.name1 : '공석'));
-            const n2 = (rec2 && rec2.status === 'ACCEPTED' && rec2.substitute) ? rec2.substitute : (rec2?.requester || (rMatch ? rMatch.name2 : '공석'));
+            const workerNames = [];
+            const notes = [];
 
-            let notes = [];
-            if (rec1 && rec1.status === 'ACCEPTED') notes.push(`[위원1 대타] ${rec1.substitute}`);
-            if (rec1 && rec1.status === 'REQUESTED') notes.push(`[위원1 대타요청]`);
-            if (rec2 && rec2.status === 'ACCEPTED') notes.push(`[위원2 대타] ${rec2.substitute}`);
-            if (rec2 && rec2.status === 'REQUESTED') notes.push(`[위원2 대타요청]`);
+            for (let r = 1; r <= cap; r++) {
+              const k = `${dateStr}_${sNorm}_${r}`;
+              const rec = getOverrideRecord(k);
+              const orig = rMatch ? (rMatch[`name${r}`] || (r === 1 ? rMatch.name1 : (r === 2 ? rMatch.name2 : ''))) : '';
+              const eff = (rec && rec.status === 'ACCEPTED' && rec.substitute) ? rec.substitute : (rec?.requester || orig || '공석');
+              
+              workerNames.push(eff || '공석');
+
+              if (rec && rec.status === 'ACCEPTED') notes.push(`[위원${r} 대타] ${rec.substitute}`);
+              if (rec && rec.status === 'REQUESTED') notes.push(`[위원${r} 대타요청]`);
+            }
 
             scheduleRows.push([
               dateStr,
               `${dayName}요일`,
               `${weekCycle}주차`,
               `${slot.startTime} (${slot.name})`,
-              n1 || '공석',
-              n2 || '공석',
+              ...workerNames,
               notes.join(' / ')
             ]);
           });
         }
       }
+
 
       try {
         await fetch(gasApiUrl, {
@@ -3570,7 +3576,9 @@ function renderRosterTable() {
         return;
       }
       const wb = XLSX.utils.book_new();
+      const cap = Math.max(1, parseInt(slotCapacity, 10) || 2);
 
+      // 1. [봉사자 정보] 탭
       const infoHeaders = ['순번', '이름', '연락처'];
       const infoRows = [infoHeaders];
       if (membersData && membersData.length > 0) {
@@ -3585,10 +3593,18 @@ function renderRosterTable() {
       const wsInfo = XLSX.utils.aoa_to_sheet(infoRows);
       wsInfo['!cols'] = [{ wch: 8 }, { wch: 18 }, { wch: 22 }];
 
-      const rosterHeaders = ['순번', '주차', '요일', '시간대', '봉사위원 1 (정)', '봉사위원 2 (부)'];
+      // 2. [봉사자 순번] 탭 (N명 정원 및 운영 요일에 맞춘 동적 열 생성)
+      const rosterHeaders = ['순번', '주차', '요일', '시간대'];
+      for (let r = 1; r <= cap; r++) {
+        const roleLabel = (r === 1) ? '봉사위원 1 (정)' : (r === 2 ? '봉사위원 2 (부)' : `봉사위원 ${r}`);
+        rosterHeaders.push(roleLabel);
+      }
       const rosterRows = [rosterHeaders];
+
       const weekLimit = (cycleType === '1주') ? 1 : ((cycleType === '1달') ? 4 : 2);
-      const days = ['월요일', '화요일', '수요일', '목요일', '금요일'];
+      const opDays = (operatingDays && operatingDays.length > 0) ? operatingDays : ['월', '화', '수', '목', '금'];
+      const dayFullNameMap = { '월': '월요일', '화': '화요일', '수': '수요일', '목': '목요일', '금': '금요일', '토': '토요일', '일': '일요일' };
+      const days = opDays.map(d => dayFullNameMap[d] || `${d}요일`);
       let seqId = 1;
 
       for (let w = 1; w <= weekLimit; w++) {
@@ -3597,21 +3613,29 @@ function renderRosterTable() {
             const slot = timeSlots[t];
             const timeLabel = slot.name ? `${slot.startTime} (${slot.name})` : slot.startTime;
             const rMatch = (rosterData || []).find(r => r.week === w && r.day.startsWith(days[d].slice(0, 1)) && r.time === slot.startTime);
-            const n1 = (rMatch && rMatch.name1 && rMatch.name1 !== '공석') ? rMatch.name1 : (seqId <= 2 ? '김도서 (예시)' : '');
-            const n2 = (rMatch && rMatch.name2 && rMatch.name2 !== '공석') ? rMatch.name2 : (seqId <= 2 ? '이하늘 (예시)' : '');
-            rosterRows.push([seqId++, `${w}주차`, days[d], timeLabel, n1, n2]);
+
+            const rowData = [seqId++, `${w}주차`, days[d], timeLabel];
+            for (let r = 1; r <= cap; r++) {
+              const workerVal = (rMatch ? (rMatch[`name${r}`] || (r === 1 ? rMatch.name1 : (r === 2 ? rMatch.name2 : ''))) : '') || '';
+              const fallbackSample = (seqId <= 3 && r <= 2) ? (r === 1 ? '김도서 (예시)' : '이하늘 (예시)') : '';
+              rowData.push(workerVal || fallbackSample);
+            }
+            rosterRows.push(rowData);
           }
         }
       }
       const wsRoster = XLSX.utils.aoa_to_sheet(rosterRows);
-      wsRoster['!cols'] = [{ wch: 8 }, { wch: 10 }, { wch: 12 }, { wch: 24 }, { wch: 18 }, { wch: 18 }];
+      
+      const colWidths = [{ wch: 8 }, { wch: 10 }, { wch: 12 }, { wch: 24 }];
+      for (let r = 1; r <= cap; r++) colWidths.push({ wch: 18 });
+      wsRoster['!cols'] = colWidths;
 
       XLSX.utils.book_append_sheet(wb, wsInfo, '봉사자 정보');
       XLSX.utils.book_append_sheet(wb, wsRoster, '봉사자 순번');
 
-      const fileName = `${orgName || '꿈길도서관'}_봉사단_표준양식(정보_순번).xlsx`;
+      const fileName = `${orgName || '꿈빛도서관'}_봉사단_표준양식(${cap}인정원_${days.length}요일).xlsx`;
       XLSX.writeFile(wb, fileName);
-      showToast('표준 2개 탭([봉사자 정보], [봉사자 순번]) 엑셀 양식이 다운로드되었습니다.');
+      showToast(`표준 ${cap}인 정원 엑셀 양식이 다운로드되었습니다.`);
     }
 
     function handleExcelUpload(e) {
@@ -3727,17 +3751,38 @@ function renderRosterTable() {
               let weekCol = 1;
               let dayCol = 2;
               let timeCol = 3;
-              let name1Col = 4;
-              let name2Col = 5;
+              const workerColMap = []; // { roleIdx, colIdx }
 
               header.forEach((h, idx) => {
                 const hStr = String(h || '').trim();
                 if (hStr.includes('주차') || hStr.includes('주')) weekCol = idx;
                 if (hStr.includes('요일') || hStr.includes('일자')) dayCol = idx;
                 if (hStr.includes('시간')) timeCol = idx;
-                if (hStr.includes('봉사위원 1') || hStr.includes('봉사위원1') || hStr.includes('(정)')) name1Col = idx;
-                if (hStr.includes('봉사위원 2') || hStr.includes('봉사위원2') || hStr.includes('(부)')) name2Col = idx;
+
+                const matchRole = hStr.match(/봉사위원\s*(\d+)/) || hStr.match(/봉사자\s*(\d+)/);
+                if (matchRole) {
+                  workerColMap.push({ roleIdx: parseInt(matchRole[1], 10), colIdx: idx });
+                } else if (hStr.includes('(정)')) {
+                  workerColMap.push({ roleIdx: 1, colIdx: idx });
+                } else if (hStr.includes('(부)')) {
+                  workerColMap.push({ roleIdx: 2, colIdx: idx });
+                }
               });
+
+              // 기본 Fallback (봉사위원 열이 특정되지 않은 경우 4열, 5열 기본 배정)
+              if (workerColMap.length === 0) {
+                workerColMap.push({ roleIdx: 1, colIdx: 4 });
+                workerColMap.push({ roleIdx: 2, colIdx: 5 });
+              }
+
+              // 최대 정원 동적 감지
+              const detectedCap = Math.max(...workerColMap.map(w => w.roleIdx));
+              if (detectedCap > slotCapacity) {
+                slotCapacity = detectedCap;
+                safeStorage.setItem('lib_slot_capacity', String(slotCapacity));
+                const capInput = document.getElementById('cfgSlotCapacityInput');
+                if (capInput) capInput.value = slotCapacity;
+              }
 
               const newRoster = [];
               for (let i = 1; i < rosterRows.length; i++) {
@@ -3748,28 +3793,30 @@ function renderRosterTable() {
                 const w = weekMatch ? parseInt(weekMatch[0], 10) : 1;
 
                 const dayRaw = String(row[dayCol] || '').trim();
-                const dayMatch = dayRaw.match(/[월화수목금]/);
+                const dayMatch = dayRaw.match(/[월화수목금토일]/);
                 const d = dayMatch ? `${dayMatch[0]}요일` : (dayRaw || '월요일');
 
                 const timeRaw = String(row[timeCol] || '').trim();
                 const timeMatch = timeRaw.match(/(\d{1,2}:\d{2})/);
                 const t = timeMatch ? (String(timeMatch[1]).length === 4 ? `0${timeMatch[1]}` : timeMatch[1]) : timeRaw;
 
-                let n1 = String(row[name1Col] || '').trim();
-                let n2 = String(row[name2Col] || '').trim();
-
-                if (n1.includes('예시') || n1 === '공석') n1 = '';
-                if (n2.includes('예시') || n2 === '공석') n2 = '';
-
                 if (t) {
-                  newRoster.push({
+                  const rObj = {
                     id: newRoster.length + 1,
                     week: w,
                     day: d,
-                    time: t,
-                    name1: n1,
-                    name2: n2
+                    time: t
+                  };
+
+                  workerColMap.forEach(wc => {
+                    let val = String(row[wc.colIdx] || '').trim();
+                    if (val.includes('예시') || val === '공석') val = '';
+                    rObj[`name${wc.roleIdx}`] = val;
+                    if (wc.roleIdx === 1) rObj.name1 = val;
+                    if (wc.roleIdx === 2) rObj.name2 = val;
                   });
+
+                  newRoster.push(rObj);
                 }
               }
 
@@ -3781,6 +3828,7 @@ function renderRosterTable() {
               }
             }
           }
+
 
           if (parsedMembersCount > 0 || parsedRosterCount > 0) {
             renderTodaySlots();
@@ -3861,7 +3909,7 @@ function renderRosterTable() {
               ${rowsHtml}
             </tbody>
           </table>
-          <p style="text-align:right;font-size:10px;color:#94a3b8;margin-top:12px;">꿈길 (Ggumgil) v1.00 · Author Sung soo Kim</p>
+          <p style="text-align:right;font-size:10px;color:#94a3b8;margin-top:12px;">꿈빛 (Ggumbit) v1.01 · Author Sung soo Kim</p>
         </div>
       `;
       window.print();
