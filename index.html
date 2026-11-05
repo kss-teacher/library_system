@@ -419,36 +419,7 @@
           </div>
         </div>
       </div>
-
-      <!-- 3. 표지 4대 감성 테마 선택기 -->
-      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
-        <h4 class="font-bold text-sm text-slate-800 border-b border-slate-100 pb-2">표지 감성 테마 선택</h4>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          <button onclick="applyCoverTheme('a')" id="themeBtn-a" class="p-3 rounded-xl border-2 text-left transition-all border-amber-500 bg-amber-50/40">
-            <div class="w-full h-8 rounded-lg bg-theme-a mb-2 shadow-xs"></div>
-            <div class="font-bold text-xs text-slate-800">여명의 구름 (기본)</div>
-            <div class="text-[10px] text-slate-500">새벽녘 라벤더·골드</div>
-          </button>
-
-          <button onclick="applyCoverTheme('b')" id="themeBtn-b" class="p-3 rounded-xl border text-left transition-all border-slate-200 hover:bg-slate-50">
-            <div class="w-full h-8 rounded-lg bg-theme-b mb-2 shadow-xs"></div>
-            <div class="font-bold text-xs text-slate-800">몽환의 층운</div>
-            <div class="text-[10px] text-slate-500">달빛 슬레이트 네이비</div>
-          </button>
-
-          <button onclick="applyCoverTheme('c')" id="themeBtn-c" class="p-3 rounded-xl border text-left transition-all border-slate-200 hover:bg-slate-50">
-            <div class="w-full h-8 rounded-lg bg-theme-c mb-2 shadow-xs"></div>
-            <div class="font-bold text-xs text-slate-800">황혼의 잔광</div>
-            <div class="text-[10px] text-slate-500">따뜻한 노을 앰버</div>
-          </button>
-
-          <button onclick="applyCoverTheme('d')" id="themeBtn-d" class="p-3 rounded-xl border text-left transition-all border-slate-200 hover:bg-slate-50">
-            <div class="w-full h-8 rounded-lg bg-theme-d mb-2 shadow-xs"></div>
-            <div class="font-bold text-xs text-slate-800">미니멀 클라우드</div>
-            <div class="text-[10px] text-slate-500">정갈한 대기 명암</div>
-          </button>
-        </div>
-      </div>
+   
     </section>
 
     <!-- [탭 5] 도서관 설정 (관리자 전용: 엄격한 인증 상태에서만 렌더링) -->
@@ -753,70 +724,70 @@
   <!-- 모달 창 컬렉션                                                    -->
   <!-- ================================================================= -->
 
-  <!-- 1. 봉사처 표지 (웰컴 게이트) 모달 -->
-  <div id="coverModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
-    <div id="coverCardContainer" class="bg-theme-a w-full max-w-md rounded-3xl p-6 sm:p-8 text-white border border-white/10 shadow-2xl relative overflow-hidden flex flex-col justify-between min-h-[520px]">
+  <!-- 1. 봉사처 표지 (웰컴 게이트) 모달 - [화이트 미니멀 개편] -->
+  <div id="coverModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div id="coverCardContainer" class="bg-white w-full max-w-md rounded-3xl p-6 sm:p-8 text-slate-800 border border-slate-200 shadow-2xl relative overflow-hidden flex flex-col justify-between min-h-[500px]">
       
       <!-- 상단 도서관 엠블럼 및 명판 -->
       <div class="text-center space-y-2 pt-2">
-        <div class="w-12 h-12 mx-auto rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 text-xl shadow-lg shadow-amber-500/10">
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center text-xl shadow-xs">
           <i class="fa-solid fa-landmark"></i>
         </div>
-        <p id="coverOrgName" class="text-xs font-semibold tracking-wider text-amber-200/90 uppercase">꿈빛도서관</p>
-        <h2 class="text-3xl sm:text-4xl font-extrabold brand-luminous-title tracking-tight">꿈 빛</h2>
-        <p class="text-xs text-slate-300 font-light">봉사인력 관리 시스템</p>
+        <p id="coverOrgName" class="text-xs font-bold tracking-wider text-amber-700 uppercase">꿈빛도서관</p>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">꿈 빛</h2>
+        <p class="text-xs text-slate-500 font-medium">봉사인력 관리 시스템</p>
       </div>
 
       <!-- 중앙 듀얼 게이트 (1회차 등록 vs 2회차 제로 노출 이름 카드) -->
       <div class="my-6">
         
         <!-- 1회차 최초 방문자 등록 폼 -->
-        <div id="gateFirstVisitorSec" class="space-y-3 bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-sm">
+        <div id="gateFirstVisitorSec" class="space-y-3 bg-slate-50/80 border border-slate-200/80 rounded-2xl p-4.5">
           <div class="text-center">
-            <h3 class="text-xs font-bold text-amber-300">봉사위원 본인 확인 및 등록</h3>
-            <p class="text-[11px] text-slate-300 mt-0.5">최초 1회 본인 정보를 등록하면 다음부터 바로 입장합니다.</p>
+            <h3 class="text-xs font-bold text-slate-800">봉사위원 본인 확인 및 등록</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">최초 1회 본인 정보를 등록하면 다음부터 바로 입장합니다.</p>
           </div>
 
           <div class="space-y-2 text-left">
             <div>
-              <label class="text-[11px] font-semibold text-slate-300 block mb-1">성함 입력</label>
-              <input type="text" id="gateNameInput" placeholder="본인 성함 입력 (예: 김도서)" class="w-full p-2.5 text-xs rounded-xl bg-slate-900/80 border border-white/15 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400">
+              <label class="text-[11px] font-bold text-slate-700 block mb-1">성함 입력</label>
+              <input type="text" id="gateNameInput" placeholder="본인 성함 입력 (예: 김도서)" class="w-full p-2.5 text-xs rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-medium">
             </div>
 
             <div>
-              <label class="text-[11px] font-semibold text-slate-300 block mb-1">전화번호 끝 4자리</label>
-              <input type="password" maxlength="4" id="gatePhoneLast4" placeholder="예: 5678" class="w-full p-2.5 text-xs rounded-xl bg-slate-900/80 border border-white/15 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400 text-center tracking-widest">
+              <label class="text-[11px] font-bold text-slate-700 block mb-1">전화번호 끝 4자리</label>
+              <input type="password" maxlength="4" id="gatePhoneLast4" placeholder="예: 5678" class="w-full p-2.5 text-xs rounded-xl bg-white border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-center tracking-widest font-bold">
             </div>
 
-            <label class="flex items-start space-x-2 pt-1 text-[11px] text-slate-300 cursor-pointer">
+            <label class="flex items-start space-x-2 pt-1 text-[11px] text-slate-600 cursor-pointer">
               <input type="checkbox" id="gateConsentCheck" class="mt-0.5 rounded text-amber-500 focus:ring-0">
               <span class="leading-tight">[필수] 도서관 봉사 일정 관리를 위한 개인정보(성명, 연락처) 수집 및 이용에 동의합니다.</span>
             </label>
           </div>
 
-          <button onclick="submitGateFirstRegistration()" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold rounded-xl text-xs transition-all shadow-md">
+          <button onclick="submitGateFirstRegistration()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs transition-all shadow-xs">
             본인 확인 및 이 기기에 등록하기
           </button>
         </div>
 
         <!-- 2회차 일상 방문자 제로 노출 환영 카드 -->
         <div id="gateReturningVisitorSec" class="hidden text-center space-y-4">
-          <p class="text-xs text-amber-100/90 font-light">따뜻한 배움의 공간을 밝혀주셔서 감사합니다.</p>
+          <p class="text-xs text-slate-500 font-medium">따뜻한 배움의 공간을 밝혀주셔서 감사합니다.</p>
           
-          <div class="p-5 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md shadow-xl text-center space-y-2">
-            <div class="w-10 h-10 mx-auto rounded-full bg-amber-400/20 text-amber-300 flex items-center justify-center text-lg">
+          <div class="p-5 rounded-2xl bg-amber-50/70 border border-amber-200/90 shadow-2xs text-center space-y-2.5">
+            <div class="w-11 h-11 mx-auto rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-lg shadow-2xs">
               <i class="fa-solid fa-user-check"></i>
             </div>
             <div>
-              <div class="text-lg font-bold text-white tracking-tight"><span id="gateSavedUserName"></span> 위원님</div>
-              <p class="text-[11px] text-amber-200/80 mt-0.5">오늘의 봉사 활동이 준비되었습니다.</p>
+              <div class="text-lg font-extrabold text-slate-900 tracking-tight"><span id="gateSavedUserName"></span> 위원님</div>
+              <p class="text-[11px] text-slate-600 mt-0.5">오늘의 봉사 활동이 준비되었습니다.</p>
             </div>
-            <button onclick="enterSystemFromGate()" class="w-full py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold rounded-xl text-xs transition-all shadow-md mt-2">
+            <button onclick="enterSystemFromGate()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-extrabold rounded-xl text-xs transition-all shadow-xs mt-2">
               오늘 봉사활동 시작하기 ✨
             </button>
           </div>
 
-          <button onclick="resetGateUser()" class="text-[11px] text-slate-400 hover:text-white underline transition-colors">
+          <button onclick="resetGateUser()" class="text-[11px] text-slate-400 hover:text-slate-700 underline transition-colors">
             다른 위원으로 전환하기
           </button>
         </div>
@@ -824,15 +795,16 @@
       </div>
 
       <!-- 하단 은은한 관리자 통로 -->
-      <div class="pt-2 flex items-center justify-between text-[11px] text-slate-400 border-t border-white/10">
-        <span>꿈빛 v31.5</span>
-        <button onclick="openModal('adminLoginModal')" class="hover:text-amber-300 transition-colors flex items-center space-x-1">
+      <div class="pt-2 flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-100">
+        <span>꿈빛 v32.0</span>
+        <button onclick="openModal('adminLoginModal')" class="hover:text-amber-600 transition-colors flex items-center space-x-1 font-semibold">
           <i class="fa-solid fa-lock text-[10px]"></i>
           <span>사서교사 / 관리자</span>
         </button>
       </div>
     </div>
   </div>
+
 
   <!-- 2. 관리자 로그인 모달 -->
   <div id="adminLoginModal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
@@ -1479,13 +1451,8 @@
       showToast('새로운 위원으로 로그인하실 수 있습니다.');
     }
 
-    function applyCoverTheme(themeKey, notify = true) {
-      const card = document.getElementById('coverCardContainer');
-      if (!card) return;
-      card.classList.remove('bg-theme-a', 'bg-theme-b', 'bg-theme-c', 'bg-theme-d');
-      card.classList.add(`bg-theme-${themeKey || 'a'}`);
+      function applyCoverTheme(themeKey, notify = true) {
       safeStorage.setItem('lib_cover_theme', themeKey || 'a');
-
       ['a', 'b', 'c', 'd'].forEach(k => {
         const btn = document.getElementById(`themeBtn-${k}`);
         if (btn) {
@@ -1498,10 +1465,9 @@
           }
         }
       });
-
-      if (notify) showToast('표지 감성 테마가 변경되었습니다.');
+      if (notify) showToast('표지 스타일이 반영되었습니다.');
     }
-
+    
     // -------------------------------------------------------------
     // [5] 탭 전환 및 보안 통제 (일반 봉사자 접근 원천 차단)
     // -------------------------------------------------------------
