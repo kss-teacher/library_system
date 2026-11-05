@@ -1,14 +1,14 @@
 /**
  * ==============================================================================
  * [꿈빛 - 도서관 봉사인력 관리 시스템]
- * Google Apps Script 클라우드 통합 백엔드 엔진 v15.0
+ * Google Apps Script 클라우드 통합 백엔드 엔진 v33.1
  * ==============================================================================
  * 
  * [주요 기능]
- * 1. 스프레드시트 상단 맞춤형 메뉴 자동 생성 (표준 5대 시트 원클릭 세팅)
+ * 1. 스프레드시트 상단 맞춤형 메뉴 자동 생성 (표준 5대 시트 원클릭 세팅 & 신학기 초기화)
  * 2. 가변 타임슬롯(1일 1타임, 2타임, 3타임 등) 및 운영 주기(1주/2주/1달) 지원
- * 3. 월별 일자별 봉사 배정표 시트 동적 자동 생성 (공휴일/방학 자동 판별)
- * 4. 웹앱 REST API (doGet / doPost): 명부, 순번표, 공지사항, 개인정보 동의로그 실시간 동기화
+ * 3. 월별 일자별 봉사 배정표 시트 동적 자동 생성 (웹앱 원격 트리거 API 결합)
+ * 4. 웹앱 REST API (doGet / doPost): 명부, 순번표, 공지사항, 출석부, 대타로그, 원격 배정표 생성
  * 5. 관리자 계정(ID/PW) 안전 저장 및 비상 초기화 지원
  */
 
@@ -65,7 +65,7 @@ function setupNewSchoolTemplate() {
   const confirm = ui.alert(
     '🌟 표준 5대 시트 자동 구성',
     '이 스프레드시트에 꿈빛 시스템 운영에 필요한 필수 시트\n' +
-    '(1. 시스템 설정  2. 봉사자 순번  3. 봉사자 정보  4. 출석 및 변경 기록  5. 개인정보_동의이력  6. 관리자용 매뉴얼)를\n' +
+    '(1. 시스템 설정  2. 봉사자 순번  3. 봉사자 정보  4. 출석부  5. 출석 및 변경 기록  6. 개인정보_동의이력  7. 관리자용 매뉴얼)를\n' +
     '표준 규격으로 자동 생성하시겠습니까?\n\n' +
     '※ 기존에 작성된 데이터가 있는 경우 덮어씌워질 수 있으니 주의하세요.',
     ui.ButtonSet.YES_NO
@@ -156,7 +156,7 @@ function createOrResetStandardSheets(ss, cycleType, libraryName, adminName, admi
   memSheet.getRange('A1:C1').setValues([['순번', '이름', '연락처']])
     .setBackground('#0369a1').setFontColor('#ffffff').setFontWeight('bold').setHorizontalAlignment('center');
 
-  // 4. [출석부] 시트 (관장님 지정 4대 표준 컬럼: 날짜 | 시간 | 이름 | 출석확인)
+  // 4. [출석부] 시트
   let attSheet = ss.getSheetByName('출석부');
   if (!attSheet) attSheet = ss.insertSheet('출석부');
   attSheet.clear();
@@ -166,7 +166,6 @@ function createOrResetStandardSheets(ss, cycleType, libraryName, adminName, admi
   attSheet.setColumnWidth(4, 100);
   attSheet.getRange('A1:D1').setValues([['날짜', '시간', '이름', '출석확인']])
     .setBackground('#047857').setFontColor('#ffffff').setFontWeight('bold').setHorizontalAlignment('center');
-  // ※ 더미 데이터 0% 철칙: 샘플 데이터는 일절 넣지 않고 헤더만 구성하여 순수 실시간 데이터만 적재
 
   // 5. [출석 및 변경 기록] 시트
   let logSheet = ss.getSheetByName('출석 및 변경 기록');
@@ -182,7 +181,7 @@ function createOrResetStandardSheets(ss, cycleType, libraryName, adminName, admi
   logSheet.getRange('A1:G1').setValues([['슬롯키', '일자', '시간', '역할', '대상자/대타 성명', '사유', '기록일시']])
     .setBackground('#475569').setFontColor('#ffffff').setFontWeight('bold').setHorizontalAlignment('center');
 
-  // 5. [개인정보_동의이력] 시트 (PIPA 감사로그)
+  // 6. [개인정보_동의이력] 시트 (PIPA 감사로그)
   let consentSheet = ss.getSheetByName('개인정보_동의이력');
   if (!consentSheet) consentSheet = ss.insertSheet('개인정보_동의이력');
   consentSheet.clear();
@@ -194,7 +193,7 @@ function createOrResetStandardSheets(ss, cycleType, libraryName, adminName, admi
   consentSheet.getRange('A1:E1').setValues([['기록일시', '구분', '성명 (식별값)', '동의 규격', '비고']])
     .setBackground('#7c3aed').setFontColor('#ffffff').setFontWeight('bold').setHorizontalAlignment('center');
 
-  // 6. [관리자용 매뉴얼] 시트
+  // 7. [관리자용 매뉴얼] 시트
   let manualSheet = ss.getSheetByName('관리자용 매뉴얼');
   if (!manualSheet) manualSheet = ss.insertSheet('관리자용 매뉴얼');
   manualSheet.clear();
@@ -210,12 +209,13 @@ function createOrResetStandardSheets(ss, cycleType, libraryName, adminName, admi
     ['1. 시스템 개요', '꿈빛은 전국의 학교 도서관에서 서버 비용 0원으로 운영할 수 있는 자원봉사자 관리 솔루션입니다.'],
     ['2. 명부 작성 요령', '[봉사자 정보] 탭에 학부모님 성함과 연락처(010-0000-0000)를 입력하시면 웹앱과 실시간 연동됩니다.'],
     ['3. 순번표 작성 요령', '[봉사자 순번] 탭의 봉사위원 1 및 봉사위원 2 열에 배정할 위원 성함을 입력하세요.'],
-    ['4. 비밀번호 분실 시', '상단 메뉴 [📚 꿈빛 도서관 봉사 관리] ➔ [관리자 계정 초기화]를 누르면 admin / admin1234로 즉시 리셋됩니다.'],
-    ['5. 배포 팁', 'Apps Script [배포] ➔ [새 배포] ➔ [웹 앱] (액세스 권한: 모든 사용자)으로 배포한 URL을 사용합니다.']
+    ['4. 배정표 시트 생성', '웹앱의 [월별 캘린더] 탭에서 [구글 시트에 배정표 탭 생성]을 누르면 해당 월의 배정표 탭이 자동 생성됩니다.'],
+    ['5. 비밀번호 분실 시', '상단 메뉴 [📚 꿈빛 도서관 봉사 관리] ➔ [관리자 계정 초기화]를 누르면 admin / admin1234로 즉시 리셋됩니다.'],
+    ['6. 배포 팁', 'Apps Script [배포] ➔ [배포 관리] ➔ [편집] ➔ [새 버전]으로 배포한 웹 앱 URL을 사용합니다.']
   ];
   manualSheet.getRange(2, 1, manualContent.length, 2).setValues(manualContent).setVerticalAlignment('middle');
-  manualSheet.getRange('A2:A6').setBackground('#f1f5f9').setFontWeight('bold').setHorizontalAlignment('center');
-  for (let r = 2; r <= 6; r++) { manualSheet.setRowHeight(r, 32); }
+  manualSheet.getRange('A2:A7').setBackground('#f1f5f9').setFontWeight('bold').setHorizontalAlignment('center');
+  for (let r = 2; r <= 7; r++) { manualSheet.setRowHeight(r, 32); }
 
   const defaultSheet1 = ss.getSheetByName('Sheet1') || ss.getSheetByName('시트1');
   if (defaultSheet1 && ss.getSheets().length > 1) {
@@ -829,7 +829,7 @@ function doPost(e) {
       return ContentService.createTextOutput(JSON.stringify({ status: 'success' })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // 6. 봉사자 명부 실시간 일괄 저장 (CRUD 동기화 - 신설)
+    // 6. 봉사자 명부 실시간 일괄 저장 (CRUD 동기화)
     if (action === 'saveMembers' && Array.isArray(postData.members)) {
       let memSheet = ss.getSheetByName('봉사자 정보');
       if (!memSheet) {
@@ -855,7 +855,7 @@ function doPost(e) {
         .setMimeType(ContentService.MimeType.JSON);
     }
 
-    // 7. 출석부 실시간 저장 (날짜 | 시간 | 이름 | 출석확인 4대 표준 규격 - 신설)
+    // 7. 출석부 실시간 저장 (날짜 | 시간 | 이름 | 출석확인 4대 표준 규격)
     if (action === 'saveAttendanceCheck' || action === 'saveAttendance') {
       let attSheet = ss.getSheetByName('출석부');
       if (!attSheet) {
@@ -917,6 +917,18 @@ function doPost(e) {
       return ContentService.createTextOutput(JSON.stringify({
         status: 'success',
         message: '신학기 봉사단 시트가 깨끗하게 초기화되었습니다.'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // 9. 월별 봉사 배정표 시트 탭 원격 자동 생성 (웹앱 월별 캘린더 연동 - 33.1 신설)
+    if (action === 'createMonthlySheet') {
+      const targetYear = parseInt(postData.year, 10) || new Date().getFullYear();
+      const targetMonth = parseInt(postData.month, 10) || (new Date().getMonth() + 1);
+      const createdSheetName = createMonthlySheet(targetYear, targetMonth);
+      return ContentService.createTextOutput(JSON.stringify({
+        status: 'success',
+        sheetName: createdSheetName,
+        message: `[${createdSheetName}] 탭이 구글 시트에 성공적으로 생성되었습니다.`
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
