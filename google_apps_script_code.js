@@ -388,82 +388,102 @@ function checkAndRunLastDayTrigger() {
   }
 }
 
-function createMonthlySheet(year, month) {
+function createMonthlySheet(year, month, clientRows, libName) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const monthStr = year + '-' + String(month).padStart(2, '0');
   const sheetName = monthStr + ' 봉사배정표';
 
-  const rosterSheet = ss.getSheetByName('봉사자 순번') || ss.getSheets()[0];
-  const { roster } = findRosterColumns(rosterSheet);
-  const holidays = readHolidaysList(ss);
-  const config = readSystemConfig(ss);
-  const timeSlots = config.timeSlots || getDefaultTimeSlots();
-
-  const logSheet = ss.getSheetByName('출석 및 변경 기록');
-  const overrides = {};
-  if (logSheet) {
-    const logData = logSheet.getDataRange().getDisplayValues();
-    for (let i = 1; i < logData.length; i++) {
-      const k = String(logData[i][0] || '').trim();
-      const ovr = String(logData[i][4] || '').trim();
-      if (k && ovr) overrides[k] = ovr;
+  // 1. 기존 동일 명칭 탭이 있을 경우 선 삭제 후 재생성 (기존 병합 셀 충돌 및 예외 원천 방어)
+  let targetSheet = ss.getSheetByName(sheetName);
+  if (targetSheet) {
+    try {
+      ss.deleteSheet(targetSheet);
+    } catch (e) {
+      targetSheet.clear();
+      try { targetSheet.getRange('A1:G1').breakApart(); } catch (e2) {}
     }
   }
+  targetSheet = ss.insertSheet(sheetName);
 
-  let targetSheet = ss.getSheetByName(sheetName);
-  if (!targetSheet) {
-    targetSheet = ss.insertSheet(sheetName);
-  } else {
-    targetSheet.clear();
-  }
-
+  // 2. 가독성 높은 열 너비 세팅
   targetSheet.setColumnWidth(1, 110);
-  targetSheet.setColumnWidth(2, 75);
+  targetSheet.setColumnWidth(2, 80);
   targetSheet.setColumnWidth(3, 90);
-  targetSheet.setColumnWidth(4, 110);
-  targetSheet.setColumnWidth(5, 130);
-  targetSheet.setColumnWidth(6, 130);
-  targetSheet.setColumnWidth(7, 180);
+  targetSheet.setColumnWidth(4, 150);
+  targetSheet.setColumnWidth(5, 140);
+  targetSheet.setColumnWidth(6, 140);
+  targetSheet.setColumnWidth(7, 220);
 
+  const displayLibName = libName || (readSystemConfig(ss).libraryName || '도서관');
+
+  // 3. 상단 대형 타이틀
   targetSheet.getRange('A1:G1').merge()
-    .setValue(`[${config.libraryName}] ${year}년 ${month}월 봉사 배정표`)
+    .setValue(`[${displayLibName}] ${year}년 ${month}월 봉사 배정표`)
     .setBackground('#15803d').setFontColor('#ffffff').setFontWeight('bold').setFontSize(14)
     .setHorizontalAlignment('center').setVerticalAlignment('middle');
-  targetSheet.setRowHeight(1, 38);
+  targetSheet.setRowHeight(1, 40);
 
+  // 4. 헤더 행
   const headers = ['활동 날짜', '요일', '순번 주차', '시간대', '봉사위원 1 (정)', '봉사위원 2 (부)', '비고'];
   targetSheet.getRange(2, 1, 1, 7).setValues([headers])
     .setBackground('#e2e8f0').setFontColor('#334155').setFontWeight('bold').setHorizontalAlignment('center');
+  targetSheet.setRowHeight(2, 28);
 
-  const lastDate = new Date(year, month, 0).getDate();
-  const rows = [];
-  const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+  let rows = [];
 
-  for (let d = 1; d <= lastDate; d++) {
-    const curDate = new Date(year, month - 1, d);
-    const dateStr = Utilities.formatDate(curDate, 'Asia/Seoul', 'yyyy-MM-dd');
-    const dayOfWeek = curDate.getDay();
-    const dayName = dayNames[dayOfWeek];
-    const status = checkDayStatus(curDate, dateStr, holidays);
+  // 5. 웹앱에서 정밀 계산된 실데이터가 넘어온 경우 1순위 즉시 적재
+  if (clientRows && Array.isArray(clientRows) && clientRows.length > 0) {
+    rows = clientRows;
+  } else {
+    // 스프레드시트 메뉴 등에서 단독 실행된 경우 시트 내부 데이터 기반 계산
+    const rosterSheet = ss.getSheetByName('봉사자 순번') || ss.getSheets()[0];
+    const { roster } = findRosterColumns(rosterSheet);
+    const holidays = readHolidaysList(ss);
+    const config = readSystemConfig(ss);
+    const timeSlots = config.timeSlots || getDefaultTimeSlots();
 
-    if (status.isClosed) {
-      rows.push([dateStr, dayName, '-', '-', '-', '-', status.title]);
-    } else {
-      const weekCycle = calculateContinuousWeekCycle(curDate, config.cycleBaseDate, config.cycleBaseWeek, config.cycleType);
-      timeSlots.forEach(slot => {
-        const sNorm = normalizeTimeStr(slot.startTime);
-        const rMatch = roster.find(r => r.week === weekCycle && r.day.startsWith(dayName) && normalizeTimeStr(r.time) === sNorm);
-        const ovr1 = overrides[`${dateStr}_${sNorm}_1`];
-        const ovr2 = overrides[`${dateStr}_${sNorm}_2`];
-        const n1 = ovr1 || (rMatch ? rMatch.name1 : '') || '공석';
-        const n2 = ovr2 || (rMatch ? rMatch.name2 : '') || '(1인 근무)';
-        rows.push([dateStr, dayName, `${weekCycle}주차`, slot.startTime, n1, n2, '']);
-      });
+    const logSheet = ss.getSheetByName('출석 및 변경 기록');
+    const overrides = {};
+    if (logSheet) {
+      const logData = logSheet.getDataRange().getDisplayValues();
+      for (let i = 1; i < logData.length; i++) {
+        const k = String(logData[i][0] || '').trim();
+        const ovr = String(logData[i][4] || '').trim();
+        if (k && ovr) overrides[k] = ovr;
+      }
+    }
+
+    const lastDate = new Date(year, month, 0).getDate();
+    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+
+    for (let d = 1; d <= lastDate; d++) {
+      const curDate = new Date(year, month - 1, d);
+      const dateStr = Utilities.formatDate(curDate, 'Asia/Seoul', 'yyyy-MM-dd');
+      const dayOfWeek = curDate.getDay();
+      const dayName = dayNames[dayOfWeek];
+      const status = checkDayStatus(curDate, dateStr, holidays);
+
+      if (status.isClosed) {
+        rows.push([dateStr, dayName, '-', '-', '-', '-', status.title]);
+      } else {
+        const weekCycle = calculateContinuousWeekCycle(curDate, config.cycleBaseDate, config.cycleBaseWeek, config.cycleType);
+        timeSlots.forEach(slot => {
+          const sNorm = normalizeTimeStr(slot.startTime);
+          const rMatch = roster.find(r => r.week === weekCycle && r.day.startsWith(dayName) && normalizeTimeStr(r.time) === sNorm);
+          const ovr1 = overrides[`${dateStr}_${sNorm}_1`];
+          const ovr2 = overrides[`${dateStr}_${sNorm}_2`];
+          const n1 = ovr1 || (rMatch ? rMatch.name1 : '') || '공석';
+          const n2 = ovr2 || (rMatch ? rMatch.name2 : '') || '(1인 근무)';
+          rows.push([dateStr, dayName, `${weekCycle}주차`, slot.startTime, n1, n2, '']);
+        });
+      }
     }
   }
 
+  // 6. 데이터 기입 및 정돈된 테두리 설정
   if (rows.length > 0) {
     targetSheet.getRange(3, 1, rows.length, 7).setValues(rows).setHorizontalAlignment('center');
+    targetSheet.getRange(3, 1, rows.length, 7).setBorder(true, true, true, true, true, true, '#cbd5e1', SpreadsheetApp.BorderStyle.SOLID);
   }
 
   ss.setActiveSheet(targetSheet);
@@ -920,11 +940,13 @@ function doPost(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // 9. 월별 봉사 배정표 시트 탭 원격 자동 생성 (웹앱 월별 캘린더 연동 - 33.1 신설)
+    // 9. 월별 봉사 배정표 시트 탭 원격 자동 생성 (웹앱 월별 캘린더 연동)
     if (action === 'createMonthlySheet') {
       const targetYear = parseInt(postData.year, 10) || new Date().getFullYear();
       const targetMonth = parseInt(postData.month, 10) || (new Date().getMonth() + 1);
-      const createdSheetName = createMonthlySheet(targetYear, targetMonth);
+      const libName = postData.libraryName || '도서관';
+      const clientRows = Array.isArray(postData.scheduleRows) ? postData.scheduleRows : null;
+      const createdSheetName = createMonthlySheet(targetYear, targetMonth, clientRows, libName);
       return ContentService.createTextOutput(JSON.stringify({
         status: 'success',
         sheetName: createdSheetName,
