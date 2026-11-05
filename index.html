@@ -1916,6 +1916,7 @@
       if (badgeEl) badgeEl.className = 'text-xs font-bold px-3 py-1.5 rounded-xl bg-amber-50 text-amber-700 border border-amber-200/60 flex items-center space-x-1.5';
 
       const myName = safeStorage.getItem('lib_my_name') || myVolunteerName || '';
+      const cap = Math.max(1, parseInt(slotCapacity, 10) || 2);
 
       let cardsHtml = '';
 
@@ -1924,7 +1925,7 @@
           <div class="p-3 bg-slate-900 text-white rounded-xl text-xs flex items-center justify-between shadow-xs">
             <div class="flex items-center space-x-2">
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-              <span class="font-bold">👑 사서 관리자 전용 직권 모드 활성화됨</span>
+              <span class="font-bold">👑 사서 관리자 직권 모드 활성화됨 (슬롯당 정원: ${cap}명)</span>
             </div>
             <span class="text-[11px] text-slate-300">슬롯별 봉사위원을 즉시 변경하거나 원상복구할 수 있습니다.</span>
           </div>
@@ -1935,10 +1936,12 @@
         const sNorm = slot.startTime;
         const rMatch = rosterData.find(r => r.week === weekCycle && r.day.startsWith(dayName.slice(0, 1)) && r.time === sNorm);
 
-        const slotWorkers = [1, 2].map(roleIdx => {
+        // 1부터 N(cap)까지 동적으로 위원 슬롯 생성
+        const roleIndices = Array.from({ length: cap }, (_, i) => i + 1);
+        const slotWorkers = roleIndices.map(roleIdx => {
           const key = `${currentDateStr}_${sNorm}_${roleIdx}`;
           const rec = getOverrideRecord(key);
-          const origName = (rMatch ? (roleIdx === 1 ? rMatch.name1 : rMatch.name2) : '') || '공석';
+          const origName = (rMatch ? (rMatch[`name${roleIdx}`] || (roleIdx === 1 ? rMatch.name1 : (roleIdx === 2 ? rMatch.name2 : ''))) : '') || '공석';
 
           const isReq = (rec && rec.status === 'REQUESTED');
           const isAcc = (rec && rec.status === 'ACCEPTED');
@@ -1950,6 +1953,11 @@
           return { roleIdx, key, rec, origName, isReq, isAcc, effName, isAtt, isMy };
         });
 
+        // 1명일 때는 1열, 2명일 때는 2열, 3명 이상일 때는 화면 크기에 맞춰 다열 분할
+        let gridColsClass = 'grid-cols-1 md:grid-cols-2';
+        if (cap === 1) gridColsClass = 'grid-cols-1';
+        else if (cap >= 3) gridColsClass = 'grid-cols-1 md:grid-cols-3';
+
         cardsHtml += `
           <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
             <!-- 슬롯 헤더 -->
@@ -1958,11 +1966,11 @@
                 <span class="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">${slot.name.slice(0, 2)}</span>
                 <h4 class="font-bold text-xs sm:text-sm text-slate-800">${slot.name} (${slot.startTime} ~ ${slot.endTime})</h4>
               </div>
-              <span class="text-[11px] font-semibold text-slate-400">2인 1조 봉사 슬롯</span>
+              <span class="text-[11px] font-semibold text-slate-400">${cap}인 봉사 슬롯</span>
             </div>
 
-            <!-- 슬롯 내부 위원 1 & 위원 2 카드 리스트 -->
-            <div class="p-4 sm:p-5 grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            <!-- 슬롯 내부 N인 위원 카드 그리드 -->
+            <div class="p-4 sm:p-5 grid ${gridColsClass} gap-3.5">
               ${slotWorkers.map(w => {
                 let cardStyle = 'border border-slate-200 rounded-xl p-3.5 transition-all bg-white flex flex-col justify-between space-y-3';
                 if (w.isReq) {
@@ -1971,13 +1979,15 @@
                   cardStyle = 'border-2 border-amber-400 bg-amber-50/50 rounded-xl p-3.5 shadow-2xs flex flex-col justify-between space-y-3';
                 }
 
+                const roleLabel = (w.roleIdx === 1) ? '봉사위원 1 (정)' : (w.roleIdx === 2 ? '봉사위원 2 (부)' : `봉사위원 ${w.roleIdx}`);
+
                 return `
                   <div class="${cardStyle}">
                     <div>
                       <!-- 역할 배지 & 대타 상태 -->
                       <div class="flex items-center justify-between mb-1.5">
                         <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${w.roleIdx === 1 ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-600 border border-slate-200'}">
-                          봉사위원 ${w.roleIdx} (${w.roleIdx === 1 ? '정' : '부'})
+                          ${roleLabel}
                         </span>
                         
                         ${w.isReq ? `
@@ -2018,7 +2028,7 @@
                       </div>
                     </div>
 
-                    <!-- 하단 액션 구역 (사용자 자율 매칭 vs 관리자 직권 교체) -->
+                    <!-- 하단 액션 구역 -->
                     ${isAdminLoggedIn ? `
                       <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
                         <div class="flex items-center space-x-1 flex-grow">
@@ -2062,6 +2072,7 @@
           </div>
         `;
       });
+
 
       container.innerHTML = cardsHtml;
     }
@@ -2311,9 +2322,26 @@
       renderRosterTable();
     }
 
-    function renderRosterTable() {
+function renderRosterTable() {
       const tbody = document.getElementById('rosterTableBody');
       if (!tbody) return;
+
+      const cap = Math.max(1, parseInt(slotCapacity, 10) || 2);
+      const thead = tbody.closest('table')?.querySelector('thead tr');
+
+      // 1. thead 헤더 열을 slotCapacity(N명)에 맞춰 동적 재구성
+      if (thead) {
+        let thHtml = `
+          <th class="p-3 text-center w-16">주차</th>
+          <th class="p-3 text-center w-20">요일</th>
+          <th class="p-3">시간대</th>
+        `;
+        for (let r = 1; r <= cap; r++) {
+          const roleLabel = (r === 1) ? '봉사위원 1 (정)' : (r === 2 ? '봉사위원 2 (부)' : `봉사위원 ${r}`);
+          thHtml += `<th class="p-3">${roleLabel}</th>`;
+        }
+        thead.innerHTML = thHtml;
+      }
 
       const searchInput = document.getElementById('rosterSearchInput');
       const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
@@ -2321,32 +2349,39 @@
       let filtered = rosterData.filter(r => {
         if (rosterFilterWeek > 0 && r.week !== rosterFilterWeek) return false;
         if (query) {
-          const str = `${r.week}주차 ${r.day} ${r.time} ${r.name1} ${r.name2}`.toLowerCase();
+          let namesStr = '';
+          for (let i = 1; i <= cap; i++) {
+            namesStr += ' ' + (r[`name${i}`] || (i === 1 ? r.name1 : (i === 2 ? r.name2 : '')) || '');
+          }
+          const str = `${r.week}주차 ${r.day} ${r.time} ${namesStr}`.toLowerCase();
           return str.includes(query);
         }
         return true;
       });
 
       if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">조건에 맞는 배정 데이터가 없습니다.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${3 + cap}" class="p-6 text-center text-slate-400">조건에 맞는 배정 데이터가 없습니다.</td></tr>`;
         return;
       }
 
       tbody.innerHTML = filtered.map(r => {
-        const isMy1 = (myVolunteerName && r.name1 === myVolunteerName);
-        const isMy2 = (myVolunteerName && r.name2 === myVolunteerName);
+        let colsHtml = '';
+        for (let i = 1; i <= cap; i++) {
+          const workerName = r[`name${i}`] || (i === 1 ? r.name1 : (i === 2 ? r.name2 : '')) || '';
+          const isMy = (myVolunteerName && workerName === myVolunteerName);
+          colsHtml += `
+            <td class="p-3">
+              <span class="font-bold text-slate-800 ${isMy ? 'text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200' : ''}">${workerName || '공석'}</span>
+            </td>
+          `;
+        }
 
         return `
           <tr class="hover:bg-slate-50 transition-colors">
             <td class="p-3 text-center font-bold text-slate-600">${r.week}주차</td>
             <td class="p-3 text-center font-semibold text-slate-700">${r.day}</td>
             <td class="p-3 font-medium text-slate-600">${r.time}</td>
-            <td class="p-3">
-              <span class="font-bold text-slate-800 ${isMy1 ? 'text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200' : ''}">${r.name1 || '공석'}</span>
-            </td>
-            <td class="p-3">
-              <span class="font-bold text-slate-800 ${isMy2 ? 'text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200' : ''}">${r.name2 || '공석'}</span>
-            </td>
+            ${colsHtml}
           </tr>
         `;
       }).join('');
@@ -2948,12 +2983,13 @@
       return html;
     }
 
-    function updateScheduleAssignment(weekNum, dayName, timeStr, roleIdx, selectedVal) {
+      function updateScheduleAssignment(weekNum, dayName, timeStr, roleIdx, selectedVal) {
       const cleanVal = (selectedVal === '공석') ? '' : selectedVal.trim();
       const dayShort = dayName.slice(0, 1);
       
       let rMatch = rosterData.find(r => r.week === weekNum && r.day.startsWith(dayShort) && r.time === timeStr);
       if (rMatch) {
+        rMatch[`name${roleIdx}`] = cleanVal;
         if (roleIdx === 1) rMatch.name1 = cleanVal;
         if (roleIdx === 2) rMatch.name2 = cleanVal;
       } else {
@@ -2962,10 +2998,11 @@
           id: newId,
           week: weekNum,
           day: dayName,
-          time: timeStr,
-          name1: roleIdx === 1 ? cleanVal : '',
-          name2: roleIdx === 2 ? cleanVal : ''
+          time: timeStr
         };
+        rMatch[`name${roleIdx}`] = cleanVal;
+        if (roleIdx === 1) rMatch.name1 = cleanVal;
+        if (roleIdx === 2) rMatch.name2 = cleanVal;
         rosterData.push(rMatch);
       }
 
@@ -2984,32 +3021,50 @@
       const tbody = document.getElementById('scheduleAssignTableBody');
       if (!tbody) return;
 
-      const days = ['월요일', '화요일', '수요일', '목요일', '금요일'];
+      const cap = Math.max(1, parseInt(slotCapacity, 10) || 2);
+      const thead = tbody.closest('table')?.querySelector('thead tr');
+
+      // thead 동적 구성
+      if (thead) {
+        let thHtml = `
+          <th class="p-2.5 text-center w-20">요일</th>
+          <th class="p-2.5 w-32">시간대</th>
+        `;
+        for (let r = 1; r <= cap; r++) {
+          const roleLabel = (r === 1) ? '봉사위원 1 (정)' : (r === 2 ? '봉사위원 2 (부)' : `봉사위원 ${r}`);
+          thHtml += `<th class="p-2.5">${roleLabel}</th>`;
+        }
+        thead.innerHTML = thHtml;
+      }
+
+      const opDays = (operatingDays && operatingDays.length > 0) ? operatingDays : ['월', '화', '수', '목', '금'];
+      const dayFullNameMap = { '월': '월요일', '화': '화요일', '수': '수요일', '목': '목요일', '금': '금요일', '토': '토요일', '일': '일요일' };
+      const days = opDays.map(d => dayFullNameMap[d] || `${d}요일`);
+
       let rowsHtml = '';
 
       days.forEach(day => {
         timeSlots.forEach((slot, sIdx) => {
           const rMatch = rosterData.find(r => r.week === scheduleAssignActiveWeek && r.day.startsWith(day.slice(0, 1)) && r.time === slot.startTime);
-          const name1 = (rMatch ? rMatch.name1 : '') || '';
-          const name2 = (rMatch ? rMatch.name2 : '') || '';
 
-          const opts1 = getScheduleMemberSelectOptions(name1);
-          const opts2 = getScheduleMemberSelectOptions(name2);
+          let dropCols = '';
+          for (let r = 1; r <= cap; r++) {
+            const currentWorker = (rMatch ? (rMatch[`name${r}`] || (r === 1 ? rMatch.name1 : (r === 2 ? rMatch.name2 : ''))) : '') || '';
+            const opts = getScheduleMemberSelectOptions(currentWorker);
+            dropCols += `
+              <td class="p-2">
+                <select onchange="updateScheduleAssignment(${scheduleAssignActiveWeek}, '${day}', '${slot.startTime}', ${r}, this.value)" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white text-slate-800 font-semibold focus:ring-2 focus:ring-indigo-500/20 focus:outline-none">
+                  ${opts}
+                </select>
+              </td>
+            `;
+          }
 
           rowsHtml += `
             <tr class="hover:bg-slate-50 transition-colors">
               ${sIdx === 0 ? `<td rowspan="${timeSlots.length}" class="p-2.5 text-center font-bold text-slate-700 bg-slate-50/50 border-r border-slate-100 align-middle">${day}</td>` : ''}
               <td class="p-2.5 font-medium text-slate-600">${slot.name} (${slot.startTime})</td>
-              <td class="p-2">
-                <select onchange="updateScheduleAssignment(${scheduleAssignActiveWeek}, '${day}', '${slot.startTime}', 1, this.value)" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white text-slate-800 font-semibold focus:ring-2 focus:ring-indigo-500/20 focus:outline-none">
-                  ${opts1}
-                </select>
-              </td>
-              <td class="p-2">
-                <select onchange="updateScheduleAssignment(${scheduleAssignActiveWeek}, '${day}', '${slot.startTime}', 2, this.value)" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white text-slate-800 font-semibold focus:ring-2 focus:ring-indigo-500/20 focus:outline-none">
-                  ${opts2}
-                </select>
-              </td>
+              ${dropCols}
             </tr>
           `;
         });
@@ -4329,22 +4384,33 @@
 
     function checkDayStatusClient(dObj, dStr) {
       const day = dObj.getDay();
-      if (day === 0) return { isClosed: true, title: '일요일 휴관' };
-      if (day === 6) return { isClosed: true, title: '토요일 휴관' };
+      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+      const dayShort = dayNames[day];
 
-      const holidays = {
-        '2026-01-01': '신정', '2026-02-16': '설연휴', '2026-02-17': '설날', '2026-02-18': '설연휴',
-        '2026-03-01': '3·1절', '2026-03-02': '대체공휴일', '2026-05-05': '어린이날', '2026-05-24': '부처님오신날',
-        '2026-05-25': '대체공휴일', '2026-06-06': '현충일', '2026-08-15': '광복절', '2026-08-17': '대체공휴일',
-        '2026-09-24': '추석연휴', '2026-09-25': '추석', '2026-09-26': '추석연휴', '2026-10-03': '개천절',
-        '2026-10-05': '대체공휴일', '2026-10-09': '한글날', '2026-12-25': '성탄절'
-      };
-
-      if (holidays[dStr]) {
-        return { isClosed: true, title: holidays[dStr] };
+      // 1. 관리자가 설정한 정기 운영 요일에 포함되지 않은 경우 휴관 처리
+      const opDays = (operatingDays && operatingDays.length > 0) ? operatingDays : ['월', '화', '수', '목', '금'];
+      if (!opDays.includes(dayShort)) {
+        return { isClosed: true, title: `${dayShort}요일 정기휴관` };
       }
+
+      // 2. 법정 공휴일 자동 휴관 적용 옵션이 켜져 있는 경우
+      if (autoHolidaysClose) {
+        const holidays = {
+          '2026-01-01': '신정', '2026-02-16': '설연휴', '2026-02-17': '설날', '2026-02-18': '설연휴',
+          '2026-03-01': '3·1절', '2026-03-02': '대체공휴일', '2026-05-05': '어린이날', '2026-05-24': '부처님오신날',
+          '2026-05-25': '대체공휴일', '2026-06-06': '현충일', '2026-08-15': '광복절', '2026-08-17': '대체공휴일',
+          '2026-09-24': '추석연휴', '2026-09-25': '추석', '2026-09-26': '추석연휴', '2026-10-03': '개천절',
+          '2026-10-05': '대체공휴일', '2026-10-09': '한글날', '2026-12-25': '성탄절'
+        };
+
+        if (holidays[dStr]) {
+          return { isClosed: true, title: holidays[dStr] };
+        }
+      }
+
       return { isClosed: false, title: '' };
     }
+
   </script>
 </body>
 </html>
