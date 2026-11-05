@@ -1332,9 +1332,6 @@
       if (cachedOverrides) {
         try { overrideLog = JSON.parse(cachedOverrides); } catch (e) {}
       }
-
-      const savedTheme = safeStorage.getItem('lib_cover_theme') || 'a';
-      applyCoverTheme(savedTheme, false);
     }
 
     function initDefaultRosterIfEmpty() {
@@ -1450,24 +1447,7 @@
       renderAllViews();
       showToast('새로운 위원으로 로그인하실 수 있습니다.');
     }
-
-      function applyCoverTheme(themeKey, notify = true) {
-      safeStorage.setItem('lib_cover_theme', themeKey || 'a');
-      ['a', 'b', 'c', 'd'].forEach(k => {
-        const btn = document.getElementById(`themeBtn-${k}`);
-        if (btn) {
-          if (k === themeKey) {
-            btn.classList.add('border-amber-500', 'bg-amber-50/40');
-            btn.classList.remove('border-slate-200');
-          } else {
-            btn.classList.remove('border-amber-500', 'bg-amber-50/40');
-            btn.classList.add('border-slate-200');
-          }
-        }
-      });
-      if (notify) showToast('표지 스타일이 반영되었습니다.');
-    }
-    
+     
     // -------------------------------------------------------------
     // [5] 탭 전환 및 보안 통제 (일반 봉사자 접근 원천 차단)
     // -------------------------------------------------------------
