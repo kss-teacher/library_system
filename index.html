@@ -1,9 +1,34 @@
 <!DOCTYPE html>
 <html lang="ko">
+<!--
+  ==============================================================================
+  [프로그램 정보(Program Information)]
+  Project: 꿈길 (Ggumgil) - 도서관 봉사인력 자원관리 프로그램
+  Version: v1.00
+  Author / Copyright: (c) 2026 Sung soo Kim. All Rights Reserved.
+  License: Open Education License (Based on MIT License with Non-Commercial Recommendation)
+
+  [이용 허락 고지 (License Notice)]
+  본 소프트웨어는 전국 초·중·고교 및 공공도서관의 자원봉사 인력 관리와 공익 증진을 위해
+  무상으로 제공됩니다. 교육기관 및 비영리 공공 목적에 한하여 누구나 본 프로그램을 자유롭게
+  사용, 수정, 배포할 수 있으며, 이 경우 상단의 저작권자(Sung soo Kim) 표기 및 본 이용허락
+  고지문을 원본 그대로 유지하여야 합니다.
+
+  [법적 면책 조항 (Disclaimer of Warranty & Liability)]
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
+  IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  본 소프트웨어는 오픈 인프라(Google Apps Script, GitHub Pages 등)를 기반으로 무상 제공되며,
+  시스템에 적재되는 개인정보 보호 및 데이터 관리의 법적 책임은 각 이용 기관(도서관)에 있습니다.
+  ==============================================================================
+-->
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>꿈빛 - 도서관 봉사인력 관리 시스템</title>
+  <title>꿈길 - 도서관 봉사인력 관리 시스템 v1.00</title>
   
   <!-- 웹 폰트 (Noto Sans KR, Inter, Noto Serif KR) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -75,17 +100,17 @@
   <header class="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-xs backdrop-blur-md bg-white/95">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
       
-      <!-- 좌측: 브랜드 로고 및 도서관 명칭 -->
+      <!-- 좌측: 브랜드 로고 및 도서관 명칭 (꿈길 v1.00 공식 명명) -->
       <div class="flex items-center space-x-3 cursor-pointer" onclick="openCoverModal()">
         <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white shadow-md shadow-amber-500/20">
           <i class="fa-solid fa-book-open-reader text-lg"></i>
         </div>
         <div>
           <div class="flex items-center space-x-1.5">
-            <span class="font-bold text-lg text-slate-900 tracking-tight">꿈빛</span>
-            <span class="text-[11px] font-semibold px-2 py-0.5 bg-amber-50 text-amber-700 rounded-md border border-amber-200/60">봉사관리</span>
+            <span class="font-extrabold text-lg text-slate-900 tracking-tight">꿈길</span>
+            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-md border border-amber-200/60 font-mono">v1.00</span>
           </div>
-          <p id="topBarOrgName" class="text-xs text-slate-500 font-medium truncate max-w-[180px] sm:max-w-xs">꿈빛도서관</p>
+          <p id="topBarOrgName" class="text-xs text-slate-500 font-medium truncate max-w-[180px] sm:max-w-xs">꿈길도서관</p>
         </div>
       </div>
 
@@ -96,7 +121,7 @@
           <span class="hidden sm:inline">봉사처 표지</span>
         </button>
 
-        <button onclick="openModal('manualModal')" class="p-2 rounded-lg border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors" title="이용 가이드">
+        <button onclick="openModal('manualModal')" class="p-2 rounded-lg border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors" title="이용 가이드 및 저작권">
           <i class="fa-solid fa-circle-question text-base"></i>
         </button>
 
@@ -228,7 +253,7 @@
           <!-- 관리자 전용: 일반 봉사위원 접속 시 기본적으로 hidden 처리 -->
           <button id="btnExportMonthlySheet" onclick="exportCurrentCalendarToGoogleSheet()" class="hidden px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs transition-all flex items-center space-x-1.5">
             <i class="fa-solid fa-file-circle-plus"></i>
-            <span id="btnExportMonthlySheetText">구글 시트에 11월 배정표 탭 생성</span>
+            <span id="btnExportMonthlySheetText">구글 시트에 11월 배정표(목록+달력) 생성</span>
           </button>
         </div>
       </div>
@@ -554,7 +579,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div class="space-y-1.5">
             <label class="block text-xs font-bold text-slate-700">도서관 공식 명칭</label>
-            <input type="text" id="cfgOrgNameInput" placeholder="예: 홍남초등학교 꿈빛도서관" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20">
+            <input type="text" id="cfgOrgNameInput" placeholder="예: 홍남초등학교 꿈길도서관" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20">
           </div>
 
           <div class="space-y-1.5">
@@ -700,18 +725,18 @@
   <!-- 모달 창 컬렉션                                                    -->
   <!-- ================================================================= -->
 
-  <!-- 1. 봉사처 표지 (웰컴 게이트) 모달 - [화이트 미니멀 개편] -->
+  <!-- 1. 봉사처 표지 (웰컴 게이트) 모달 - [꿈길 v1.00 화이트 미니멀 & Sung soo Kim 라이선스] -->
   <div id="coverModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div id="coverCardContainer" class="bg-white w-full max-w-md rounded-3xl p-6 sm:p-8 text-slate-800 border border-slate-200 shadow-2xl relative overflow-hidden flex flex-col justify-between min-h-[500px]">
+    <div id="coverCardContainer" class="bg-white w-full max-w-md rounded-3xl p-6 sm:p-8 text-slate-800 border border-slate-200 shadow-2xl relative overflow-hidden flex flex-col justify-between min-h-[520px]">
       
       <!-- 상단 도서관 엠블럼 및 명판 -->
       <div class="text-center space-y-2 pt-2">
         <div class="w-12 h-12 mx-auto rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center text-xl shadow-xs">
           <i class="fa-solid fa-landmark"></i>
         </div>
-        <p id="coverOrgName" class="text-xs font-bold tracking-wider text-amber-700 uppercase">꿈빛도서관</p>
-        <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">꿈 빛</h2>
-        <p class="text-xs text-slate-500 font-medium">봉사인력 관리 시스템</p>
+        <p id="coverOrgName" class="text-xs font-bold tracking-wider text-amber-700 uppercase">꿈길도서관</p>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">꿈 길</h2>
+        <p class="text-xs text-slate-500 font-medium">도서관 봉사인력 자원관리 솔루션</p>
       </div>
 
       <!-- 중앙 듀얼 게이트 (1회차 등록 vs 2회차 제로 노출 이름 카드) -->
@@ -770,9 +795,13 @@
 
       </div>
 
-      <!-- 하단 은은한 관리자 통로 -->
-      <div class="pt-2 flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-100">
-        <span>꿈빛 v33.2</span>
+      <!-- 하단 은은한 저작권(Sung soo Kim) 및 관리자 통로 -->
+      <div class="pt-2 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-400 border-t border-slate-100 gap-1.5">
+        <div class="flex items-center space-x-1.5">
+          <span class="font-bold text-slate-600">꿈길 v1.00</span>
+          <span>·</span>
+          <span>© 2026 Sung soo Kim</span>
+        </div>
         <button onclick="openModal('adminLoginModal')" class="hover:text-amber-600 transition-colors flex items-center space-x-1 font-semibold">
           <i class="fa-solid fa-lock text-[10px]"></i>
           <span>사서교사 / 관리자</span>
@@ -971,7 +1000,7 @@
     </div>
   </div>
 
-  <!-- 4-1. [신설] 봉사 일정 배정 모달 (31.3 신설) -->
+  <!-- 4-1. 봉사 일정 배정 모달 -->
   <div id="scheduleAssignmentModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4 hidden">
     <div class="bg-white w-full max-w-2xl rounded-2xl p-6 border border-slate-200 shadow-2xl space-y-4 text-slate-800 max-h-[90vh] flex flex-col">
       
@@ -1029,27 +1058,50 @@
     </div>
   </div>
 
-  <!-- 5. 설명서 모달 -->
+  <!-- 5. 설명서 & 라이선스·지적재산권(IP) 모달 -->
   <div id="manualModal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
-    <div class="bg-white w-full max-w-md rounded-2xl p-6 border border-slate-200 shadow-xl space-y-4 text-slate-800">
+    <div class="bg-white w-full max-w-md rounded-2xl p-6 border border-slate-200 shadow-xl space-y-4 text-slate-800 max-h-[90vh] flex flex-col overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-        <h3 class="font-bold text-base text-slate-900">꿈빛 도서관 시스템 안내</h3>
+        <div class="flex items-center space-x-2">
+          <span class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">
+            <i class="fa-solid fa-book-bookmark"></i>
+          </span>
+          <h3 class="font-bold text-base text-slate-900">꿈길 도서관 시스템 안내</h3>
+        </div>
         <button onclick="closeModal('manualModal')" class="text-slate-400 hover:text-slate-600 text-lg">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
-      <div class="text-xs text-slate-600 space-y-2.5 leading-relaxed">
-        <p><b>1. 봉사위원 접속:</b> 처음 1회 본인 성함과 연락처 뒷자리로 인증하시면 다음 접속부터는 간편하게 바로 입장됩니다.</p>
-        <p><b>2. 출석 확인:</b> 당일 활동일 데스크에서 출석 확인을 완료해 주세요.</p>
-        <p><b>3. 자율 대타 매칭:</b> 개인 사정 시 본인이 [대타 요청]을 누르고, 동료 위원은 [내가 대타 서기]로 자율 참여할 수 있습니다.</p>
-        <p><b>4. 관리자 직권 교체:</b> 사서 관리자는 필요 시 [봉사위원 교체] 기능을 통해 직권으로 위원을 교체하거나 대타를 중재할 수 있습니다.</p>
+      <!-- 기본 운영 가이드 -->
+      <div class="text-xs text-slate-600 space-y-2 leading-relaxed">
+        <p><b>1. 봉사위원 본인 등록:</b> 최초 1회 성함과 연락처 뒷자리로 인증하시면 다음 접속부터는 간편하게 바로 입장됩니다.</p>
+        <p><b>2. 당일 출석 확인:</b> 도서관 데스크에서 본인 이름 우측의 [출석확인 (O)]을 터치하여 활동을 확인합니다.</p>
+        <p><b>3. 자율 대타 매칭:</b> 개인 사정 발생 시 본인이 [🚨 대타 요청]을 게시하면, 동료 위원이 [✋ 내가 대타 서기]로 상호 협력합니다.</p>
+        <p><b>4. 관리자 직권 모드:</b> 사서 관리자는 필요 시 [봉사위원 교체] 드롭다운을 통해 직권으로 즉시 위원을 배정·중재할 수 있습니다.</p>
+        <p><b>5. 구글 시트 듀얼 탭:</b> [월별 캘린더]에서 클릭 한 번으로 [봉사배정표(목록)]와 [달력(인쇄용)] 2개 탭을 구글 시트에 자동 생성합니다.</p>
       </div>
 
-      <div class="pt-2">
+      <!-- 공식 라이선스 및 지적재산권(IP) 고지 카드 -->
+      <div class="p-3.5 bg-slate-50 border border-slate-200/90 rounded-xl space-y-2 text-xs text-slate-600">
+        <div class="font-bold text-slate-800 flex items-center space-x-1.5 border-b border-slate-200 pb-1.5">
+          <i class="fa-solid fa-scale-balanced text-amber-600"></i>
+          <span>지적재산권(IP) 및 라이선스 고지</span>
+        </div>
+        <div class="space-y-1 text-[11px]">
+          <p>• <b>솔루션 명칭:</b> 꿈길 (Ggumgil) v1.00</p>
+          <p>• <b>원작자 / 저작권:</b> © 2026 <b>Sung soo Kim</b>. All Rights Reserved.</p>
+          <p>• <b>이용 허락 (License):</b> 본 시스템은 전국 초·중·고교 및 공공도서관의 봉사 활성화를 위해 비영리 교육기관 무상 이용 라이선스(MIT License 기반)로 배포됩니다.</p>
+          <p class="text-[10px] text-slate-500 pt-1 leading-normal">
+            ※ <b>면책 조항 (Disclaimer):</b> 본 프로그램은 오픈 인프라 기반으로 AS-IS 조건으로 제공되며, 데이터 보관 및 시스템 운영에 따른 모든 책임은 각 이용 기관(도서관)에 귀속됩니다.
+          </p>
+        </div>
+      </div>
+
+      <div class="pt-1">
         <button type="button" onclick="openGuideSlides()" class="w-full py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-xl text-xs font-bold border border-amber-200 flex items-center justify-center space-x-1.5 transition-colors">
           <i class="fa-solid fa-chalkboard-user"></i>
-          <span>8장 연동방법 프레젠테이션 슬라이드 보기</span>
+          <span>8장 구글 시트 연동 프레젠테이션 슬라이드 보기</span>
         </button>
       </div>
     </div>
@@ -1184,7 +1236,7 @@
     // -------------------------------------------------------------
     // [2] 전역 상태 변수
     // -------------------------------------------------------------
-    let orgName = '꿈빛도서관';
+    let orgName = '꿈길도서관';
     let adminId = 'admin';
     let adminPassword = 'admin1234';
     let gasApiUrl = '';
@@ -1429,7 +1481,6 @@
     // [5] 탭 전환 및 보안 통제 (일반 봉사자 접근 원천 차단)
     // -------------------------------------------------------------
     function showTab(tabId) {
-      // 관리자 미인증 시 도서관 설정 탭 진입 100% 강제 차단
       if (tabId === 'admin') {
         if (!isAdminLoggedIn) {
           showToast('도서관 설정은 사서 관리자 인증이 필요합니다.');
@@ -1461,7 +1512,7 @@
     }
 
     // -------------------------------------------------------------
-    // [6] 관리자 로그인 / 로그아웃 & 안전 롤백
+    // [6] 관리자 로그인 / 로그아웃
     // -------------------------------------------------------------
     function toggleAdminPwVisibility() {
       const pwInput = document.getElementById('adminPwInput');
@@ -1488,18 +1539,17 @@
       if (inputId === targetId && inputPw === targetPw) {
         isAdminLoggedIn = true;
         closeModal('adminLoginModal');
-        closeModal('coverModal'); // 대문 갇힘 해결
+        closeModal('coverModal');
         
         document.getElementById('adminLoginBtn').classList.add('hidden');
         document.getElementById('adminLogoutBtn').classList.remove('hidden');
-        document.getElementById('tabBtn-admin').classList.remove('hidden'); // 관리자 인증 시 탭 버튼 노출
+        document.getElementById('tabBtn-admin').classList.remove('hidden');
         document.getElementById('noticeEditBtn').classList.remove('hidden');
         
-        // 관리자 인증 시 월별 배정표 탭 생성 버튼 노출
         const exportBtn = document.getElementById('btnExportMonthlySheet');
         if (exportBtn) exportBtn.classList.remove('hidden');
 
-        showToast('관리자 인증 완료: 당일 현황 관리자 전용 모드가 활성화되었습니다.');
+        showToast('관리자 인증 완료: 도서관 관리자 모드가 활성화되었습니다.');
         renderTodaySlots();
         showTab('admin');
       } else {
@@ -1519,10 +1569,9 @@
       isAdminLoggedIn = false;
       document.getElementById('adminLoginBtn').classList.remove('hidden');
       document.getElementById('adminLogoutBtn').classList.add('hidden');
-      document.getElementById('tabBtn-admin').classList.add('hidden'); // 로그아웃 시 도서관 설정 탭 은닉
+      document.getElementById('tabBtn-admin').classList.add('hidden');
       document.getElementById('noticeEditBtn').classList.add('hidden');
       
-      // 로그아웃 시 월별 배정표 탭 생성 버튼 즉시 은닉
       const exportBtn = document.getElementById('btnExportMonthlySheet');
       if (exportBtn) exportBtn.classList.add('hidden');
 
@@ -1532,7 +1581,7 @@
     }
 
     // -------------------------------------------------------------
-    // [7] 당일 현황 날짜 제어 및 슬롯 카드 렌더링 엔진 (복원 완료)
+    // [7] 당일 현황 날짜 제어 및 슬롯 카드 렌더링 엔진
     // -------------------------------------------------------------
     let currentSubReqSlotKey = '';
     let currentSubReqOriginalName = '';
@@ -1890,7 +1939,7 @@
     }
 
     // -------------------------------------------------------------
-    // [8] 월별 캘린더 엔진 (복원 완료)
+    // [8] 월별 캘린더 엔진
     // -------------------------------------------------------------
     function changeCalendarMonth(offset) {
       calendarMonth += offset;
@@ -1916,7 +1965,7 @@
     function updateCalendarExportButtonText() {
       const btnText = document.getElementById('btnExportMonthlySheetText');
       if (btnText) {
-        btnText.textContent = `구글 시트에 ${calendarMonth}월 배정표 탭 생성`;
+        btnText.textContent = `구글 시트에 ${calendarMonth}월 배정표(목록+달력) 생성`;
       }
     }
 
@@ -2026,10 +2075,9 @@
     }
 
     // -------------------------------------------------------------
-    // [9-1] 월별 배정표 구글 시트 원격 탭 생성 엔진 (관리자 전용 & 실데이터 직결 전송)
+    // [9] 월별 배정표 구글 시트 원격 듀얼 탭(목록표+달력) 생성 엔진
     // -------------------------------------------------------------
     async function exportCurrentCalendarToGoogleSheet() {
-      // 1. 일반 사용자 클릭 원천 차단 가드
       if (!isAdminLoggedIn) {
         showToast('구글 시트 배정표 탭 생성은 사서 관리자 인증이 필요합니다.');
         return;
@@ -2042,13 +2090,12 @@
 
       const btn = document.getElementById('btnExportMonthlySheet');
       const btnText = document.getElementById('btnExportMonthlySheetText');
-      const origText = btnText ? btnText.textContent : `구글 시트에 ${calendarMonth}월 배정표 탭 생성`;
+      const origText = btnText ? btnText.textContent : `구글 시트에 ${calendarMonth}월 배정표(목록+달력) 생성`;
 
       if (btn) btn.disabled = true;
-      if (btnText) btnText.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> <span>${calendarMonth}월 탭 생성 중...</span>`;
-      showToast(`구글 시트에 [${calendarYear}-${String(calendarMonth).padStart(2, '0')} 봉사배정표] 탭 생성을 요청합니다...`);
+      if (btnText) btnText.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> <span>${calendarMonth}월 목록+달력 생성 중...</span>`;
+      showToast(`구글 시트에 [${calendarYear}-${String(calendarMonth).padStart(2, '0')} 배정표] 및 [달력] 듀얼 탭 생성을 요청합니다...`);
 
-      // 2. 웹앱 캘린더 화면에 표시되는 당월 실제 일자별 배정 데이터를 100% 동일하게 직결 패키징
       const lastDate = new Date(calendarYear, calendarMonth, 0).getDate();
       const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
       const scheduleRows = [];
@@ -2094,7 +2141,6 @@
         }
       }
 
-      // 3. 구글 Apps Script로 완성된 데이터 직결 전송
       try {
         await fetch(gasApiUrl, {
           method: 'POST',
@@ -2109,7 +2155,7 @@
           })
         });
 
-        showToast(`🎉 [${calendarYear}-${String(calendarMonth).padStart(2, '0')} 봉사배정표] 탭 생성 요청 완료! 시트에서 확인하세요.`);
+        showToast(`🎉 [${calendarYear}-${String(calendarMonth).padStart(2, '0')}] 배정표 목록 및 달력 2개 탭 생성 요청 완료!`);
       } catch (err) {
         console.error(err);
         showToast('배정표 시트 원격 생성 중 오류가 발생했습니다.');
@@ -2120,7 +2166,7 @@
     }
 
     // -------------------------------------------------------------
-    // [10] 상세 순번표 엔진 (복원 완료)
+    // [10] 상세 순번표 엔진
     // -------------------------------------------------------------
     function filterRosterByWeek(week) {
       rosterFilterWeek = week;
@@ -2179,7 +2225,7 @@
     }
 
     // -------------------------------------------------------------
-    // [11] 내 정보 및 미니 활동 캘린더 엔진 (복원 완료)
+    // [11] 내 정보 및 미니 활동 캘린더 엔진
     // -------------------------------------------------------------
     function renderMyTab() {
       loadMyProfileToInputs();
@@ -2494,7 +2540,6 @@
       }
 
       renderTodaySlots();
-
       syncAttendanceCheckToGas(slotKey, effectiveName, attendanceLog[slotKey].status, timeStr);
     }
 
@@ -2557,7 +2602,6 @@
         updatedAt: now.toISOString()
       };
 
-      // 만약 이미 출석 확인(O)이 완료되어 있던 슬롯이면, 교체된 위원 성함으로 출석부 연쇄 동기화
       if (attendanceLog[slotKey] && attendanceLog[slotKey].status !== 'X') {
         attendanceLog[slotKey].name = targetName;
         safeStorage.setItem('lib_cache_attendance', JSON.stringify(attendanceLog));
@@ -2725,7 +2769,7 @@
     }
 
     // -------------------------------------------------------------
-    // [13-1] 봉사 일정 배정 모달 컨트롤러 (31.3 신설)
+    // [13-1] 봉사 일정 배정 모달 컨트롤러
     // -------------------------------------------------------------
     let scheduleAssignActiveWeek = 1;
 
@@ -2799,15 +2843,12 @@
 
       safeStorage.setItem('lib_cache_roster', JSON.stringify(rosterData));
       
-      // 전역 뷰(당일 현황, 월별 캘린더, 상세 순번표, 내 정보) 실시간 즉각 재계산
       renderTodaySlots();
       renderCalendar();
       renderRosterTable();
       renderMyTab();
 
-      // 연결된 도서관 구글 스프레드시트 [봉사자 순번] 탭 실시간 영구 동기화
       syncRosterToGas(rosterData);
-
       showToast(`✓ ${weekNum}주차 ${dayName} ${timeStr} 봉사위원 ${roleIdx}이(가) ${cleanVal || '공석'}(으)로 배정되었습니다.`);
     }
 
@@ -3142,7 +3183,6 @@
       const sheetCheck = document.getElementById('resetGoogleSheetCheck');
       const includeGas = !!(sheetCheck && sheetCheck.checked);
 
-      // 1. 기기 앱 봉사단 데이터 초기화
       membersData = [];
       rosterData = [];
       attendanceLog = {};
@@ -3233,7 +3273,6 @@
       }
       const wb = XLSX.utils.book_new();
 
-      // 1. [봉사자 정보] 탭 (순번, 이름, 연락처)
       const infoHeaders = ['순번', '이름', '연락처'];
       const infoRows = [infoHeaders];
       if (membersData && membersData.length > 0) {
@@ -3248,7 +3287,6 @@
       const wsInfo = XLSX.utils.aoa_to_sheet(infoRows);
       wsInfo['!cols'] = [{ wch: 8 }, { wch: 18 }, { wch: 22 }];
 
-      // 2. [봉사자 순번] 탭 (순번, 주차, 요일, 시간대, 봉사위원 1, 봉사위원 2)
       const rosterHeaders = ['순번', '주차', '요일', '시간대', '봉사위원 1 (정)', '봉사위원 2 (부)'];
       const rosterRows = [rosterHeaders];
       const weekLimit = (cycleType === '1주') ? 1 : ((cycleType === '1달') ? 4 : 2);
@@ -3270,11 +3308,10 @@
       const wsRoster = XLSX.utils.aoa_to_sheet(rosterRows);
       wsRoster['!cols'] = [{ wch: 8 }, { wch: 10 }, { wch: 12 }, { wch: 24 }, { wch: 18 }, { wch: 18 }];
 
-      // 구글 시트 5대 탭 표준 규격 명칭으로 2개 시트 추가
       XLSX.utils.book_append_sheet(wb, wsInfo, '봉사자 정보');
       XLSX.utils.book_append_sheet(wb, wsRoster, '봉사자 순번');
 
-      const fileName = `${orgName || '꿈빛도서관'}_봉사단_표준양식(정보_순번).xlsx`;
+      const fileName = `${orgName || '꿈길도서관'}_봉사단_표준양식(정보_순번).xlsx`;
       XLSX.writeFile(wb, fileName);
       showToast('표준 2개 탭([봉사자 정보], [봉사자 순번]) 엑셀 양식이 다운로드되었습니다.');
     }
@@ -3309,7 +3346,6 @@
           let infoSheet = null;
           let rosterSheet = null;
 
-          // 1. 시트 이름 기반 지능형 탭 탐색 ([봉사자 정보], [봉사자 순번])
           workbook.SheetNames.forEach(sName => {
             const cleanName = sName.trim().toLowerCase();
             if (cleanName.includes('정보') || cleanName.includes('명부') || cleanName.includes('회원') || cleanName.includes('member')) {
@@ -3319,7 +3355,6 @@
             }
           });
 
-          // 시트 이름에 표준 키워드가 없을 때: 단일 시트 또는 첫 2개 시트 구조 자동 판별
           if (!infoSheet && !rosterSheet && workbook.SheetNames.length > 0) {
             const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
             const firstRows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
@@ -3344,7 +3379,6 @@
           let parsedMembersCount = 0;
           let parsedRosterCount = 0;
 
-          // 2. [봉사자 정보] 탭 파싱 (순번, 이름, 연락처)
           if (infoSheet) {
             const infoRows = XLSX.utils.sheet_to_json(infoSheet, { header: 1 });
             if (infoRows && infoRows.length > 1) {
@@ -3368,7 +3402,6 @@
                 const rawName = String(row[nameCol] || '').trim();
                 const rawPhone = String(row[phoneCol] || '').trim();
                 
-                // 견본 예시 데이터(김도서 (예시) 등) 및 중복 헤더 필터링
                 if (rawName && !rawName.includes('예시') && rawName !== '성명' && rawName !== '이름') {
                   newMembers.push({
                     id: newMembers.length + 1,
@@ -3389,7 +3422,6 @@
             }
           }
 
-          // 3. [봉사자 순번] 탭 파싱 (순번, 주차, 요일, 시간대, 봉사위원 1, 봉사위원 2)
           if (rosterSheet) {
             const rosterRows = XLSX.utils.sheet_to_json(rosterSheet, { header: 1 });
             if (rosterRows && rosterRows.length > 1) {
@@ -3428,7 +3460,6 @@
                 let n1 = String(row[name1Col] || '').trim();
                 let n2 = String(row[name2Col] || '').trim();
 
-                // 견본 예시 텍스트 정돈
                 if (n1.includes('예시') || n1 === '공석') n1 = '';
                 if (n2.includes('예시') || n2 === '공석') n2 = '';
 
@@ -3453,7 +3484,6 @@
             }
           }
 
-          // 4. 전역 화면 일괄 재계산 및 사용자 피드백 안내
           if (parsedMembersCount > 0 || parsedRosterCount > 0) {
             renderTodaySlots();
             renderCalendar();
@@ -3533,13 +3563,14 @@
               ${rowsHtml}
             </tbody>
           </table>
+          <p style="text-align:right;font-size:10px;color:#94a3b8;margin-top:12px;">꿈길 (Ggumgil) v1.00 · Author Sung soo Kim</p>
         </div>
       `;
       window.print();
     }
 
     // -------------------------------------------------------------
-    // [19] 구글 Apps Script 연동 데이터 비동기 조회 (Cloud-First 진실의 원천)
+    // [19] 구글 Apps Script 연동 데이터 비동기 조회
     // -------------------------------------------------------------
     async function fetchGasData() {
       if (!gasApiUrl) return;
@@ -3734,9 +3765,9 @@
                 <span>통신 응답 없음 (Failed to fetch) - 아래 2가지를 1분 만에 점검해 주세요:</span>
               </span>
               <ul class="text-[11px] text-slate-600 list-disc list-inside space-y-0.5 pt-0.5 leading-snug">
-                <li><b>Apps Script [배포 관리] ➔ [새 버전] 재배포:</b> 직전 구문오류 수술 후 [새 버전]으로 배포하지 않았다면 이전 오류 버전이 유지됩니다. [배포 관리] ➔ [✏️편집] ➔ 버전: <b>[새 버전]</b>을 선택해 다시 배포해 주세요.</li>
-                <li><b>최초 권한 승인:</b> Apps Script 창 상단에서 <b>testSystem</b> 함수 선택 후 <b>[실행]</b>을 눌러 구글 계정 권한 검토(고급 ➔ 안전하지 않은 페이지로 이동 ➔ 허용)를 완료해 주세요.</li>
-                <li><b>배포 권한:</b> [액세스 권한: <b>모든 사용자</b>], [다음 사용자 권한으로 실행: <b>나(내 계정)</b>]인지 다시 확인해 주세요.</li>
+                <li><b>Apps Script [배포 관리] ➔ [새 버전] 재배포:</b> [배포 관리] ➔ [✏️편집] ➔ 버전: <b>[새 버전]</b>을 선택해 배포했는지 확인해 주세요.</li>
+                <li><b>최초 권한 승인:</b> Apps Script 창 상단에서 <b>testSystem</b> 함수 선택 후 <b>[실행]</b>을 눌러 구글 계정 권한 검토를 완료해 주세요.</li>
+                <li><b>배포 권한:</b> [액세스 권한: <b>모든 사용자</b>], [다음 사용자 권한으로 실행: <b>나(내 계정)</b>]인지 확인해 주세요.</li>
               </ul>
             </div>
           `;
