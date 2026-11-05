@@ -225,7 +225,8 @@
           <button onclick="setCalendarToCurrentMonth()" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-colors">
             이번 달
           </button>
-          <button id="btnExportMonthlySheet" onclick="exportCurrentCalendarToGoogleSheet()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs transition-all flex items-center space-x-1.5">
+          <!-- 관리자 전용: 일반 봉사위원 접속 시 기본적으로 hidden 처리 -->
+          <button id="btnExportMonthlySheet" onclick="exportCurrentCalendarToGoogleSheet()" class="hidden px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs transition-all flex items-center space-x-1.5">
             <i class="fa-solid fa-file-circle-plus"></i>
             <span id="btnExportMonthlySheetText">구글 시트에 11월 배정표 탭 생성</span>
           </button>
@@ -1235,10 +1236,12 @@
       renderAllViews();
       checkWelcomeGateState();
 
-      // 비인가 상태 시 관리자 설정 탭을 DOM에서 철저히 은닉
+      // 비인가 상태 시 관리자 설정 탭 및 월별 시트 생성 버튼을 DOM에서 철저히 은닉
       if (!isAdminLoggedIn) {
         const adminBtn = document.getElementById('tabBtn-admin');
         if (adminBtn) adminBtn.classList.add('hidden');
+        const exportBtn = document.getElementById('btnExportMonthlySheet');
+        if (exportBtn) exportBtn.classList.add('hidden');
       }
 
       if (gasApiUrl) {
@@ -1491,6 +1494,10 @@
         document.getElementById('adminLogoutBtn').classList.remove('hidden');
         document.getElementById('tabBtn-admin').classList.remove('hidden'); // 관리자 인증 시 탭 버튼 노출
         document.getElementById('noticeEditBtn').classList.remove('hidden');
+        
+        // 관리자 인증 시 월별 배정표 탭 생성 버튼 노출
+        const exportBtn = document.getElementById('btnExportMonthlySheet');
+        if (exportBtn) exportBtn.classList.remove('hidden');
 
         showToast('관리자 인증 완료: 당일 현황 관리자 전용 모드가 활성화되었습니다.');
         renderTodaySlots();
@@ -1514,6 +1521,10 @@
       document.getElementById('adminLogoutBtn').classList.add('hidden');
       document.getElementById('tabBtn-admin').classList.add('hidden'); // 로그아웃 시 도서관 설정 탭 은닉
       document.getElementById('noticeEditBtn').classList.add('hidden');
+      
+      // 로그아웃 시 월별 배정표 탭 생성 버튼 즉시 은닉
+      const exportBtn = document.getElementById('btnExportMonthlySheet');
+      if (exportBtn) exportBtn.classList.add('hidden');
 
       showToast('관리자 로그아웃: 일반 봉사자 모드로 전환되었습니다.');
       renderTodaySlots();
@@ -1521,276 +1532,20 @@
     }
 
     // -------------------------------------------------------------
-    // [7] 대타(Override) 데이터 헬퍼, 지능형 요청/수락 및 중복 방지 가드
+    // [7] 당일 현황 날짜 제어 및 슬롯 카드 렌더링 엔진 (복원 완료)
     // -------------------------------------------------------------
-    let pendingSubSlotKey = '';
-    let pendingSubOrgName = '';
-    let pendingAcceptSlotKey = '';
+    let currentSubReqSlotKey = '';
+    let currentSubReqOriginalName = '';
+    let currentSubAcceptSlotKey = '';
 
     function getOverrideRecord(slotKey) {
-      const val = overrideLog[slotKey];
-      if (!val) return null;
-      if (typeof val === 'string') {
-        if (val.startsWith('[요청]')) {
-          const match = val.match(/\[요청\]\s*([^(]+)(?:\((.*)\))?/);
-          const req = match && match[1] ? match[1].trim() : '';
-          const rsn = match && match[2] ? match[2].trim() : '개인 사정';
-          return { status: 'REQUESTED', requester: req, substitute: '', reason: rsn };
-        }
-        return { status: 'ACCEPTED', requester: '', substitute: val, reason: '' };
-      }
-      return val;
+      return overrideLog[slotKey] || null;
     }
 
     function notifySubstituteEvent(type, payload) {
-      try {
-        console.log(`[알림 이벤트 훅] ${type}`, payload);
-      } catch (e) {}
+      console.log(`[SubstituteEvent] ${type}`, payload);
     }
 
-    function isUserAlreadyAssignedAt(dateStr, timeStr, userName, excludeSlotKey) {
-      if (!userName || !dateStr || !timeStr) return false;
-      const dObj = parseDate(dateStr);
-      const wCycle = calculateContinuousWeekCycle(dObj, cycleBaseDate, cycleBaseWeek, cycleType);
-      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-      const dayName = dayNames[dObj.getDay()];
-
-      const rMatch = rosterData.find(r => r.week === wCycle && r.day.startsWith(dayName) && r.time === timeStr);
-
-      for (let roleIdx = 1; roleIdx <= 2; roleIdx++) {
-        const k = `${dateStr}_${timeStr}_${roleIdx}`;
-        if (k === excludeSlotKey) continue;
-
-        const rec = getOverrideRecord(k);
-        let effectiveWorker = '';
-
-        if (rec && rec.status === 'ACCEPTED' && rec.substitute) {
-          effectiveWorker = rec.substitute;
-        } else if (rec && rec.status === 'REQUESTED') {
-          effectiveWorker = rec.requester || (rMatch ? (roleIdx === 1 ? rMatch.name1 : rMatch.name2) : '');
-        } else {
-          effectiveWorker = rMatch ? (roleIdx === 1 ? rMatch.name1 : rMatch.name2) : '';
-        }
-
-        if (effectiveWorker === userName) {
-          return true;
-        }
-      }
-      return false;
-    }
-
-    function handleSubstituteRequestClick(slotKey, originalName) {
-      if (!originalName || originalName === '공석') {
-        showToast('배정된 위원이 없는 공석 슬롯입니다.');
-        return;
-      }
-
-      const todayStr = formatDate(new Date());
-      const slotDate = slotKey.split('_')[0];
-      if (slotDate < todayStr) {
-        showToast('이미 지난 일자의 봉사는 대타를 요청할 수 없습니다.');
-        return;
-      }
-
-      const myName = safeStorage.getItem('lib_my_name') || myVolunteerName || '';
-
-      if (!myName && !isAdminLoggedIn) {
-        showToast('대타를 요청하시려면 먼저 봉사위원 본인 확인이 필요합니다.');
-        openCoverModal();
-        return;
-      }
-
-      if (isAdminLoggedIn) {
-        openSubstituteRequestModal(slotKey, originalName);
-        return;
-      }
-
-      if (myName !== originalName) {
-        showToast(`대타 요청은 배정된 본인(${originalName} 위원님)만 신청할 수 있습니다.`);
-        return;
-      }
-
-      openSubstituteRequestModal(slotKey, originalName);
-    }
-
-    function openSubstituteRequestModal(slotKey, originalName) {
-      pendingSubSlotKey = slotKey;
-      pendingSubOrgName = originalName;
-
-      const parts = slotKey.split('_');
-      const dStr = parts[0];
-      const tStr = parts[1];
-      const slot = timeSlots.find(s => s.startTime === tStr);
-      const timeName = slot ? slot.name : tStr;
-
-      const infoEl = document.getElementById('subReqModalSlotInfo');
-      if (infoEl) infoEl.textContent = `${originalName} 위원님 • ${dStr} (${timeName})`;
-
-      const inputEl = document.getElementById('subReqModalReasonInput');
-      if (inputEl) inputEl.value = '개인 사정';
-
-      openModal('substituteRequestModal');
-    }
-
-    function setSubReqReason(val) {
-      const inputEl = document.getElementById('subReqModalReasonInput');
-      if (inputEl) inputEl.value = val;
-    }
-
-    function confirmSubmitSubstituteRequest() {
-      const inputEl = document.getElementById('subReqModalReasonInput');
-      const reason = (inputEl && inputEl.value.trim()) ? inputEl.value.trim() : '개인 사정';
-
-      closeModal('substituteRequestModal');
-      applySubstituteRequest(pendingSubSlotKey, pendingSubOrgName, reason);
-    }
-
-    function applySubstituteRequest(slotKey, originalName, reason) {
-      const now = new Date();
-      const slotDate = slotKey.split('_')[0];
-
-      overrideLog[slotKey] = {
-        status: 'REQUESTED',
-        requester: originalName,
-        substitute: '',
-        reason: reason,
-        updatedAt: now.toISOString()
-      };
-
-      safeStorage.setItem('lib_cache_overrides', JSON.stringify(overrideLog));
-      syncOverrideToGas(slotKey, `[요청] ${originalName} (${reason})`);
-
-      notifySubstituteEvent('REQUEST', {
-        slotKey,
-        requester: originalName,
-        reason: reason,
-        date: slotDate
-      });
-
-      showToast('🚨 대타 요청이 등록되었습니다. 해당 슬롯이 빨간색 비상 경고등으로 점등됩니다.');
-      renderTodaySlots();
-      renderCalendar();
-      renderMyVolunteerSchedule();
-    }
-
-    function acceptSubstituteSlot(slotKey) {
-      const myName = safeStorage.getItem('lib_my_name') || myVolunteerName || '';
-      if (!myName) {
-        showToast('대타를 수락하시려면 먼저 본인 확인(로그인)을 완료해 주세요.');
-        openCoverModal();
-        return;
-      }
-
-      const rec = getOverrideRecord(slotKey);
-      if (!rec || rec.status !== 'REQUESTED') {
-        showToast('현재 대타 요청 상태가 아니거나 이미 다른 위원님이 수락하셨습니다.');
-        renderTodaySlots();
-        return;
-      }
-
-      const requesterName = rec.requester || '동료 위원';
-      if (requesterName === myName) {
-        showToast('본인이 요청한 슬롯은 직접 수락할 수 없습니다.');
-        return;
-      }
-
-      const parts = slotKey.split('_');
-      const dateStr = parts[0];
-      const timeStr = parts[1];
-
-      const todayStr = formatDate(new Date());
-      if (dateStr < todayStr) {
-        showToast('이미 지난 일자의 대타는 수락할 수 없습니다.');
-        return;
-      }
-
-      if (isUserAlreadyAssignedAt(dateStr, timeStr, myName, slotKey)) {
-        showToast(`위원님은 이미 해당 시간대(${timeStr})에 봉사가 배정되어 있어 수락할 수 없습니다.`);
-        return;
-      }
-
-      pendingAcceptSlotKey = slotKey;
-      const slot = timeSlots.find(s => s.startTime === timeStr);
-      const timeName = slot ? slot.name : timeStr;
-
-      const infoEl = document.getElementById('subAcceptModalSlotInfo');
-      if (infoEl) infoEl.textContent = `${dateStr} (${timeName})`;
-
-      const reqEl = document.getElementById('subAcceptModalRequester');
-      if (reqEl) reqEl.textContent = requesterName;
-
-      const rsnEl = document.getElementById('subAcceptModalReason');
-      if (rsnEl) rsnEl.textContent = rec.reason || '개인 사정';
-
-      openModal('substituteAcceptModal');
-    }
-
-    function confirmExecuteSubstituteAccept() {
-      const myName = safeStorage.getItem('lib_my_name') || myVolunteerName || '';
-      const slotKey = pendingAcceptSlotKey;
-      if (!slotKey || !myName) {
-        closeModal('substituteAcceptModal');
-        return;
-      }
-
-      const rec = getOverrideRecord(slotKey);
-      const requesterName = rec ? (rec.requester || '동료 위원') : '동료 위원';
-      const parts = slotKey.split('_');
-      const dateStr = parts[0];
-      const timeStr = parts[1];
-
-      const now = new Date();
-      overrideLog[slotKey] = {
-        status: 'ACCEPTED',
-        requester: requesterName,
-        substitute: myName,
-        reason: (rec && rec.reason) ? rec.reason : '동료 자율 대타 수락',
-        updatedAt: now.toISOString()
-      };
-
-      safeStorage.setItem('lib_cache_overrides', JSON.stringify(overrideLog));
-      syncOverrideToGas(slotKey, myName);
-
-      notifySubstituteEvent('ACCEPT', {
-        slotKey,
-        requester: requesterName,
-        substitute: myName,
-        date: dateStr,
-        time: timeStr
-      });
-
-      closeModal('substituteAcceptModal');
-      showToast(`🎉 ${requesterName} 위원님의 대타 봉사를 수락하셨습니다! 따뜻한 마음에 감사드립니다.`);
-      renderTodaySlots();
-      renderCalendar();
-      renderMyVolunteerSchedule();
-    }
-
-    function cancelSubstituteRequest(slotKey) {
-      const rec = getOverrideRecord(slotKey);
-      const myName = safeStorage.getItem('lib_my_name') || myVolunteerName || '';
-
-      if (!isAdminLoggedIn && rec && rec.requester && rec.requester !== myName) {
-        showToast('본인이 요청한 건만 취소할 수 있습니다.');
-        return;
-      }
-
-      const prevRequester = rec ? rec.requester : '';
-      delete overrideLog[slotKey];
-      safeStorage.setItem('lib_cache_overrides', JSON.stringify(overrideLog));
-      syncOverrideToGas(slotKey, '');
-
-      notifySubstituteEvent('CANCEL', { slotKey, requester: prevRequester });
-
-      showToast('대타 요청이 취소되었습니다.');
-      renderTodaySlots();
-      renderCalendar();
-      renderMyVolunteerSchedule();
-    }
-
-    // -------------------------------------------------------------
-    // [8] 날짜 연산 및 당일 현황 렌더링 (사용자 vs 관리자 완전 이원화)
-    // -------------------------------------------------------------
     function setTodayDate() {
       const now = new Date();
       currentDateStr = formatDate(now);
@@ -1799,11 +1554,10 @@
       renderTodaySlots();
     }
 
-    function changeCurrentDate(offsetDays) {
-      const parts = currentDateStr.split('-');
-      const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-      d.setDate(d.getDate() + offsetDays);
-      currentDateStr = formatDate(d);
+    function changeCurrentDate(offset) {
+      const cur = parseDate(currentDateStr || formatDate(new Date()));
+      cur.setDate(cur.getDate() + offset);
+      currentDateStr = formatDate(cur);
       const input = document.getElementById('currentDateInput');
       if (input) input.value = currentDateStr;
       renderTodaySlots();
@@ -1815,418 +1569,328 @@
       renderTodaySlots();
     }
 
+    function openSubReqModal(slotKey, originalName) {
+      currentSubReqSlotKey = slotKey;
+      currentSubReqOriginalName = originalName;
+      const parts = slotKey.split('_');
+      const dStr = parts[0];
+      const tStr = parts[1];
+      const role = parts[2] === '1' ? '봉사위원 1' : '봉사위원 2';
+      const infoEl = document.getElementById('subReqModalSlotInfo');
+      if (infoEl) infoEl.textContent = `${dStr} [${tStr}] ${role} (${originalName} 위원님)`;
+      const reasonInput = document.getElementById('subReqModalReasonInput');
+      if (reasonInput) reasonInput.value = '개인 사정';
+      openModal('substituteRequestModal');
+    }
+
+    function setSubReqReason(reason) {
+      const reasonInput = document.getElementById('subReqModalReasonInput');
+      if (reasonInput) reasonInput.value = reason;
+    }
+
+    function confirmSubmitSubstituteRequest() {
+      if (!currentSubReqSlotKey) return;
+      const reasonInput = document.getElementById('subReqModalReasonInput');
+      const reason = (reasonInput ? reasonInput.value.trim() : '') || '개인 사정';
+
+      overrideLog[currentSubReqSlotKey] = {
+        status: 'REQUESTED',
+        requester: currentSubReqOriginalName,
+        substitute: '',
+        reason: reason,
+        updatedAt: new Date().toISOString()
+      };
+
+      safeStorage.setItem('lib_cache_overrides', JSON.stringify(overrideLog));
+      syncOverrideToGas(currentSubReqSlotKey, `[요청] ${currentSubReqOriginalName}`, reason);
+
+      notifySubstituteEvent('SUB_REQUEST', {
+        slotKey: currentSubReqSlotKey,
+        requester: currentSubReqOriginalName,
+        reason: reason
+      });
+
+      closeModal('substituteRequestModal');
+      showToast('🚨 대타 요청이 등록되었습니다. 동료 위원들에게 긴급 공고됩니다.');
+      renderTodaySlots();
+      renderCalendar();
+      renderMyVolunteerSchedule();
+    }
+
+    function cancelSubstituteRequest(slotKey) {
+      if (!overrideLog[slotKey]) return;
+      const prev = overrideLog[slotKey];
+      delete overrideLog[slotKey];
+      safeStorage.setItem('lib_cache_overrides', JSON.stringify(overrideLog));
+      syncOverrideToGas(slotKey, '', '대타 요청 취소');
+
+      notifySubstituteEvent('SUB_CANCEL', {
+        slotKey,
+        previousRecord: prev
+      });
+
+      showToast('대타 요청이 취소되었습니다.');
+      renderTodaySlots();
+      renderCalendar();
+      renderMyVolunteerSchedule();
+    }
+
+    function openSubAcceptModal(slotKey) {
+      const rec = getOverrideRecord(slotKey);
+      if (!rec || rec.status !== 'REQUESTED') {
+        showToast('대타 요청 상태가 아닙니다.');
+        return;
+      }
+      const myName = safeStorage.getItem('lib_my_name') || myVolunteerName || '';
+      if (!myName) {
+        showToast('먼저 표지에서 본인 확인 등록을 완료해 주세요.');
+        openCoverModal();
+        return;
+      }
+      if (myName === rec.requester) {
+        showToast('본인이 요청한 대타는 수락할 수 없습니다.');
+        return;
+      }
+
+      currentSubAcceptSlotKey = slotKey;
+      const parts = slotKey.split('_');
+      const dStr = parts[0];
+      const tStr = parts[1];
+      const role = parts[2] === '1' ? '봉사위원 1' : '봉사위원 2';
+      const infoEl = document.getElementById('subAcceptModalSlotInfo');
+      if (infoEl) infoEl.textContent = `${dStr} [${tStr}] ${role}`;
+      const reqEl = document.getElementById('subAcceptModalRequester');
+      if (reqEl) reqEl.textContent = rec.requester;
+      const reasonEl = document.getElementById('subAcceptModalReason');
+      if (reasonEl) reasonEl.textContent = rec.reason || '개인 사정';
+
+      openModal('substituteAcceptModal');
+    }
+
+    function confirmExecuteSubstituteAccept() {
+      if (!currentSubAcceptSlotKey) return;
+      const rec = getOverrideRecord(currentSubAcceptSlotKey);
+      if (!rec) return;
+
+      const myName = safeStorage.getItem('lib_my_name') || myVolunteerName || '';
+      if (!myName) {
+        showToast('본인 정보가 확인되지 않았습니다.');
+        return;
+      }
+
+      overrideLog[currentSubAcceptSlotKey] = {
+        status: 'ACCEPTED',
+        requester: rec.requester,
+        substitute: myName,
+        reason: rec.reason || '자율 대타 수락',
+        updatedAt: new Date().toISOString()
+      };
+
+      safeStorage.setItem('lib_cache_overrides', JSON.stringify(overrideLog));
+      syncOverrideToGas(currentSubAcceptSlotKey, myName, `대타수락 (${rec.requester} 대타)`);
+
+      notifySubstituteEvent('SUB_ACCEPT', {
+        slotKey: currentSubAcceptSlotKey,
+        requester: rec.requester,
+        substitute: myName
+      });
+
+      closeModal('substituteAcceptModal');
+      showToast(`🤝 대타 수락이 완료되었습니다! ${myName} 위원님 감사합니다.`);
+      renderTodaySlots();
+      renderCalendar();
+      renderMyVolunteerSchedule();
+    }
+
     function renderTodaySlots() {
       const container = document.getElementById('todaySlotsContainer');
-      const badge = document.getElementById('todayStatusText');
+      const dateInput = document.getElementById('currentDateInput');
+      const badgeEl = document.getElementById('todayStatusBadge');
+      const textEl = document.getElementById('todayStatusText');
       if (!container) return;
 
-      const dObj = parseDate(currentDateStr);
-      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-      const dayName = dayNames[dObj.getDay()];
-      const weekCycle = calculateContinuousWeekCycle(dObj, cycleBaseDate, cycleBaseWeek, cycleType);
+      if (!currentDateStr) {
+        currentDateStr = formatDate(new Date());
+      }
+      if (dateInput) dateInput.value = currentDateStr;
 
-      const status = checkDayStatusClient(dObj, currentDateStr);
+      const curDate = parseDate(currentDateStr);
+      const dayNames = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+      const dayName = dayNames[curDate.getDay()];
+      const status = checkDayStatusClient(curDate, currentDateStr);
 
       if (status.isClosed) {
-        if (badge) badge.textContent = `${status.title} (휴관)`;
+        if (textEl) textEl.textContent = `${status.title}`;
+        if (badgeEl) badgeEl.className = 'text-xs font-bold px-3 py-1.5 rounded-xl bg-slate-100 text-slate-500 border border-slate-200 flex items-center space-x-1.5';
         container.innerHTML = `
-          <div class="bg-white p-8 rounded-2xl border border-slate-200 text-center space-y-2">
-            <i class="fa-solid fa-mug-hot text-3xl text-amber-500/70"></i>
-            <h4 class="font-bold text-slate-800 text-sm">${status.title}</h4>
-            <p class="text-xs text-slate-500">오늘은 도서관 휴관일로 예정된 자원봉사 일정이 없습니다.</p>
+          <div class="bg-white rounded-2xl border border-slate-200/80 p-8 text-center space-y-2 shadow-xs">
+            <div class="w-12 h-12 mx-auto rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center text-xl">
+              <i class="fa-solid fa-mug-hot"></i>
+            </div>
+            <h4 class="font-bold text-sm text-slate-800">${currentDateStr} (${dayName}) 도서관 휴관일</h4>
+            <p class="text-xs text-slate-500">${status.title}로 인해 오늘의 도서관 봉사 일정이 없습니다.</p>
           </div>
         `;
         return;
       }
 
-      if (badge) badge.textContent = `${dayName}요일 • ${weekCycle}주차 정규 활동일`;
+      const weekCycle = calculateContinuousWeekCycle(curDate, cycleBaseDate, cycleBaseWeek, cycleType);
+      if (textEl) textEl.textContent = `${weekCycle}주차 활동일 (${dayName})`;
+      if (badgeEl) badgeEl.className = 'text-xs font-bold px-3 py-1.5 rounded-xl bg-amber-50 text-amber-700 border border-amber-200/60 flex items-center space-x-1.5';
 
-      const todayStr = formatDate(new Date());
-      const isPastDate = (currentDateStr < todayStr);
+      const myName = safeStorage.getItem('lib_my_name') || myVolunteerName || '';
 
-      // 관리자 로그인 시 상단 직권 모드 안내 배너 장착
-      let adminTopNoticeHtml = '';
+      let cardsHtml = '';
+
       if (isAdminLoggedIn) {
-        adminTopNoticeHtml = `
-          <div class="p-3 bg-slate-900 text-white rounded-2xl border border-slate-800 shadow-xs flex items-center justify-between gap-2 mb-3">
+        cardsHtml += `
+          <div class="p-3 bg-slate-900 text-white rounded-xl text-xs flex items-center justify-between shadow-xs">
             <div class="flex items-center space-x-2">
-              <span class="w-6 h-6 rounded-lg bg-amber-400 text-slate-950 flex items-center justify-center text-xs shrink-0 shadow-xs">
-                <i class="fa-solid fa-crown"></i>
-              </span>
-              <div>
-                <span class="font-bold text-xs sm:text-sm text-amber-300">사서 관리자 전용 직권 모드</span>
-                <span class="text-[11px] text-slate-300 ml-1.5 hidden sm:inline">• 당일 봉사위원 교체 및 직권 중재 권한 활성화됨</span>
-              </div>
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+              <span class="font-bold">👑 사서 관리자 전용 직권 모드 활성화됨</span>
             </div>
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-800 text-amber-300 border border-amber-400/30 shrink-0">관리자 전용</span>
+            <span class="text-[11px] text-slate-300">슬롯별 봉사위원을 즉시 변경하거나 원상복구할 수 있습니다.</span>
           </div>
         `;
       }
 
-      let slotsHtml = adminTopNoticeHtml;
       timeSlots.forEach(slot => {
-        const rMatch = rosterData.find(r => r.week === weekCycle && r.day.startsWith(dayName) && r.time === slot.startTime);
-        
-        const key1 = `${currentDateStr}_${slot.startTime}_1`;
-        const key2 = `${currentDateStr}_${slot.startTime}_2`;
+        const sNorm = slot.startTime;
+        const rMatch = rosterData.find(r => r.week === weekCycle && r.day.startsWith(dayName.slice(0, 1)) && r.time === sNorm);
 
-        const orgName1 = (rMatch ? rMatch.name1 : '공석') || '공석';
-        const orgName2 = (rMatch ? rMatch.name2 : '공석') || '공석';
+        const slotWorkers = [1, 2].map(roleIdx => {
+          const key = `${currentDateStr}_${sNorm}_${roleIdx}`;
+          const rec = getOverrideRecord(key);
+          const origName = (rMatch ? (roleIdx === 1 ? rMatch.name1 : rMatch.name2) : '') || '공석';
 
-        const rec1 = getOverrideRecord(key1);
-        const rec2 = getOverrideRecord(key2);
+          const isReq = (rec && rec.status === 'REQUESTED');
+          const isAcc = (rec && rec.status === 'ACCEPTED');
+          const effName = isAcc ? rec.substitute : (isReq ? (rec.requester || origName) : origName);
 
-        const isReq1 = (rec1 && rec1.status === 'REQUESTED');
-        const isReq2 = (rec2 && rec2.status === 'REQUESTED');
+          const isAtt = !!(attendanceLog[key] && attendanceLog[key].status !== 'X');
+          const isMy = (myName && (effName === myName || (isReq && rec.requester === myName)));
 
-        const isAcc1 = (rec1 && rec1.status === 'ACCEPTED' && rec1.substitute);
-        const isAcc2 = (rec2 && rec2.status === 'ACCEPTED' && rec2.substitute);
+          return { roleIdx, key, rec, origName, isReq, isAcc, effName, isAtt, isMy };
+        });
 
-        const dispName1 = isAcc1 ? rec1.substitute : (rec1?.requester || orgName1);
-        const dispName2 = isAcc2 ? rec2.substitute : (rec2?.requester || orgName2);
-
-        const att1 = attendanceLog[key1];
-        const att2 = attendanceLog[key2];
-
-        const isAtt1Checked = !!(att1 && att1.status !== 'X');
-        const isAtt2Checked = !!(att2 && att2.status !== 'X');
-
-        // 슬롯 1 스타일
-        let card1Class = 'p-3.5 rounded-xl border flex flex-col justify-between space-y-2 transition-all ';
-        if (isReq1) {
-          card1Class += 'border-rose-500 bg-rose-50/90 ring-2 ring-rose-400 animate-pulse shadow-sm ';
-        } else if (isAtt1Checked) {
-          card1Class += 'border-emerald-300 bg-emerald-50/20 ';
-        } else if (isAcc1) {
-          card1Class += 'border-blue-300 bg-blue-50/30 ';
-        } else {
-          card1Class += 'border-slate-200 bg-slate-50/40 ';
-        }
-
-        // ==========================================
-        // 슬롯 1 액션: [사용자 전용] vs [관리자 전용] 완전 이원화
-        // ==========================================
-        let actionArea1 = '';
-
-        if (!isAdminLoggedIn) {
-          // [사용자 전용 뷰: 관리자 기능 0% 노출, 순수 자율 대타 매칭만 유지]
-          if (isAtt1Checked) {
-            actionArea1 = `
-              <div class="flex items-center justify-between w-full pt-1 flex-wrap gap-2">
-                <span class="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg flex items-center space-x-1.5 shadow-2xs">
-                  <i class="fa-solid fa-circle-check text-emerald-600"></i>
-                  <span>출석확인 (O) • ${att1.time || '완료'}</span>
-                </span>
-                <button onclick="toggleAttendanceCheck('${key1}', '${dispName1}')" class="text-[11px] text-slate-400 hover:text-rose-600 underline font-medium transition-colors" title="출석 확인 취소">
-                  취소 (X)
-                </button>
-              </div>
-            `;
-          } else if (isReq1) {
-            const isMyRequest = (myVolunteerName && myVolunteerName === (rec1.requester || orgName1));
-            actionArea1 = `
-              <div class="flex items-center justify-between w-full pt-1 gap-2 flex-wrap">
-                <span class="text-[11px] font-extrabold text-rose-700 flex items-center space-x-1.5">
-                  <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-600"></span>
-                  </span>
-                  <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
-                  <span>긴급 대타 모집 중</span>
-                </span>
-                <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
-                  ${isMyRequest ? `<button onclick="cancelSubstituteRequest('${key1}')" class="px-2.5 py-1 text-xs font-bold bg-rose-100 hover:bg-rose-200 text-rose-800 border border-rose-300 rounded-lg transition-colors">✕ 요청 취소</button>` : ''}
-                  ${(!isMyRequest && !isPastDate) ? `<button onclick="acceptSubstituteSlot('${key1}')" class="px-2.5 py-1 text-xs font-extrabold bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow-xs transition-all flex items-center space-x-1 animate-pulse"><i class="fa-solid fa-hand-holding-heart text-[11px]"></i><span>내가 대타 서기</span></button>` : ''}
-                </div>
-              </div>
-            `;
-          } else {
-            const canRequestSub1 = (!myVolunteerName || myVolunteerName === orgName1);
-            actionArea1 = `
-              <div class="flex items-center justify-between w-full pt-1 flex-wrap gap-2">
-                <button onclick="toggleAttendanceCheck('${key1}', '${dispName1}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs transition-colors flex items-center space-x-1.5">
-                  <i class="fa-solid fa-check"></i>
-                  <span>출석 확인 (O)</span>
-                </button>
-                <div class="flex items-center space-x-2">
-                  ${(orgName1 !== '공석' && !isAcc1 && !isPastDate && canRequestSub1) ? `
-                    <button onclick="handleSubstituteRequestClick('${key1}', '${orgName1}')" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-lg text-xs transition-all shadow-2xs flex items-center space-x-1" title="대타 요청 등록">
-                      <i class="fa-solid fa-bullhorn text-[10px]"></i>
-                      <span>대타 요청</span>
-                    </button>
-                  ` : ''}
-                </div>
-              </div>
-            `;
-          }
-        } else {
-          // [사서 관리자 전용 뷰: 봉사위원 임의 교체 인라인 드롭다운 및 원상복구 장착]
-          const adminOpts1 = membersData.map(m => {
-            const isSel = (m.name === dispName1 && (isAcc1 || orgName1 === m.name));
-            const phoneTail = m.phone ? m.phone.slice(-4) : '****';
-            return `<option value="${m.name}" ${isSel ? 'selected' : ''}>${m.name} (${phoneTail})</option>`;
-          }).join('');
-
-          actionArea1 = `
-            <div class="pt-1.5 border-t border-slate-200/80 space-y-2">
-              <div class="flex items-center justify-between flex-wrap gap-1">
-                ${isAtt1Checked ? `
-                  <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md flex items-center space-x-1">
-                    <i class="fa-solid fa-circle-check text-emerald-600"></i>
-                    <span>출석 (O)</span>
-                  </span>
-                  <button onclick="toggleAttendanceCheck('${key1}', '${dispName1}')" class="text-[10px] text-slate-400 hover:text-rose-600 underline font-medium">취소 (X)</button>
-                ` : `
-                  <button onclick="toggleAttendanceCheck('${key1}', '${dispName1}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-[11px] font-bold shadow-2xs">
-                    출석 확인 (O)
-                  </button>
-                `}
-                <span class="text-[10px] text-slate-400 font-medium">정규: <b>${orgName1}</b></span>
-              </div>
-
-              <!-- 관리자 전용: 봉사위원 인라인 교체 드롭다운 구역 -->
-              <div class="p-2.5 rounded-xl bg-slate-900/5 border border-slate-900/15 space-y-1.5">
-                <div class="flex items-center justify-between gap-1 text-[11px]">
-                  <span class="font-bold text-slate-800 flex items-center gap-1">
-                    <i class="fa-solid fa-crown text-amber-500"></i>
-                    <span>봉사위원 교체</span>
-                  </span>
-                  ${(isAcc1 || isReq1) ? `
-                    <button onclick="resetAdminSwap('${key1}')" class="px-2 py-0.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-md text-[10px] font-bold transition-colors flex items-center gap-1 shadow-2xs" title="원래 정규 배정자로 복구">
-                      <i class="fa-solid fa-rotate-left text-[9px]"></i>
-                      <span>원상복구</span>
-                    </button>
-                  ` : ''}
-                </div>
-
-                <div class="flex items-center gap-1.5">
-                  <select id="adminSwapSelect_${key1}" class="flex-grow p-1.5 text-xs border border-slate-300 rounded-lg bg-white text-slate-800 font-medium focus:ring-1 focus:ring-slate-900 focus:outline-none">
-                    <option value="">-- 교체할 위원 선택 --</option>
-                    ${adminOpts1}
-                  </select>
-                  <button onclick="applyAdminQuickSwap('${key1}', '${orgName1}')" class="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold shrink-0 transition-colors shadow-2xs flex items-center gap-1">
-                    <i class="fa-solid fa-check text-[10px]"></i>
-                    <span>교체</span>
-                  </button>
-                </div>
-
-                ${(isAcc1 || isReq1) ? `
-                  <div class="text-[10px] text-slate-500 flex items-center justify-between pt-0.5">
-                    <span>원 배정: <b class="text-slate-700">${orgName1}</b></span>
-                    <span class="text-blue-700 font-bold">${isAcc1 ? `👉 현재 교체: ${rec1.substitute}` : `🚨 대타요청: ${rec1.requester}`}</span>
-                  </div>
-                ` : ''}
-              </div>
-            </div>
-          `;
-        }
-
-        // 슬롯 2 스타일
-        let card2Class = 'p-3.5 rounded-xl border flex flex-col justify-between space-y-2 transition-all ';
-        if (isReq2) {
-          card2Class += 'border-rose-500 bg-rose-50/90 ring-2 ring-rose-400 animate-pulse shadow-sm ';
-        } else if (isAtt2Checked) {
-          card2Class += 'border-emerald-300 bg-emerald-50/20 ';
-        } else if (isAcc2) {
-          card2Class += 'border-blue-300 bg-blue-50/30 ';
-        } else {
-          card2Class += 'border-slate-200 bg-slate-50/40 ';
-        }
-
-        // ==========================================
-        // 슬롯 2 액션: [사용자 전용] vs [관리자 전용] 완전 이원화
-        // ==========================================
-        let actionArea2 = '';
-
-        if (!isAdminLoggedIn) {
-          // [사용자 전용 뷰: 관리자 기능 0% 노출, 순수 자율 대타 매칭만 유지]
-          if (isAtt2Checked) {
-            actionArea2 = `
-              <div class="flex items-center justify-between w-full pt-1 flex-wrap gap-2">
-                <span class="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg flex items-center space-x-1.5 shadow-2xs">
-                  <i class="fa-solid fa-circle-check text-emerald-600"></i>
-                  <span>출석확인 (O) • ${att2.time || '완료'}</span>
-                </span>
-                <button onclick="toggleAttendanceCheck('${key2}', '${dispName2}')" class="text-[11px] text-slate-400 hover:text-rose-600 underline font-medium transition-colors" title="출석 확인 취소">
-                  취소 (X)
-                </button>
-              </div>
-            `;
-          } else if (isReq2) {
-            const isMyRequest = (myVolunteerName && myVolunteerName === (rec2.requester || orgName2));
-            actionArea2 = `
-              <div class="flex items-center justify-between w-full pt-1 gap-2 flex-wrap">
-                <span class="text-[11px] font-extrabold text-rose-700 flex items-center space-x-1.5">
-                  <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-600"></span>
-                  </span>
-                  <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
-                  <span>긴급 대타 모집 중</span>
-                </span>
-                <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
-                  ${isMyRequest ? `<button onclick="cancelSubstituteRequest('${key2}')" class="px-2.5 py-1 text-xs font-bold bg-rose-100 hover:bg-rose-200 text-rose-800 border border-rose-300 rounded-lg transition-colors">✕ 요청 취소</button>` : ''}
-                  ${(!isMyRequest && !isPastDate) ? `<button onclick="acceptSubstituteSlot('${key2}')" class="px-2.5 py-1 text-xs font-extrabold bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow-xs transition-all flex items-center space-x-1 animate-pulse"><i class="fa-solid fa-hand-holding-heart text-[11px]"></i><span>내가 대타 서기</span></button>` : ''}
-                </div>
-              </div>
-            `;
-          } else {
-            const canRequestSub2 = (!myVolunteerName || myVolunteerName === orgName2);
-            actionArea2 = `
-              <div class="flex items-center justify-between w-full pt-1 flex-wrap gap-2">
-                <button onclick="toggleAttendanceCheck('${key2}', '${dispName2}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-xs transition-colors flex items-center space-x-1.5">
-                  <i class="fa-solid fa-check"></i>
-                  <span>출석 확인 (O)</span>
-                </button>
-                <div class="flex items-center space-x-2">
-                  ${(orgName2 !== '공석' && !isAcc2 && !isPastDate && canRequestSub2) ? `
-                    <button onclick="handleSubstituteRequestClick('${key2}', '${orgName2}')" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-lg text-xs transition-all shadow-2xs flex items-center space-x-1" title="대타 요청 등록">
-                      <i class="fa-solid fa-bullhorn text-[10px]"></i>
-                      <span>대타 요청</span>
-                    </button>
-                  ` : ''}
-                </div>
-              </div>
-            `;
-          }
-        } else {
-          // [사서 관리자 전용 뷰: 봉사위원 임의 교체 인라인 드롭다운 및 원상복구 장착]
-          const adminOpts2 = membersData.map(m => {
-            const isSel = (m.name === dispName2 && (isAcc2 || orgName2 === m.name));
-            const phoneTail = m.phone ? m.phone.slice(-4) : '****';
-            return `<option value="${m.name}" ${isSel ? 'selected' : ''}>${m.name} (${phoneTail})</option>`;
-          }).join('');
-
-          actionArea2 = `
-            <div class="pt-1.5 border-t border-slate-200/80 space-y-2">
-              <div class="flex items-center justify-between flex-wrap gap-1">
-                ${isAtt2Checked ? `
-                  <span class="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md flex items-center space-x-1">
-                    <i class="fa-solid fa-circle-check text-emerald-600"></i>
-                    <span>출석 (O)</span>
-                  </span>
-                  <button onclick="toggleAttendanceCheck('${key2}', '${dispName2}')" class="text-[10px] text-slate-400 hover:text-rose-600 underline font-medium">취소 (X)</button>
-                ` : `
-                  <button onclick="toggleAttendanceCheck('${key2}', '${dispName2}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-[11px] font-bold shadow-2xs">
-                    출석 확인 (O)
-                  </button>
-                `}
-                <span class="text-[10px] text-slate-400 font-medium">정규: <b>${orgName2}</b></span>
-              </div>
-
-              <!-- 관리자 전용: 봉사위원 인라인 교체 드롭다운 구역 -->
-              <div class="p-2.5 rounded-xl bg-slate-900/5 border border-slate-900/15 space-y-1.5">
-                <div class="flex items-center justify-between gap-1 text-[11px]">
-                  <span class="font-bold text-slate-800 flex items-center gap-1">
-                    <i class="fa-solid fa-crown text-amber-500"></i>
-                    <span>봉사위원 교체</span>
-                  </span>
-                  ${(isAcc2 || isReq2) ? `
-                    <button onclick="resetAdminSwap('${key2}')" class="px-2 py-0.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-md text-[10px] font-bold transition-colors flex items-center gap-1 shadow-2xs" title="원래 정규 배정자로 복구">
-                      <i class="fa-solid fa-rotate-left text-[9px]"></i>
-                      <span>원상복구</span>
-                    </button>
-                  ` : ''}
-                </div>
-
-                <div class="flex items-center gap-1.5">
-                  <select id="adminSwapSelect_${key2}" class="flex-grow p-1.5 text-xs border border-slate-300 rounded-lg bg-white text-slate-800 font-medium focus:ring-1 focus:ring-slate-900 focus:outline-none">
-                    <option value="">-- 교체할 위원 선택 --</option>
-                    ${adminOpts2}
-                  </select>
-                  <button onclick="applyAdminQuickSwap('${key2}', '${orgName2}')" class="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold shrink-0 transition-colors shadow-2xs flex items-center gap-1">
-                    <i class="fa-solid fa-check text-[10px]"></i>
-                    <span>교체</span>
-                  </button>
-                </div>
-
-                ${(isAcc2 || isReq2) ? `
-                  <div class="text-[10px] text-slate-500 flex items-center justify-between pt-0.5">
-                    <span>원 배정: <b class="text-slate-700">${orgName2}</b></span>
-                    <span class="text-blue-700 font-bold">${isAcc2 ? `👉 현재 교체: ${rec2.substitute}` : `🚨 대타요청: ${rec2.requester}`}</span>
-                  </div>
-                ` : ''}
-              </div>
-            </div>
-          `;
-        }
-
-        slotsHtml += `
-          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-3">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+        cardsHtml += `
+          <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <!-- 슬롯 헤더 -->
+            <div class="bg-slate-50/70 border-b border-slate-100 px-4 sm:px-5 py-3 flex items-center justify-between">
               <div class="flex items-center space-x-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                <span class="font-bold text-xs sm:text-sm text-slate-900">${slot.name} (${slot.startTime} ~ ${slot.endTime})</span>
+                <span class="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">${slot.name.slice(0, 2)}</span>
+                <h4 class="font-bold text-xs sm:text-sm text-slate-800">${slot.name} (${slot.startTime} ~ ${slot.endTime})</h4>
               </div>
-              <span class="text-[11px] text-slate-400 font-medium">활동 2시간 배정</span>
+              <span class="text-[11px] font-semibold text-slate-400">2인 1조 봉사 슬롯</span>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <!-- 봉사위원 1 카드 -->
-              <div class="${card1Class}">
-                <div class="flex items-start justify-between">
-                  <div>
-                    <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
-                      <span class="text-xs font-bold text-slate-800">${dispName1}</span>
-                      ${isReq1 ? `
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-extrabold shadow-xs animate-bounce">
-                          <span class="relative flex h-2 w-2">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-300 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-400"></span>
-                          </span>
-                          <i class="fa-solid fa-lightbulb text-amber-300"></i>
-                          <span>대타 급구</span>
+            <!-- 슬롯 내부 위원 1 & 위원 2 카드 리스트 -->
+            <div class="p-4 sm:p-5 grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              ${slotWorkers.map(w => {
+                let cardStyle = 'border border-slate-200 rounded-xl p-3.5 transition-all bg-white flex flex-col justify-between space-y-3';
+                if (w.isReq) {
+                  cardStyle = 'border-2 border-rose-500 bg-rose-50/90 ring-2 ring-rose-400 animate-pulse rounded-xl p-3.5 shadow-sm flex flex-col justify-between space-y-3';
+                } else if (w.isMy) {
+                  cardStyle = 'border-2 border-amber-400 bg-amber-50/50 rounded-xl p-3.5 shadow-2xs flex flex-col justify-between space-y-3';
+                }
+
+                return `
+                  <div class="${cardStyle}">
+                    <div>
+                      <!-- 역할 배지 & 대타 상태 -->
+                      <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${w.roleIdx === 1 ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-600 border border-slate-200'}">
+                          봉사위원 ${w.roleIdx} (${w.roleIdx === 1 ? '정' : '부'})
                         </span>
-                      ` : ''}
-                      ${isAcc1 ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 border border-blue-200">대타 확정</span>' : ''}
-                      ${myVolunteerName && myVolunteerName === dispName1 ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">나</span>' : ''}
-                    </div>
-                    ${isReq1 ? `<p class="text-[10px] text-rose-700 mt-0.5 font-bold flex items-center gap-1"><i class="fa-solid fa-circle-exclamation text-rose-500 text-[9px]"></i><span>사유: ${rec1.reason || '개인 사정'}</span></p>` : ''}
-                    ${isAcc1 && rec1.requester ? `<p class="text-[10px] text-slate-400 mt-0.5">원 배정: ${rec1.requester}</p>` : ''}
-                  </div>
-                  <span class="text-[10px] text-slate-400 font-semibold shrink-0">봉사위원 1</span>
-                </div>
-
-                ${actionArea1}
-              </div>
-
-              <!-- 봉사위원 2 카드 -->
-              <div class="${card2Class}">
-                <div class="flex items-start justify-between">
-                  <div>
-                    <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
-                      <span class="text-xs font-bold text-slate-800">${dispName2}</span>
-                      ${isReq2 ? `
-                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-extrabold shadow-xs animate-bounce">
-                          <span class="relative flex h-2 w-2">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-300 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-400"></span>
+                        
+                        ${w.isReq ? `
+                          <span class="flex items-center space-x-1 text-[10px] font-extrabold text-rose-600 bg-rose-100 px-2 py-0.5 rounded-md border border-rose-300 animate-bounce">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span>대타 급구</span>
                           </span>
-                          <i class="fa-solid fa-lightbulb text-amber-300"></i>
-                          <span>대타 급구</span>
-                        </span>
-                      ` : ''}
-                      ${isAcc2 ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 border border-blue-200">대타 확정</span>' : ''}
-                      ${myVolunteerName && myVolunteerName === dispName2 ? '<span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">나</span>' : ''}
-                    </div>
-                    ${isReq2 ? `<p class="text-[10px] text-rose-700 mt-0.5 font-bold flex items-center gap-1"><i class="fa-solid fa-circle-exclamation text-rose-500 text-[9px]"></i><span>사유: ${rec2.reason || '개인 사정'}</span></p>` : ''}
-                    ${isAcc2 && rec2.requester ? `<p class="text-[10px] text-slate-400 mt-0.5">원 배정: ${rec2.requester}</p>` : ''}
-                  </div>
-                  <span class="text-[10px] text-slate-400 font-semibold shrink-0">봉사위원 2</span>
-                </div>
+                        ` : ''}
 
-                ${actionArea2}
-              </div>
+                        ${w.isAcc ? `
+                          <span class="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                            대타 참여 (${w.origName} 대신)
+                          </span>
+                        ` : ''}
+
+                        ${!w.isReq && !w.isAcc && w.isMy ? `
+                          <span class="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md border border-amber-300">
+                            나의 활동일
+                          </span>
+                        ` : ''}
+                      </div>
+
+                      <!-- 위원 이름 및 출석 상태 -->
+                      <div class="flex items-center justify-between pt-1">
+                        <div>
+                          <div class="font-extrabold text-sm sm:text-base text-slate-900 tracking-tight flex items-center space-x-1.5">
+                            <span>${w.effName || '공석'}</span>
+                            ${w.isMy ? '<span class="text-[10px] text-amber-700 font-bold bg-amber-100 px-1.5 py-0.2 rounded">[나]</span>' : ''}
+                          </div>
+                          ${w.isReq && w.rec?.reason ? `<p class="text-[11px] text-rose-600 font-medium mt-0.5">사유: ${w.rec.reason}</p>` : ''}
+                        </div>
+
+                        <!-- 출석 확인 (O/X) 토글 버튼 -->
+                        <button onclick="toggleAttendanceCheck('${w.key}', '${w.effName}')" class="px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center space-x-1.5 ${w.isAtt ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'}">
+                          <i class="fa-solid ${w.isAtt ? 'fa-circle-check text-emerald-200' : 'fa-circle text-slate-400'} text-xs"></i>
+                          <span>${w.isAtt ? '출석확인 (O)' : '미출석 (X)'}</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- 하단 액션 구역 (사용자 자율 매칭 vs 관리자 직권 교체) -->
+                    ${isAdminLoggedIn ? `
+                      <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                        <div class="flex items-center space-x-1 flex-grow">
+                          <select id="adminSwapSelect_${w.key}" class="w-full p-1.5 text-xs border border-slate-200 rounded-lg bg-white font-medium focus:ring-2 focus:ring-slate-900/20 focus:outline-none">
+                            <option value="">-- 위원 교체 --</option>
+                            ${membersData.map(m => `<option value="${m.name}" ${m.name === w.effName ? 'selected' : ''}>${m.name} (${m.phone ? m.phone.slice(-4) : '****'})</option>`).join('')}
+                          </select>
+                          <button onclick="applyAdminQuickSwap('${w.key}', '${w.origName}')" class="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition-all shrink-0">교체</button>
+                        </div>
+                        ${(w.isAcc || w.isReq) ? `
+                          <button onclick="resetAdminSwap('${w.key}')" class="px-2 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg text-[11px] font-bold transition-colors shrink-0">✕ 원복</button>
+                        ` : ''}
+                      </div>
+                    ` : `
+                      <div class="pt-1 flex items-center justify-end space-x-2">
+                        ${w.isReq ? `
+                          ${(myName && myName === w.rec?.requester) ? `
+                            <button onclick="cancelSubstituteRequest('${w.key}')" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-bold transition-colors">
+                              ✕ 대타 요청 취소
+                            </button>
+                          ` : `
+                            <button onclick="openSubAcceptModal('${w.key}')" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition-all flex items-center space-x-1 animate-bounce">
+                              <i class="fa-solid fa-hand-holding-heart text-[11px]"></i>
+                              <span>✋ 내가 대타 서기</span>
+                            </button>
+                          `}
+                        ` : `
+                          ${(myName && (w.effName === myName || w.origName === myName)) ? `
+                            <button onclick="openSubReqModal('${w.key}', '${w.origName}')" class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold transition-colors flex items-center space-x-1">
+                              <i class="fa-solid fa-bullhorn text-[11px]"></i>
+                              <span>🚨 대타 요청</span>
+                            </button>
+                          ` : ''}
+                        `}
+                      </div>
+                    `}
+                  </div>
+                `;
+              }).join('')}
             </div>
           </div>
         `;
       });
 
-      container.innerHTML = slotsHtml;
+      container.innerHTML = cardsHtml;
     }
 
     // -------------------------------------------------------------
-    // [9] 월별 캘린더 엔진 (복원 완료)
+    // [8] 월별 캘린더 엔진 (복원 완료)
     // -------------------------------------------------------------
     function changeCalendarMonth(offset) {
       calendarMonth += offset;
@@ -2237,6 +1901,7 @@
         calendarMonth = 12;
         calendarYear--;
       }
+      updateCalendarExportButtonText();
       renderCalendar();
     }
 
@@ -2244,114 +1909,109 @@
       const now = new Date();
       calendarYear = now.getFullYear();
       calendarMonth = now.getMonth() + 1;
+      updateCalendarExportButtonText();
       renderCalendar();
     }
 
+    function updateCalendarExportButtonText() {
+      const btnText = document.getElementById('btnExportMonthlySheetText');
+      if (btnText) {
+        btnText.textContent = `구글 시트에 ${calendarMonth}월 배정표 탭 생성`;
+      }
+    }
+
     function jumpToDateFromCalendar(dateStr) {
+      if (!dateStr) return;
       currentDateStr = dateStr;
       const input = document.getElementById('currentDateInput');
-      if (input) input.value = dateStr;
+      if (input) input.value = currentDateStr;
       showTab('today');
-      renderTodaySlots();
     }
 
     function renderCalendar() {
       const titleEl = document.getElementById('calendarYearMonthText');
       const gridEl = document.getElementById('calendarDaysGrid');
       if (!gridEl) return;
-      if (titleEl) titleEl.textContent = `${calendarYear}년 ${calendarMonth}월`;
 
-      const exportBtnText = document.getElementById('btnExportMonthlySheetText');
-      if (exportBtnText) exportBtnText.textContent = `구글 시트에 ${calendarMonth}월 배정표 탭 생성`;
+      if (titleEl) titleEl.textContent = `${calendarYear}년 ${calendarMonth}월`;
+      updateCalendarExportButtonText();
 
       const firstDay = new Date(calendarYear, calendarMonth - 1, 1);
       const lastDate = new Date(calendarYear, calendarMonth, 0).getDate();
-      const startDayOfWeek = firstDay.getDay(); // 0(일) ~ 6(토)
+      const startDayOfWeek = firstDay.getDay();
       const todayStr = formatDate(new Date());
 
       let cellsHtml = '';
 
-      // 이전 달 빈 칸
       for (let i = 0; i < startDayOfWeek; i++) {
-        cellsHtml += `<div class="bg-slate-50/50 min-h-[90px] sm:min-h-[110px] p-1.5 border-b border-r border-slate-100"></div>`;
+        cellsHtml += `<div class="min-h-[85px] sm:min-h-[105px] p-1.5 sm:p-2 bg-slate-50/50"></div>`;
       }
-
-      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
 
       for (let d = 1; d <= lastDate; d++) {
         const curDate = new Date(calendarYear, calendarMonth - 1, d);
         const dateStr = formatDate(curDate);
         const dayOfWeek = curDate.getDay();
-        const dayName = dayNames[dayOfWeek];
         const isToday = (dateStr === todayStr);
 
         const status = checkDayStatusClient(curDate, dateStr);
         const weekCycle = calculateContinuousWeekCycle(curDate, cycleBaseDate, cycleBaseWeek, cycleType);
 
-        let dayNumClass = 'text-xs font-bold ';
+        let cellClass = 'min-h-[85px] sm:min-h-[105px] p-1.5 sm:p-2 transition-all flex flex-col justify-between cursor-pointer ';
         if (isToday) {
-          dayNumClass += 'w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-xs';
-        } else if (dayOfWeek === 0) {
-          dayNumClass += 'text-rose-600';
-        } else if (dayOfWeek === 6) {
-          dayNumClass += 'text-blue-600';
+          cellClass += 'bg-amber-50/50 ring-2 ring-inset ring-amber-400 ';
+        } else if (status.isClosed) {
+          cellClass += 'bg-slate-50/60 opacity-60 ';
         } else {
-          dayNumClass += 'text-slate-700';
+          cellClass += 'bg-white hover:bg-slate-50/80 ';
         }
 
-        let slotChips = '';
+        let numClass = 'text-xs font-bold ';
+        if (isToday) numClass += 'text-amber-800';
+        else if (dayOfWeek === 0) numClass += 'text-rose-500';
+        else if (dayOfWeek === 6) numClass += 'text-blue-500';
+        else numClass += 'text-slate-700';
+
+        let innerContent = '';
         if (status.isClosed) {
-          slotChips = `<div class="text-[10px] text-slate-400 bg-slate-100/70 rounded px-1.5 py-0.5 font-medium mt-1 text-center">${status.title}</div>`;
+          innerContent = `<div class="text-[10px] text-slate-400 font-medium text-center mt-2">${status.title}</div>`;
         } else {
-          timeSlots.forEach((slot, sIdx) => {
+          const dayNameShort = ['일', '월', '화', '수', '목', '금', '토'][dayOfWeek];
+          let slotChips = '';
+
+          timeSlots.forEach(slot => {
             const sNorm = slot.startTime;
-            const rMatch = rosterData.find(r => r.week === weekCycle && r.day.startsWith(dayName) && r.time === sNorm);
-            
+            const rMatch = rosterData.find(r => r.week === weekCycle && r.day.startsWith(dayNameShort) && r.time === sNorm);
             const k1 = `${dateStr}_${sNorm}_1`;
             const k2 = `${dateStr}_${sNorm}_2`;
             const rec1 = getOverrideRecord(k1);
             const rec2 = getOverrideRecord(k2);
 
-            const n1 = (rec1 && rec1.status === 'ACCEPTED' && rec1.substitute) ? rec1.substitute : (rec1?.requester || (rMatch ? rMatch.name1 : '공석'));
-            const n2 = (rec2 && rec2.status === 'ACCEPTED' && rec2.substitute) ? rec2.substitute : (rec2?.requester || (rMatch ? rMatch.name2 : '공석'));
+            const n1 = (rec1 && rec1.status === 'ACCEPTED' && rec1.substitute) ? rec1.substitute : (rec1?.requester || (rMatch ? rMatch.name1 : ''));
+            const n2 = (rec2 && rec2.status === 'ACCEPTED' && rec2.substitute) ? rec2.substitute : (rec2?.requester || (rMatch ? rMatch.name2 : ''));
 
             const isReq1 = (rec1 && rec1.status === 'REQUESTED');
             const isReq2 = (rec2 && rec2.status === 'REQUESTED');
-
-            const isMy1 = (myVolunteerName && (myVolunteerName === n1));
-            const isMy2 = (myVolunteerName && (myVolunteerName === n2));
-
-            let badge1 = n1;
-            if (isReq1) badge1 = `🚨${n1}`;
-            let badge2 = n2;
-            if (isReq2) badge2 = `🚨${n2}`;
-
-            let c1Bg = isReq1 ? 'bg-rose-600 text-white font-extrabold border border-rose-700 animate-pulse shadow-2xs' : (isMy1 ? 'bg-amber-100 text-amber-800 font-bold' : 'bg-slate-100 text-slate-700');
-            let c2Bg = isReq2 ? 'bg-rose-600 text-white font-extrabold border border-rose-700 animate-pulse shadow-2xs' : (isMy2 ? 'bg-amber-100 text-amber-800 font-bold' : 'bg-slate-100 text-slate-700');
+            const hasReq = isReq1 || isReq2;
 
             slotChips += `
-              <div class="mt-1 text-[10px] leading-tight flex flex-col gap-0.5">
-                <div class="flex items-center justify-between text-[9px] text-slate-400 font-medium">
-                  <span>${slot.name.replace('오전 ', '')}</span>
-                  ${sIdx === 0 ? `<span class="text-[8px] px-1 bg-slate-100 rounded text-slate-500">${weekCycle}주</span>` : ''}
-                </div>
-                <div class="flex gap-1">
-                  <span class="flex-1 truncate rounded px-1 py-0.5 ${c1Bg}">${badge1}</span>
-                  <span class="flex-1 truncate rounded px-1 py-0.5 ${c2Bg}">${badge2}</span>
-                </div>
+              <div class="text-[10px] p-1 rounded-md ${hasReq ? 'bg-rose-100 text-rose-800 font-extrabold animate-pulse border border-rose-300' : 'bg-slate-100 text-slate-700 font-medium'} truncate">
+                <span class="text-slate-400">${slot.name.slice(0, 2)}</span>
+                ${hasReq ? '<span class="text-rose-600 font-bold">[대타구함]</span>' : ''}
+                <span>${n1 || '공석'}/${n2 || '공석'}</span>
               </div>
             `;
           });
+
+          innerContent = `<div class="space-y-1 mt-1">${slotChips}</div>`;
         }
 
         cellsHtml += `
-          <div onclick="jumpToDateFromCalendar('${dateStr}')" class="min-h-[90px] sm:min-h-[110px] p-1.5 border-b border-r border-slate-100 hover:bg-slate-50/80 transition-colors cursor-pointer flex flex-col justify-between ${isToday ? 'bg-rose-50/30' : ''}">
-            <div>
-              <div class="flex items-center justify-between mb-1">
-                <span class="${dayNumClass}">${d}</span>
-              </div>
-              ${slotChips}
+          <div onclick="jumpToDateFromCalendar('${dateStr}')" class="${cellClass}">
+            <div class="flex items-center justify-between">
+              <span class="${numClass}">${d}</span>
+              ${isToday ? '<span class="text-[9px] font-extrabold text-amber-700 bg-amber-100 px-1 rounded">오늘</span>' : ''}
             </div>
+            ${innerContent}
           </div>
         `;
       }
@@ -2359,16 +2019,22 @@
       const totalCells = startDayOfWeek + lastDate;
       const trailingCells = (7 - (totalCells % 7)) % 7;
       for (let i = 0; i < trailingCells; i++) {
-        cellsHtml += `<div class="bg-slate-50/50 min-h-[90px] sm:min-h-[110px] p-1.5 border-b border-r border-slate-100"></div>`;
+        cellsHtml += `<div class="min-h-[85px] sm:min-h-[105px] p-1.5 sm:p-2 bg-slate-50/50"></div>`;
       }
 
       gridEl.innerHTML = cellsHtml;
     }
 
     // -------------------------------------------------------------
-    // [9-1] 월별 배정표 구글 시트 원격 탭 생성 엔진 (33.2 신설)
+    // [9-1] 월별 배정표 구글 시트 원격 탭 생성 엔진 (관리자 전용 & 실데이터 직결 전송)
     // -------------------------------------------------------------
     async function exportCurrentCalendarToGoogleSheet() {
+      // 1. 일반 사용자 클릭 원천 차단 가드
+      if (!isAdminLoggedIn) {
+        showToast('구글 시트 배정표 탭 생성은 사서 관리자 인증이 필요합니다.');
+        return;
+      }
+
       if (!gasApiUrl) {
         showToast('구글 시트 연동이 필요합니다. [도서관 설정]에서 웹 앱 URL을 먼저 등록해 주세요.');
         return;
@@ -2382,6 +2048,53 @@
       if (btnText) btnText.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> <span>${calendarMonth}월 탭 생성 중...</span>`;
       showToast(`구글 시트에 [${calendarYear}-${String(calendarMonth).padStart(2, '0')} 봉사배정표] 탭 생성을 요청합니다...`);
 
+      // 2. 웹앱 캘린더 화면에 표시되는 당월 실제 일자별 배정 데이터를 100% 동일하게 직결 패키징
+      const lastDate = new Date(calendarYear, calendarMonth, 0).getDate();
+      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+      const scheduleRows = [];
+
+      for (let d = 1; d <= lastDate; d++) {
+        const curDate = new Date(calendarYear, calendarMonth - 1, d);
+        const dateStr = formatDate(curDate);
+        const dayOfWeek = curDate.getDay();
+        const dayName = dayNames[dayOfWeek];
+        const status = checkDayStatusClient(curDate, dateStr);
+
+        if (status.isClosed) {
+          scheduleRows.push([dateStr, `${dayName}요일`, '-', '-', '-', '-', status.title]);
+        } else {
+          const weekCycle = calculateContinuousWeekCycle(curDate, cycleBaseDate, cycleBaseWeek, cycleType);
+          timeSlots.forEach(slot => {
+            const sNorm = slot.startTime;
+            const rMatch = rosterData.find(r => r.week === weekCycle && r.day.startsWith(dayName) && r.time === sNorm);
+            const k1 = `${dateStr}_${sNorm}_1`;
+            const k2 = `${dateStr}_${sNorm}_2`;
+            const rec1 = getOverrideRecord(k1);
+            const rec2 = getOverrideRecord(k2);
+
+            const n1 = (rec1 && rec1.status === 'ACCEPTED' && rec1.substitute) ? rec1.substitute : (rec1?.requester || (rMatch ? rMatch.name1 : '공석'));
+            const n2 = (rec2 && rec2.status === 'ACCEPTED' && rec2.substitute) ? rec2.substitute : (rec2?.requester || (rMatch ? rMatch.name2 : '공석'));
+
+            let notes = [];
+            if (rec1 && rec1.status === 'ACCEPTED') notes.push(`[위원1 대타] ${rec1.substitute}`);
+            if (rec1 && rec1.status === 'REQUESTED') notes.push(`[위원1 대타요청]`);
+            if (rec2 && rec2.status === 'ACCEPTED') notes.push(`[위원2 대타] ${rec2.substitute}`);
+            if (rec2 && rec2.status === 'REQUESTED') notes.push(`[위원2 대타요청]`);
+
+            scheduleRows.push([
+              dateStr,
+              `${dayName}요일`,
+              `${weekCycle}주차`,
+              `${slot.startTime} (${slot.name})`,
+              n1 || '공석',
+              n2 || '공석',
+              notes.join(' / ')
+            ]);
+          });
+        }
+      }
+
+      // 3. 구글 Apps Script로 완성된 데이터 직결 전송
       try {
         await fetch(gasApiUrl, {
           method: 'POST',
@@ -2390,7 +2103,9 @@
           body: JSON.stringify({
             action: 'createMonthlySheet',
             year: calendarYear,
-            month: calendarMonth
+            month: calendarMonth,
+            libraryName: orgName,
+            scheduleRows: scheduleRows
           })
         });
 
