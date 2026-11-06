@@ -701,9 +701,14 @@
   <!-- ============================================================= -->
   <!-- [모달 1: 대문 (웰컴 게이트) - 화이트 미니멀] -->
   <!-- ============================================================= -->
-  <div id="coverModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+  <div id="coverModal" onclick="if(event.target===this) closeModal('coverModal')" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
     <div id="coverCardContainer" class="bg-white w-full max-w-md rounded-3xl p-6 sm:p-8 text-slate-800 border border-slate-200 shadow-2xl relative overflow-hidden flex flex-col justify-between min-h-[480px]">
       
+      <!-- 대문 우측 상단 닫기 (X) 버튼 신설 -->
+      <button type="button" onclick="closeModal('coverModal')" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center text-sm transition-colors z-10" title="대문 닫기">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
       <!-- 도서관 명판 -->
       <div class="text-center space-y-2 pt-2">
         <div class="w-12 h-12 mx-auto rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center text-xl shadow-2xs">
@@ -744,6 +749,12 @@
           <button onclick="submitGateFirstRegistration()" class="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs transition-all shadow-xs">
             본인 확인 및 이 기기에 등록하기
           </button>
+          
+          <div class="text-center pt-1">
+            <button type="button" onclick="closeModal('coverModal')" class="text-[11px] text-slate-400 hover:text-slate-600 underline transition-colors">
+              등록 없이 둘러보기 (닫기)
+            </button>
+          </div>
         </div>
 
         <!-- 2회차: 일상 환영 카드 -->
@@ -777,7 +788,7 @@
           <span>·</span>
           <span>© 2026 Sung soo Kim</span>
         </div>
-        <button onclick="openModal('adminLoginModal')" class="hover:text-amber-600 transition-colors flex items-center space-x-1 font-semibold">
+        <button onclick="closeModal('coverModal'); openModal('adminLoginModal');" class="hover:text-amber-600 transition-colors flex items-center space-x-1 font-semibold">
           <i class="fa-solid fa-lock text-[10px]"></i>
           <span>사서교사 / 관리자</span>
         </button>
@@ -1149,12 +1160,18 @@
 
     function openModal(id) {
       const m = document.getElementById(id);
-      if (m) m.classList.remove('hidden');
+      if (m) {
+        m.classList.remove('hidden');
+        m.style.display = 'flex';
+      }
     }
 
     function closeModal(id) {
       const m = document.getElementById(id);
-      if (m) m.classList.add('hidden');
+      if (m) {
+        m.classList.add('hidden');
+        m.style.display = 'none';
+      }
     }
 
     // -------------------------------------------------------------
