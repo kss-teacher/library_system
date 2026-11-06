@@ -7,7 +7,7 @@
   ==============================================================================
   [프로그램 정보(Program Information)]
   Project: 꿈빛 (Ggumbit) - 도서관 봉사인력 자원관리 프로그램
-  Version: v1.11 (Mobile UX Polish, Attendance Security Guard & History Navigation)
+  Version: v1.12 (Compact 3-Char Name Roster & Collapsible IP License Notice)
   Author / Copyright: (c) 2026 Sung soo Kim. All Rights Reserved.
   License: Open Education License (Based on MIT License with Non-Commercial Recommendation)
   
@@ -17,7 +17,7 @@
   제공하지 않습니다. 이용 과정에서 발생하는 데이터 관리 책임은 각 이용 기관에 있습니다.
   ==============================================================================
   -->
-  <title>꿈빛 - 도서관 봉사인력 관리 시스템 v1.11</title>
+  <title>꿈빛 - 도서관 봉사인력 관리 시스템 v1.12</title>
 
   <!-- ============================================================= -->
   <!-- [PWA 모바일 홈 화면 앱 설치 메타 태그 & 펼쳐진 책 아이콘 엔진] -->
@@ -82,7 +82,7 @@
         <div>
           <div class="flex items-center space-x-1.5">
             <span class="font-extrabold text-lg text-slate-900 tracking-tight">꿈빛</span>
-            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-md border border-amber-200/60 font-mono">v1.11</span>
+            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-md border border-amber-200/60 font-mono">v1.12</span>
           </div>
           <p id="topBarOrgName" class="text-xs text-slate-500 font-medium truncate max-w-[180px] sm:max-w-xs">꿈빛도서관</p>
         </div>
@@ -234,7 +234,7 @@
     </section>
 
     <!-- ----------------------------------------------------------- -->
-    <!-- [탭 3] 상세 순번표 -->
+    <!-- [탭 3] 상세 순번표 (이름 3글자 최적화 & 간결 뷰) -->
     <!-- ----------------------------------------------------------- -->
     <section id="tabContent-roster" class="hidden space-y-4">
       
@@ -499,7 +499,7 @@
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 font-mono">v1.10 가변</span>
+            <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 font-mono">v1.12 가변</span>
             <i id="accordionIcon-3" class="fa-solid fa-chevron-up text-slate-400 text-xs transition-transform duration-200"></i>
           </div>
         </button>
@@ -753,6 +753,24 @@
   </main>
 
   <!-- ============================================================= -->
+  <!-- [초미니멀 접이식 지적재산권(IP) 푸터 영역] -->
+  <!-- ============================================================= -->
+  <footer class="py-4 text-center">
+    <details class="group max-w-md mx-auto px-4 text-center">
+      <summary class="cursor-pointer text-[11px] text-slate-400 hover:text-slate-600 font-medium list-none select-none inline-flex items-center space-x-1 transition-colors">
+        <span>📜 지적재산권(IP) 및 비영리 라이선스 안내</span>
+        <i class="fa-solid fa-chevron-down text-[9px] group-open:rotate-180 transition-transform duration-200"></i>
+      </summary>
+      <div class="mt-2 p-3.5 bg-white border border-slate-200 rounded-xl text-left text-[11px] text-slate-500 leading-relaxed space-y-1.5 shadow-2xs">
+        <p>• <b>원작자 / Copyright:</b> © 2026 <b>Sung soo Kim</b>. All Rights Reserved.</p>
+        <p>• <b>라이선스 규격:</b> Open Education License (MIT License 기반). 전국 교육기관 및 공공도서관은 비영리 목적으로 본 소프트웨어를 영구히 무상 사용할 수 있습니다.</p>
+        <p>• <b>법적 면책 조항:</b> 본 프로그램은 "있는 그대로" 제공되며 명시적이거나 묵시적인 어떠한 보증도 제공하지 않습니다. 각 기관의 데이터 백업과 관리에 대한 법적 책임은 해당 이용 기관에 귀속됩니다.</p>
+        <p>• <b>소프트웨어 버전:</b> 꿈빛 (Ggumbit) v1.12</p>
+      </div>
+    </details>
+  </footer>
+
+  <!-- ============================================================= -->
   <!-- [인쇄 전용 A4 일일 활동일지 컨테이너] -->
   <!-- ============================================================= -->
   <div id="printArea" class="hidden">
@@ -845,7 +863,7 @@
       <!-- 하단 저작권 및 관리자 통로 -->
       <div class="pt-2 flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-100">
         <div class="flex items-center space-x-1.5">
-          <span class="font-bold text-slate-600">꿈빛 v1.11</span>
+          <span class="font-bold text-slate-600">꿈빛 v1.12</span>
           <span>·</span>
           <span>© 2026 Sung soo Kim</span>
         </div>
@@ -1094,7 +1112,7 @@
   </div>
 
   <!-- ============================================================= -->
-  <!-- [모달 8: 시스템 이용 설명서 & 라이선스 고지] -->
+  <!-- [모달 8: 시스템 이용 설명서 & 라이선스 안내] -->
   <!-- ============================================================= -->
   <div id="manualModal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
     <div class="bg-white w-full max-w-xl rounded-2xl p-6 border border-slate-200 shadow-2xl space-y-4 text-slate-800 max-h-[90vh] flex flex-col">
@@ -1111,21 +1129,6 @@
       </div>
 
       <div class="flex-grow overflow-y-auto space-y-3.5 text-xs leading-relaxed text-slate-600 pr-1">
-        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
-        <h4 class="font-bold text-slate-800 text-xs">📜 지적재산권(IP) 및 비영리 라이선스 안내</h4>
-        <p>• <b>원작자 / Copyright:</b> © 2026 <b>Sung soo Kim</b>. All Rights Reserved.</p>
-        <p>• <b>라이선스 규격:</b> Open Education License (MIT License 기반). 전국 교육기관 및 공공도서관은 비영리 목적으로 본 소프트웨어를 영구히 무상 사용할 수 있습니다.</p>
-        <p>• <b>법적 면책 조항:</b> 본 프로그램은 "있는 그대로" 제공되며 명시적이거나 묵시적인 어떠한 보증도 제공하지 않습니다. 각 기관의 데이터 백업과 관리에 대한 법적 책임은 해당 이용 기관에 귀속됩니다.</p>
-        <p>• <b>소프트웨어 버전:</b> 꿈빛 (Ggumbit) v1.11</p>
-      </div>
-    </div>
-
-    <div class="flex justify-end pt-2 border-t border-slate-100">
-      <button onclick="closeModal('manualModal')" class="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold">확인 완료</button>
-    </div>
-  </div>
-</div>
-
         <!-- 홈 화면 앱 설치 안내 카드 -->
         <div class="p-3.5 bg-amber-50/70 border border-amber-200 rounded-xl space-y-1.5">
           <h4 class="font-bold text-amber-950 text-xs flex items-center space-x-1.5">
@@ -1143,7 +1146,7 @@
           <p>• <b>원작자 / Copyright:</b> © 2026 <b>Sung soo Kim</b>. All Rights Reserved.</p>
           <p>• <b>라이선스 규격:</b> Open Education License (MIT License 기반). 전국 교육기관 및 공공도서관은 비영리 목적으로 본 소프트웨어를 영구히 무상 사용할 수 있습니다.</p>
           <p>• <b>법적 면책 조항:</b> 본 프로그램은 "있는 그대로" 제공되며 명시적이거나 묵시적인 어떠한 보증도 제공하지 않습니다. 각 기관의 데이터 백업과 관리에 대한 법적 책임은 해당 이용 기관에 귀속됩니다.</p>
-          <p>• <b>소프트웨어 버전:</b> 꿈빛 (Ggumbit) v1.10</p>
+          <p>• <b>소프트웨어 버전:</b> 꿈빛 (Ggumbit) v1.12</p>
         </div>
       </div>
 
@@ -1206,7 +1209,6 @@
     // -------------------------------------------------------------
     function setupPwaHomeScreenEngine() {
       try {
-        // 펼쳐진 책 SVG 아이콘 데이터
         const bookSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
           <defs>
             <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -1222,7 +1224,6 @@
 
         const svgDataUri = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(bookSvg);
 
-        // 캔버스 기반 고해상도(192x192, 512x512) PNG 즉석 생성
         const canvas192 = document.createElement('canvas');
         canvas192.width = 192;
         canvas192.height = 192;
@@ -1246,11 +1247,9 @@
             png512 = canvas512.toDataURL('image/png');
           } catch (e) {}
 
-          // iOS 사파리 터치 아이콘에 PNG 적용
           const appleIcon = document.getElementById('dynamicAppleIcon');
           if (appleIcon && png192) appleIcon.href = png192;
 
-          // 인라인 웹 앱 매니페스트 동적 조립 (앱 이름: [꿈빛], 아이콘: [펼쳐진 책])
           const manifestObj = {
             "name": "꿈빛 - 도서관 봉사인력 관리 시스템",
             "short_name": "꿈빛",
@@ -1305,7 +1304,7 @@
     let gasApiUrl = '';
     let connectedSheetUrl = '';
 
-    // 운영 파라미터 (v1.10 가변 엔진)
+    // 운영 파라미터 (v1.12 가변 엔진)
     let cycleType = '2주';
     let slotCapacity = 2; // N인 무제한 직접 입력
     let operatingDays = ['월', '화', '수', '목', '금'];
@@ -1361,7 +1360,6 @@
       }
     }
 
-    // 아이프레임 제약 없이 100% 작동하는 안전 클립보드 복사 엔진
     function copyTextToClipboard(text, successMsg) {
       const textarea = document.createElement('textarea');
       textarea.value = text;
@@ -1489,7 +1487,7 @@ ${url}
           </div>
 
           <div style="font-size: 11px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 12px;">
-            꿈빛 (Ggumbit) v1.10 도서관 봉사인력 관리 시스템 · (c) 2026 Sung soo Kim
+            꿈빛 (Ggumbit) v1.12 도서관 봉사인력 관리 시스템 · (c) 2026 Sung soo Kim
           </div>
         </div>
       `;
@@ -1582,7 +1580,6 @@ ${url}
       } catch (e) {}
 
       window.addEventListener('popstate', function(e) {
-        // 1. 열려 있는 모달이 있는지 확인하고 가장 위의 모달을 닫아줌
         const activeModals = [
           'qrCodeModal', 'manualModal', 'resetModal', 'substituteAcceptModal',
           'substituteRequestModal', 'membersModal', 'scheduleAssignmentModal',
@@ -1592,12 +1589,11 @@ ${url}
         for (const mId of activeModals) {
           const m = document.getElementById(mId);
           if (m && !m.classList.contains('hidden') && m.style.display !== 'none') {
-            closeModal(mId, false); // 히스토리 추가 조작 없이 순수 닫기
+            closeModal(mId, false);
             return;
           }
         }
 
-        // 2. 모달이 열려있지 않은 상태에서 메인(today) 탭이 아닌 다른 탭에 있는 경우 홈 탭으로 복귀
         const todaySec = document.getElementById('tabContent-today');
         const isTodayActive = todaySec && !todaySec.classList.contains('hidden');
 
@@ -1606,10 +1602,8 @@ ${url}
           return;
         }
 
-        // 3. 메인(당일 현황) 탭에서 뒤로 가기를 눌렀을 때: 바로 튕기지 않고 2초 내 더블 클릭 시 종료
         const now = Date.now();
         if (now - lastBackPressedTime < 2000) {
-          // 2초 내에 두 번 누르면 브라우저 기본 뒤로가기(종료) 허용
           history.back();
         } else {
           lastBackPressedTime = now;
@@ -1940,7 +1934,6 @@ ${url}
           return { roleIdx, key, rec, origName, isReq, isAcc, effName, isAtt, isMy };
         });
 
-        // 🟢 개선 1: 일반 봉사자 접속 시 '공석' 카드는 숨겨서 화면 가독성 극대화 (관리자는 배정을 위해 표시)
         const visibleWorkers = isAdminLoggedIn 
           ? allSlotWorkers 
           : allSlotWorkers.filter(w => w.effName && w.effName !== '공석');
@@ -2011,7 +2004,7 @@ ${url}
                           ${w.isReq && w.rec?.reason ? `<p class="text-[11px] text-rose-600 font-medium mt-0.5">사유: ${w.rec.reason}</p>` : ''}
                         </div>
 
-                        <!-- O/X 출석 확인 버튼 (본인 인증 보안 가드 체결) -->
+                        <!-- O/X 출석 확인 버튼 -->
                         <button onclick="toggleAttendanceCheck('${w.key}', '${w.effName}')" class="px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center space-x-1.5 ${w.isAtt ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'}">
                           <i class="fa-solid ${w.isAtt ? 'fa-circle-check text-emerald-200' : 'fa-circle text-slate-400'} text-xs"></i>
                           <span>${w.isAtt ? '출석확인 (O)' : '미출석 (X)'}</span>
@@ -2025,7 +2018,7 @@ ${url}
                         <div class="flex items-center space-x-1 flex-grow">
                           <select id="adminSwapSelect_${w.key}" class="w-full p-1.5 text-xs border border-slate-200 rounded-lg bg-white font-medium focus:ring-2 focus:ring-slate-900/20 focus:outline-none">
                             <option value="">-- 위원 교체 --</option>
-                            ${membersData.map(m => `<option value="${m.name}" ${m.name === w.effName ? 'selected' : ''}>${m.name} (${m.phone ? m.phone.slice(-4) : '****'})</option>`).join('')}
+                            ${membersData.map(m => `<option value="${m.name}" ${m.name === w.effName ? 'selected' : ''}>${m.name}</option>`).join('')}
                           </select>
                           <button onclick="applyAdminQuickSwap('${w.key}', '${w.origName}')" class="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition-all shrink-0">교체</button>
                         </div>
@@ -2068,7 +2061,7 @@ ${url}
     }
 
     // -------------------------------------------------------------
-    // [7-1] 출석 확인 (O/X) 토글 - 본인 보안 검증 가드 완비
+    // [7-1] 출석 확인 (O/X) 토글 - 본인 보안 검증 가드
     // -------------------------------------------------------------
     function toggleAttendanceCheck(key, workerName) {
       if (!workerName || workerName === '공석') {
@@ -2076,7 +2069,6 @@ ${url}
         return;
       }
 
-      // 🛡️ 보안 가드: 관리자가 아닌 일반 사용자일 경우 엄격한 본인 검증
       if (!isAdminLoggedIn) {
         const myName = myVolunteerName || safeStorage.getItem('lib_my_name') || '';
         
@@ -2282,7 +2274,7 @@ ${url}
               if (eff && eff !== '공석') names.push(eff);
             }
 
-            if (names.length === 0) return; // 공석인 타임은 좁은 달력 칩에서 제외하여 가독성 확보
+            if (names.length === 0) return;
 
             const isMySlot = myVolunteerName && names.includes(myVolunteerName);
 
@@ -2290,7 +2282,6 @@ ${url}
             if (hasReq) chipClass = 'bg-rose-500 text-white font-extrabold animate-pulse';
             else if (isMySlot) chipClass = 'bg-amber-100 text-amber-900 border border-amber-300 font-bold';
 
-            // 🟢 개선 2: 시간 숫자를 생략하고 봉사자 이름(김도서/이하늘)을 우선 표기하여 모바일 잘림 완치
             chipsHtml += `
               <div class="px-1 py-0.5 rounded text-[10px] truncate ${chipClass} mt-0.5 text-center leading-tight shadow-2xs" title="${slot.startTime} ${names.join(', ')}">
                 <span class="font-bold">${names.join('/')}</span>
@@ -2322,7 +2313,7 @@ ${url}
     }
 
     // -------------------------------------------------------------
-    // [9] [탭 3] 상세 순번표 렌더러 (관리자 인라인 수정 & 시트 동기화)
+    // [9] [탭 3] 상세 순번표 (이름 3글자 최적 너비 & 간결 표시)
     // -------------------------------------------------------------
     function filterRosterByWeek(w) {
       rosterFilterWeek = w;
@@ -2339,12 +2330,12 @@ ${url}
       renderRosterTable();
     }
 
+    // 위원 드롭다운 옵션: 이름 3글자 위주로 깔끔하게 렌더링
     function getScheduleMemberSelectOptions(selectedName) {
       let opts = '<option value="공석">-- 공석 --</option>';
       (membersData || []).forEach(m => {
         const isSel = (m.name === selectedName) ? 'selected' : '';
-        const phoneSuffix = m.phone ? ` (${m.phone.slice(-4)})` : '';
-        opts += `<option value="${m.name}" ${isSel}>${m.name}${phoneSuffix}</option>`;
+        opts += `<option value="${m.name}" ${isSel}>${m.name}</option>`;
       });
       return opts;
     }
@@ -2356,17 +2347,17 @@ ${url}
 
       const cap = Math.max(1, parseInt(slotCapacity, 10) || 2);
 
-      // 🟢 개선 3: 관리자 모드 순번표에서 드롭다운 이름이 성 한 글자만 보이지 않도록 최소 너비 넉넉히 확보
+      // 상세 순번표 헤더: 콤팩트한 열 너비 적용으로 이름 3글자가 시원하게 한눈에 들어옴
       if (thead) {
         let thHtml = `
           <tr>
-            <th class="p-3 text-center w-16 min-w-[65px] whitespace-nowrap">주차</th>
-            <th class="p-3 text-center w-20 min-w-[70px] whitespace-nowrap">요일</th>
-            <th class="p-3 w-28 min-w-[100px] whitespace-nowrap">시간대</th>
+            <th class="p-2.5 text-center w-12 min-w-[50px] whitespace-nowrap">주차</th>
+            <th class="p-2.5 text-center w-14 min-w-[55px] whitespace-nowrap">요일</th>
+            <th class="p-2.5 text-center w-20 min-w-[70px] whitespace-nowrap">시간</th>
         `;
         for (let r = 1; r <= cap; r++) {
-          const roleLabel = (r === 1) ? '봉사위원 1 (정)' : (r === 2 ? '봉사위원 2 (부)' : `봉사위원 ${r}`);
-          thHtml += `<th class="p-3 min-w-[150px] whitespace-nowrap">${roleLabel}${isAdminLoggedIn ? ' <span class="text-amber-500 font-normal text-[10px]">[선택수정]</span>' : ''}</th>`;
+          const roleLabel = (r === 1) ? '위원 1 (정)' : (r === 2) ? '위원 2 (부)' : `위원 ${r}`;
+          thHtml += `<th class="p-2.5 text-center min-w-[86px] whitespace-nowrap">${roleLabel}${isAdminLoggedIn ? ' <span class="text-amber-500 font-normal text-[10px]">[수정]</span>' : ''}</th>`;
         }
         thHtml += '</tr>';
         thead.innerHTML = thHtml;
@@ -2402,15 +2393,15 @@ ${url}
           if (isAdminLoggedIn) {
             const opts = getScheduleMemberSelectOptions(workerName);
             colsHtml += `
-              <td class="p-2 min-w-[150px]">
-                <select onchange="updateScheduleAssignment(${r.week}, '${r.day}', '${r.time}', ${i}, this.value)" class="w-full min-w-[140px] p-2 text-xs border border-slate-200 rounded-lg bg-white font-semibold text-slate-800 focus:ring-2 focus:ring-amber-500/20 focus:outline-none">
+              <td class="p-1.5 min-w-[86px] text-center">
+                <select onchange="updateScheduleAssignment(${r.week}, '${r.day}', '${r.time}', ${i}, this.value)" class="w-full min-w-[80px] px-2 py-1.5 text-xs border border-slate-200 rounded-lg bg-white font-bold text-slate-800 focus:ring-2 focus:ring-amber-500/20 focus:outline-none text-center">
                   ${opts}
                 </select>
               </td>
             `;
           } else {
             colsHtml += `
-              <td class="p-3 min-w-[120px]">
+              <td class="p-2.5 min-w-[86px] text-center">
                 <span class="font-bold text-slate-800 ${isMy ? 'text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200' : ''}">${workerName || '공석'}</span>
               </td>
             `;
@@ -2419,9 +2410,9 @@ ${url}
 
         return `
           <tr class="hover:bg-slate-50 transition-colors">
-            <td class="p-3 text-center font-bold text-slate-600 whitespace-nowrap">${r.week}주차</td>
-            <td class="p-3 text-center font-semibold text-slate-700 whitespace-nowrap">${r.day}</td>
-            <td class="p-3 font-medium text-slate-600 whitespace-nowrap">${r.time}</td>
+            <td class="p-2.5 text-center font-bold text-slate-600 whitespace-nowrap">${r.week}주</td>
+            <td class="p-2.5 text-center font-semibold text-slate-700 whitespace-nowrap">${r.day ? r.day.replace(/요일/, '') : ''}</td>
+            <td class="p-2.5 text-center font-mono font-medium text-slate-600 whitespace-nowrap">${r.time}</td>
             ${colsHtml}
           </tr>
         `;
@@ -2851,7 +2842,7 @@ ${url}
             <th class="p-2.5 w-32">시간대</th>
         `;
         for (let r = 1; r <= cap; r++) {
-          const roleLabel = (r === 1) ? '봉사위원 1 (정)' : (r === 2 ? '봉사위원 2 (부)' : `봉사위원 ${r}`);
+          const roleLabel = (r === 1) ? '위원 1 (정)' : (r === 2) ? '위원 2 (부)' : `위원 ${r}`;
           thHtml += `<th class="p-2.5">${roleLabel}</th>`;
         }
         thHtml += '</tr>';
@@ -2966,7 +2957,6 @@ ${url}
       const wb = XLSX.utils.book_new();
       const cap = Math.max(1, parseInt(slotCapacity, 10) || 2);
 
-      // Sheet 1: 봉사자 정보
       const infoHeaders = ['순번', '이름', '연락처'];
       const infoRows = [infoHeaders];
       if (membersData && membersData.length > 0) {
@@ -2978,10 +2968,9 @@ ${url}
       const wsInfo = XLSX.utils.aoa_to_sheet(infoRows);
       wsInfo['!cols'] = [{ wch: 8 }, { wch: 18 }, { wch: 22 }];
 
-      // Sheet 2: 봉사자 순번
       const rosterHeaders = ['순번', '주차', '요일', '시간대'];
       for (let r = 1; r <= cap; r++) {
-        rosterHeaders.push((r === 1) ? '봉사위원 1 (정)' : (r === 2 ? '봉사위원 2 (부)' : `봉사위원 ${r}`));
+        rosterHeaders.push((r === 1) ? '위원 1 (정)' : (r === 2) ? '위원 2 (부)' : `위원 ${r}`);
       }
       const rosterRows = [rosterHeaders];
       const weekLimit = (cycleType === '1주') ? 1 : ((cycleType === '1달') ? 4 : 2);
@@ -3111,7 +3100,7 @@ ${url}
                 if (hStr.includes('요일') || hStr.includes('일자')) dayCol = idx;
                 if (hStr.includes('시간')) timeCol = idx;
 
-                const matchRole = hStr.match(/봉사위원\s*(\d+)/) || hStr.match(/봉사자\s*(\d+)/);
+                const matchRole = hStr.match(/봉사위원\s*(\d+)/) || hStr.match(/위원\s*(\d+)/) || hStr.match(/봉사자\s*(\d+)/);
                 if (matchRole) {
                   workerColMap.push({ roleIdx: parseInt(matchRole[1], 10), colIdx: idx });
                 } else if (hStr.includes('(정)')) {
@@ -3546,7 +3535,7 @@ ${url}
               <span>사서교사 확인: __________________ (서명)</span>
             </div>
           </div>
-          <p style="text-align: right; font-size: 10px; color: #94a3b8; margin-top: 24px;">꿈빛 (Ggumbit) v1.10 · Author Sung soo Kim</p>
+          <p style="text-align: right; font-size: 10px; color: #94a3b8; margin-top: 24px;">꿈빛 (Ggumbit) v1.12 · Author Sung soo Kim</p>
         </div>
       `;
 
