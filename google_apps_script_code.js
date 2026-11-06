@@ -1035,17 +1035,36 @@ function doPost(e) {
       return ContentService.createTextOutput(JSON.stringify({ status: 'success' })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    // 5. 순번표 일괄 저장
+    // 5. 순번표 일괄 저장 (가변 N인 정원 및 서식 무결성 지원)
     if (action === 'saveRoster' && Array.isArray(postData.roster)) {
       let rSheet = ss.getSheetByName('봉사자 순번') || ss.insertSheet('봉사자 순번');
       rSheet.clear();
-      const rows = [['순번', '주차', '요일', '시간대', '봉사위원 1 (정)', '봉사위원 2 (부)']];
+
+      const cap = Math.max(1, parseInt(postData.slotCapacity, 10) || 2);
+      const headers = ['순번', '주차', '요일', '시간대'];
+      for (let r = 1; r <= cap; r++) {
+        headers.push(r === 1 ? '봉사위원 1 (정)' : (r === 2 ? '봉사위원 2 (부)' : `봉사위원 ${r}`));
+      }
+
+      const rows = [headers];
       postData.roster.forEach(r => {
         const dStr = String(r.day || '').replace(/요일/, '') + '요일';
-        rows.push([r.id, `${r.week}주차`, dStr, r.time, r.name1 || '', r.name2 || '']);
+        const tStr = normalizeTimeStr(r.time);
+        const row = [r.id, `${r.week}주차`, dStr, tStr];
+        for (let idx = 1; idx <= cap; idx++) {
+          row.push(r[`name${idx}`] || (idx === 1 ? r.name1 : (idx === 2 ? r.name2 : '')) || '');
+        }
+        rows.push(row);
       });
-      rSheet.getRange(1, 1, rows.length, 6).setValues(rows).setHorizontalAlignment('center');
-      return ContentService.createTextOutput(JSON.stringify({ status: 'success' })).setMimeType(ContentService.MimeType.JSON);
+
+      rSheet.getRange(1, 1, rows.length, headers.length).setValues(rows).setHorizontalAlignment('center');
+      rSheet.getRange(1, 1, 1, headers.length)
+        .setBackground('#15803d').setFontColor('#ffffff').setFontWeight('bold');
+      rSheet.getRange(1, 1, rows.length, headers.length)
+        .setBorder(true, true, true, true, true, true, '#cbd5e1', SpreadsheetApp.BorderStyle.SOLID);
+
+      return ContentService.createTextOutput(JSON.stringify({ status: 'success', rowCount: rows.length }))
+        .setMimeType(ContentService.MimeType.JSON);
     }
 
     // 6. 봉사자 명부 실시간 일괄 저장 (CRUD 동기화)
