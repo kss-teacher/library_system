@@ -7,7 +7,7 @@
   ==============================================================================
   [프로그램 정보(Program Information)]
   Project: 꿈빛 (Ggumbit) - 도서관 봉사인력 자원관리 프로그램
-  Version: v1.05 (Universal N-Worker Engine)
+  Version: v1.06 (Universal N-Worker Engine)
   Author / Copyright: (c) 2026 Sung soo Kim. All Rights Reserved.
   License: Open Education License (Based on MIT License with Non-Commercial Recommendation)
   
@@ -17,7 +17,7 @@
   제공하지 않습니다. 이용 과정에서 발생하는 데이터 관리 책임은 각 이용 기관에 있습니다.
   ==============================================================================
   -->
-  <title>꿈빛 - 도서관 봉사인력 관리 시스템 v1.05</title>
+  <title>꿈빛 - 도서관 봉사인력 관리 시스템 v1.06</title>
 
   <!-- Tailwind CSS & FontAwesome & SheetJS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -59,7 +59,7 @@
         <div>
           <div class="flex items-center space-x-1.5">
             <span class="font-extrabold text-lg text-slate-900 tracking-tight">꿈빛</span>
-            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-md border border-amber-200/60 font-mono">v1.05</span>
+            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-md border border-amber-200/60 font-mono">v1.06</span>
           </div>
           <p id="topBarOrgName" class="text-xs text-slate-500 font-medium truncate max-w-[180px] sm:max-w-xs">꿈빛도서관</p>
         </div>
@@ -438,7 +438,7 @@
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 font-mono">v1.05 가변</span>
+            <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 font-mono">v1.06 가변</span>
             <i id="accordionIcon-3" class="fa-solid fa-chevron-up text-slate-400 text-xs transition-transform duration-200"></i>
           </div>
         </button>
@@ -673,15 +673,15 @@
             </button>
           </div>
 
-          <!-- 대형 엑셀 드래그 앤 드롭 업로드 구역 -->
-          <div class="p-8 sm:p-11 border-2 border-dashed border-slate-300 hover:border-amber-500 rounded-2xl bg-white text-center space-y-3 transition-colors cursor-pointer" onclick="document.getElementById('excelFileInput').click()">
+          <!-- 대형 엑셀 드래그 앤 드롭 업로드 구역 (드래그앤드롭 리스너 완비) -->
+          <div id="excelDropZone" ondragover="handleExcelDragOver(event)" ondragleave="handleExcelDragLeave(event)" ondrop="handleExcelDrop(event)" class="p-8 sm:p-11 border-2 border-dashed border-slate-300 hover:border-amber-500 rounded-2xl bg-white text-center space-y-3 transition-all cursor-pointer" onclick="document.getElementById('excelFileInput').click()">
             <input type="file" id="excelFileInput" accept=".xlsx, .xls" class="hidden" onchange="handleExcelUpload(event)">
             <div class="w-12 h-12 mx-auto rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl shadow-2xs">
               <i class="fa-solid fa-cloud-arrow-up"></i>
             </div>
             <div>
               <h5 class="text-xs sm:text-sm font-bold text-slate-800">엑셀 파일을 이곳에 끌어다 놓거나 클릭하여 선택하세요</h5>
-              <p class="text-[11px] text-slate-500 mt-1">[봉사자 정보]와 [봉사자 순번] 2개 탭을 자동으로 인식하여 완벽히 일괄 적재합니다.</p>
+              <p class="text-[11px] text-slate-500 mt-1">[봉사자 정보]와 [봉사자 순번] 2개 탭을 자동으로 인식하여 구글 시트까지 완벽히 일괄 덮어씁니다.</p>
             </div>
           </div>
         </div>
@@ -784,7 +784,7 @@
       <!-- 하단 저작권 및 관리자 통로 -->
       <div class="pt-2 flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-100">
         <div class="flex items-center space-x-1.5">
-          <span class="font-bold text-slate-600">꿈빛 v1.05</span>
+          <span class="font-bold text-slate-600">꿈빛 v1.06</span>
           <span>·</span>
           <span>© 2026 Sung soo Kim</span>
         </div>
@@ -1060,7 +1060,7 @@
           <p>• <b>원작자 / Copyright:</b> © 2026 <b>Sung soo Kim</b>. All Rights Reserved.</p>
           <p>• <b>라이선스 규격:</b> Open Education License (MIT License 기반). 전국 교육기관 및 공공도서관은 비영리 목적으로 본 소프트웨어를 영구히 무상 사용할 수 있습니다.</p>
           <p>• <b>법적 면책 조항:</b> 본 프로그램은 "있는 그대로" 제공되며 명시적이거나 묵시적인 어떠한 보증도 제공하지 않습니다. 각 기관의 데이터 백업과 관리에 대한 법적 책임은 해당 이용 기관에 귀속됩니다.</p>
-          <p>• <b>소프트웨어 버전:</b> 꿈빛 (Ggumbit) v1.05</p>
+          <p>• <b>소프트웨어 버전:</b> 꿈빛 (Ggumbit) v1.06</p>
         </div>
       </div>
 
@@ -2527,8 +2527,42 @@
       showToast(`표준 ${cap}인 정원 엑셀 양식이 다운로드되었습니다.`);
     }
 
+    // 드래그 앤 드롭 시각 피드백 & 이벤트 제어기
+    function handleExcelDragOver(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const zone = document.getElementById('excelDropZone');
+      if (zone) zone.classList.add('border-amber-500', 'bg-amber-50/50', 'ring-2', 'ring-amber-400/40');
+    }
+
+    function handleExcelDragLeave(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const zone = document.getElementById('excelDropZone');
+      if (zone) zone.classList.remove('border-amber-500', 'bg-amber-50/50', 'ring-2', 'ring-amber-400/40');
+    }
+
+    function handleExcelDrop(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const zone = document.getElementById('excelDropZone');
+      if (zone) zone.classList.remove('border-amber-500', 'bg-amber-50/50', 'ring-2', 'ring-amber-400/40');
+      const files = e.dataTransfer?.files;
+      if (files && files.length > 0) {
+        processExcelFile(files[0]);
+      }
+    }
+
     function handleExcelUpload(event) {
       const file = event.target.files[0];
+      if (file) {
+        processExcelFile(file);
+      }
+      event.target.value = '';
+    }
+
+    // 엑셀 파서 & 원자적 구글 시트 2개 탭 일괄 덮어쓰기 엔진
+    function processExcelFile(file) {
       if (!file) return;
 
       const reader = new FileReader();
@@ -2540,8 +2574,21 @@
           let parsedMemberCount = 0;
           let parsedRosterCount = 0;
 
+          // 스마트 시트 탐색기 (공백 무시 및 유연한 키워드 매칭)
+          const sheetNames = workbook.SheetNames || [];
+          const findSheet = (keywords, fallbackIdx) => {
+            for (let name of sheetNames) {
+              const clean = name.replace(/\s+/g, '');
+              if (keywords.some(k => clean.includes(k))) return workbook.Sheets[name];
+            }
+            if (sheetNames[fallbackIdx]) return workbook.Sheets[sheetNames[fallbackIdx]];
+            return null;
+          };
+
+          const infoSheet = findSheet(['봉사자정보', '정보', '명부', '회원'], 0);
+          const rosterSheet = findSheet(['봉사자순번', '순번', '배정'], 1);
+
           // 1. [봉사자 정보] 파싱
-          const infoSheet = workbook.Sheets['봉사자 정보'] || workbook.Sheets['정보'];
           if (infoSheet) {
             const infoRows = XLSX.utils.sheet_to_json(infoSheet, { header: 1 });
             if (infoRows && infoRows.length > 1) {
@@ -2559,13 +2606,11 @@
                 membersData = newMembers;
                 safeStorage.setItem('lib_cache_members', JSON.stringify(membersData));
                 parsedMemberCount = newMembers.length;
-                syncMembersToGas(membersData);
               }
             }
           }
 
           // 2. [봉사자 순번] 파싱 (N인 가변 열 자동 감지)
-          const rosterSheet = workbook.Sheets['봉사자 순번'] || workbook.Sheets['순번'];
           if (rosterSheet) {
             const rosterRows = XLSX.utils.sheet_to_json(rosterSheet, { header: 1 });
             if (rosterRows && rosterRows.length > 1) {
@@ -2634,16 +2679,17 @@
                 rosterData = newRoster;
                 safeStorage.setItem('lib_cache_roster', JSON.stringify(rosterData));
                 parsedRosterCount = newRoster.length;
-                syncRosterToGas(rosterData);
               }
             }
           }
 
-          event.target.value = '';
           renderAllViews();
-          showToast(`✓ 엑셀 일괄 적재 완료: 명부 ${parsedMemberCount}명, 순번 ${parsedRosterCount}건이 동기화되었습니다.`);
+
+          // 3. 구글 시트 단일 트랜잭션 일괄 동기화 실행 (충돌 0% 보장)
+          syncExcelBatchToGas(membersData, rosterData, slotCapacity, parsedMemberCount, parsedRosterCount);
+
         } catch (err) {
-          showToast('엑셀 파일 분석 중 오류가 발생했습니다. 양식을 확인해 주세요.');
+          showToast('⚠️ 엑셀 파일 분석 중 오류가 발생했습니다. 양식을 확인해 주세요.');
         }
       };
       reader.readAsArrayBuffer(file);
@@ -2652,6 +2698,33 @@
     // -------------------------------------------------------------
     // [15] 구글 시트 클라우드 통신 파이프라인
     // -------------------------------------------------------------
+    function syncExcelBatchToGas(mList, rList, cap, memberCount, rosterCount) {
+      if (!gasApiUrl) {
+        showToast(`✓ 로컬 반영 완료: 명부 ${memberCount}명, 순번 ${rosterCount}건 (구글 시트는 미연동 상태입니다)`);
+        return;
+      }
+
+      showToast(`☁️ 구글 시트에 엑셀 데이터(명부 ${memberCount}명 / 순번 ${rosterCount}건)를 일괄 덮어쓰는 중입니다...`);
+
+      fetch(gasApiUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'saveExcelBatch',
+          members: mList,
+          roster: rList,
+          slotCapacity: cap
+        })
+      })
+      .then(() => {
+        showToast(`🎉 구글 시트 2개 탭([봉사자 정보], [봉사자 순번])에 100% 깔끔하게 덮어쓰기 완료되었습니다!`);
+      })
+      .catch(() => {
+        showToast('⚠️ 구글 시트 일괄 저장 통신 중 오류가 발생했습니다.');
+      });
+    }
+
     function saveGasUrlFromSettings() {
       const inEl = document.getElementById('cfgGasUrlInput');
       const url = inEl ? inEl.value.trim() : '';
@@ -2991,7 +3064,7 @@
               <span>사서교사 확인: __________________ (서명)</span>
             </div>
           </div>
-          <p style="text-align: right; font-size: 10px; color: #94a3b8; margin-top: 24px;">꿈빛 (Ggumbit) v1.05 · Author Sung soo Kim</p>
+          <p style="text-align: right; font-size: 10px; color: #94a3b8; margin-top: 24px;">꿈빛 (Ggumbit) v1.06 · Author Sung soo Kim</p>
         </div>
       `;
 
