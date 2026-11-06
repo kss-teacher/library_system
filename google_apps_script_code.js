@@ -2,7 +2,7 @@
  * ==============================================================================
  * [프로그램 정보]
  * Project: 꿈빛 (Ggumbit) - 도서관 봉사인력 자원관리 시스템
- * Version: Google Apps Script 클라우드 백엔드 엔진 v1.04
+ * Version: Google Apps Script 클라우드 백엔드 엔진 v1.05
  * Author / Copyright: (c) 2026 Sung soo Kim. All Rights Reserved.
  * License: Open Education License (Based on MIT License)
  * ==============================================================================
@@ -29,7 +29,7 @@ function setupStandardSheetsMenu() {
 
 function createCurrentMonthSheetMenu() {
   const now = new Date();
-  createMonthlySheet(now.getFullYear(), now.getMonth() + 1, 2);
+  createMonthlySheet(now.getFullYear(), now.getMonth() + 1);
   SpreadsheetApp.getUi().alert('🎉 이번 달 배정표 및 달력 탭 생성이 완료되었습니다.');
 }
 
@@ -507,16 +507,19 @@ function resetNewSemesterSheets(ss) {
 }
 
 // -------------------------------------------------------------
-// [6] 월별 배정표 및 7열 격자 달력 탭 동시 생성 엔진
+// [6] 월별 배정표 및 7열 격자 달력 탭 동시 생성 엔진 (v1.05 고도화)
 // -------------------------------------------------------------
 function createMonthlySheet(year, month, slotCapacity, scheduleRows, gridRows) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const cap = slotCapacity || 2;
+  const config = getSystemConfig(ss.getSheetByName('시스템 설정'));
+  const cap = Math.max(1, parseInt(slotCapacity, 10) || config.slotCapacity || 2);
   const sheetName = year + '-' + String(month).padStart(2, '0') + ' 봉사배정표';
+  
   let sheet = ss.getSheetByName(sheetName);
   if (sheet) ss.deleteSheet(sheet);
   sheet = ss.insertSheet(sheetName);
 
+  // 헤더 정의
   const header = ['활동 날짜', '요일', '순번 주차', '시간대'];
   for (let r = 1; r <= cap; r++) {
     header.push(r === 1 ? '봉사위원 1 (정)' : (r === 2 ? '봉사위원 2 (부)' : '봉사위원 ' + r));
@@ -524,42 +527,77 @@ function createMonthlySheet(year, month, slotCapacity, scheduleRows, gridRows) {
   header.push('비고 (대타 및 교체 내역)');
 
   sheet.appendRow(header);
+
+  // 헤더 스타일링
   sheet.getRange(1, 1, 1, header.length)
     .setBackground('#059669')
     .setFontColor('#ffffff')
     .setFontWeight('bold')
-    .setHorizontalAlignment('center');
+    .setHorizontalAlignment('center')
+    .setVerticalAlignment('middle');
+  sheet.setRowHeight(1, 36);
 
-  // 세부 배정 데이터 적재
-  if (scheduleRows && scheduleRows.length > 0) {
-    const dataRange = sheet.getRange(2, 1, scheduleRows.length, header.length);
-    dataRange.setValues(scheduleRows);
+  // 세부 배정 데이터가 웹앱에서 전달되지 않았을 경우, 스프레드시트 원본 데이터로 자동 조립(Fallback)
+  let finalScheduleRows = scheduleRows;
+  let finalGridRows = gridRows;
+
+  if (!finalScheduleRows || finalScheduleRows.length === 0) {
+    const generated = generateMonthlyDataFromSheet(ss, year, month, cap, config);
+    finalScheduleRows = generated.scheduleRows;
+    finalGridRows = generated.gridRows;
+  }
+
+  // 데이터 적재 및 셀 서식 적용
+  if (finalScheduleRows && finalScheduleRows.length > 0) {
+    const dataRange = sheet.getRange(2, 1, finalScheduleRows.length, header.length);
+    dataRange.setValues(finalScheduleRows);
     dataRange.setVerticalAlignment('middle');
-    sheet.getRange(2, 1, scheduleRows.length, 3).setHorizontalAlignment('center');
+
+    // 1~3열(날짜, 요일, 주차) 및 봉사위원 열 중앙 정렬, 비고 좌측 정렬
+    sheet.getRange(2, 1, finalScheduleRows.length, 3).setHorizontalAlignment('center');
+    sheet.getRange(2, 5, finalScheduleRows.length, cap).setHorizontalAlignment('center');
+    sheet.getRange(2, 4 + cap + 1, finalScheduleRows.length, 1).setHorizontalAlignment('left');
+
+    // 행 높이 및 줄무늬 스타일링
+    for (let r = 2; r <= finalScheduleRows.length + 1; r++) {
+      sheet.setRowHeight(r, 28);
+      if (r % 2 === 1) {
+        sheet.getRange(r, 1, 1, header.length).setBackground('#f8fafc');
+      }
+    }
   }
 
-  // 열 너비 자동 조정
+  // 최적화된 고정 열 너비 부여 (글자 잘림 및 압축 방지)
+  const colWidths = [115, 75, 85, 140];
+  for (let r = 1; r <= cap; r++) colWidths.push(130);
+  colWidths.push(220); // 비고
+
   for (let c = 1; c <= header.length; c++) {
-    sheet.autoResizeColumn(c);
+    sheet.setColumnWidth(c, colWidths[c - 1] || 120);
   }
+
+  SpreadsheetApp.flush();
 
   // 달력형 그리드 탭 동시 생성
-  createMonthlyCalendarGridSheet(ss, year, month, cap, gridRows);
+  createMonthlyCalendarGridSheet(ss, year, month, cap, finalGridRows);
 }
 
 function createMonthlyCalendarGridSheet(ss, year, month, slotCapacity, gridRows) {
   const gridSheetName = year + '-' + String(month).padStart(2, '0') + ' 달력';
   let gSheet = ss.getSheetByName(gridSheetName);
-  if (gSheet) ss.deleteSheet(gSheet);
+  if (gSheet) ss.deleteSheet(gSheet); // 🟢 Sheet 객체 전달로 결함 해결
   gSheet = ss.insertSheet(gridSheetName);
 
   const headers = ['일', '월', '화', '수', '목', '금', '토'];
   gSheet.appendRow(headers);
+  gSheet.setRowHeight(1, 36);
+
   gSheet.getRange(1, 1, 1, 7)
     .setBackground('#334155')
     .setFontColor('#ffffff')
     .setFontWeight('bold')
-    .setHorizontalAlignment('center');
+    .setHorizontalAlignment('center')
+    .setVerticalAlignment('middle');
 
   // 일요일 빨강, 토요일 파랑 헤더 강조
   gSheet.getRange(1, 1).setBackground('#e11d48');
@@ -571,11 +609,103 @@ function createMonthlyCalendarGridSheet(ss, year, month, slotCapacity, gridRows)
     range.setVerticalAlignment('top');
     range.setWrap(true);
     for (let r = 2; r <= gridRows.length + 1; r++) {
-      gSheet.setRowHeight(r, 85);
+      gSheet.setRowHeight(r, 95);
     }
   }
 
   for (let c = 1; c <= 7; c++) {
-    gSheet.setColumnWidth(c, 135);
+    gSheet.setColumnWidth(c, 145);
   }
+
+  SpreadsheetApp.flush();
+}
+
+// -------------------------------------------------------------
+// [7] 스프레드시트 원본 데이터 기반 월간 일정 자동 생성기 (신설)
+// -------------------------------------------------------------
+function generateMonthlyDataFromSheet(ss, year, month, cap, config) {
+  const rosterRes = findRosterColumns(ss.getSheetByName('봉사자 순번') || ss.insertSheet('봉사자 순번'));
+  const roster = rosterRes.roster || [];
+  
+  // 변경 기록 수집
+  const overrides = {};
+  const logSheet = ss.getSheetByName('출석 및 변경 기록');
+  if (logSheet) {
+    const lData = logSheet.getDataRange().getDisplayValues();
+    for (let i = 1; i < lData.length; i++) {
+      const k = String(lData[i][1] || '').trim();
+      if (k) overrides[k] = { status: lData[i][2], substitute: lData[i][4], requester: lData[i][3] };
+    }
+  }
+
+  const lastDay = new Date(year, month, 0).getDate();
+  const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+  const opDays = config.operatingDays || ['월', '화', '수', '목', '금'];
+  const timeSlots = config.timeSlots || [{ name: '오전 1차', startTime: '08:30' }, { name: '오전 2차', startTime: '10:30' }];
+
+  const scheduleRows = [];
+  const gridRows = [];
+  let weekGrid = ['', '', '', '', '', '', ''];
+
+  for (let d = 1; d <= lastDay; d++) {
+    const curDate = new Date(year, month - 1, d);
+    const dow = curDate.getDay();
+    const dayShort = dayNames[dow];
+    const dateStr = Utilities.formatDate(curDate, 'Asia/Seoul', 'yyyy-MM-dd');
+    const isOp = opDays.includes(dayShort);
+
+    if (!isOp) {
+      const row = [dateStr, dayShort + '요일', '-', '-'];
+      for (let r = 1; r <= cap; r++) row.push('-');
+      row.push(dayShort + '요일 정기휴관');
+      scheduleRows.push(row);
+      weekGrid[dow] = d + '일\n(' + dayShort + '요휴관)';
+    } else {
+      // 주차 계산
+      const bDate = new Date(config.cycleBaseDate || '2026-03-02');
+      const diffWeeks = Math.floor((curDate - bDate) / (7 * 24 * 60 * 60 * 1000));
+      const limit = (config.cycleType === '1주') ? 1 : ((config.cycleType === '1달') ? 4 : 2);
+      let weekCycle = ((config.cycleBaseWeek - 1 + diffWeeks) % limit);
+      if (weekCycle < 0) weekCycle += limit;
+      weekCycle += 1;
+
+      let cellText = d + '일 [' + weekCycle + '주]\n';
+
+      timeSlots.forEach(slot => {
+        const sNorm = normalizeTimeStr(slot.startTime);
+        const rMatch = roster.find(r => r.week === weekCycle && r.day.startsWith(dayShort) && normalizeTimeStr(r.time) === sNorm);
+        const workers = [];
+        const notes = [];
+
+        for (let r = 1; r <= cap; r++) {
+          const k = dateStr + '_' + sNorm + '_' + r;
+          const rec = overrides[k];
+          const orig = rMatch ? (rMatch['name' + r] || '') : '';
+          const eff = (rec && rec.status === 'ACCEPTED' && rec.substitute) ? rec.substitute : (rec?.requester || orig || '공석');
+          workers.push(eff || '공석');
+          if (rec && rec.status === 'ACCEPTED') notes.push('[대타] ' + rec.substitute);
+        }
+
+        scheduleRows.push([
+          dateStr,
+          dayShort + '요일',
+          weekCycle + '주차',
+          slot.startTime + ' (' + (slot.name || '') + ')',
+          ...workers,
+          notes.join(' / ')
+        ]);
+
+        cellText += slot.startTime.slice(0, 5) + ' ' + workers.join('/') + '\n';
+      });
+
+      weekGrid[dow] = cellText.trim();
+    }
+
+    if (dow === 6 || d === lastDay) {
+      gridRows.push(weekGrid);
+      weekGrid = ['', '', '', '', '', '', ''];
+    }
+  }
+
+  return { scheduleRows, gridRows };
 }
