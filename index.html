@@ -1584,11 +1584,15 @@
       } else {
         if (firstSec) firstSec.classList.remove('hidden');
         if (returnSec) returnSec.classList.add('hidden');
-        openModal('coverModal');
       }
 
-      document.getElementById('coverOrgName').textContent = orgName;
-      document.getElementById('topBarOrgName').textContent = orgName;
+      const coverOrg = document.getElementById('coverOrgName');
+      const topOrg = document.getElementById('topBarOrgName');
+      if (coverOrg) coverOrg.textContent = orgName;
+      if (topOrg) topOrg.textContent = orgName;
+
+      // [버그 3 해결] 등록 여부와 무관하게 앱 시작 시 항상 웰컴 게이트(대문)가 열리도록 보장
+      openModal('coverModal');
     }
 
     function submitGateFirstRegistration() {
@@ -1758,6 +1762,17 @@
     let currentSubReqSlotKey = '';
     let currentSubReqOriginalName = '';
     let currentSubAcceptSlotKey = '';
+
+    // [버그 1·2 해결] 시간 형식 정규화 유틸리티 (08:30, 8:30, 08:30 (오전 1차) 통일)
+    function normalizeTimeStr(t) {
+      if (!t) return '';
+      const s = String(t).trim();
+      const m = s.match(/(\d{1,2}):(\d{2})/);
+      if (m) {
+        return String(m[1]).padStart(2, '0') + ':' + m[2];
+      }
+      return s;
+    }
 
     function getOverrideRecord(slotKey) {
       return overrideLog[slotKey] || null;
@@ -1977,8 +1992,16 @@
       }
 
       timeSlots.forEach(slot => {
-        const sNorm = slot.startTime;
-        const rMatch = rosterData.find(r => r.week === weekCycle && r.day.startsWith(dayName.slice(0, 1)) && r.time === sNorm);
+        const sNorm = normalizeTimeStr(slot.startTime);
+        const dayShort = dayName.slice(0, 1);
+        // [버그 1 해결] 시간 정규화 및 요일 안전 매칭으로 오늘 봉사자 100% 매칭
+        const rMatch = rosterData.find(r => {
+          if (!r) return false;
+          const rWeekMatch = (cycleType === '1주') ? true : (r.week === weekCycle);
+          const rDayMatch = r.day && (r.day.includes(dayShort) || dayShort.includes(r.day.slice(0, 1)));
+          const rTimeMatch = normalizeTimeStr(r.time) === sNorm;
+          return rWeekMatch && rDayMatch && rTimeMatch;
+        });
 
         const roleIndices = Array.from({ length: cap }, (_, i) => i + 1);
         const slotWorkers = roleIndices.map(roleIdx => {
@@ -3025,8 +3048,10 @@
     function updateScheduleAssignment(weekNum, dayName, timeStr, roleIdx, selectedVal) {
       const cleanVal = (selectedVal === '공석') ? '' : selectedVal.trim();
       const dayShort = dayName.slice(0, 1);
+      const sNorm = normalizeTimeStr(timeStr);
       
-      let rMatch = rosterData.find(r => r.week === weekNum && r.day.startsWith(dayShort) && r.time === timeStr);
+      // [버그 2 해결] 정규화된 시간으로 기존 행을 정확하게 탐색하여 덮어쓰기
+      let rMatch = rosterData.find(r => r.week === weekNum && r.day.startsWith(dayShort) && normalizeTimeStr(r.time) === sNorm);
       if (rMatch) {
         rMatch[`name${roleIdx}`] = cleanVal;
         if (roleIdx === 1) rMatch.name1 = cleanVal;
@@ -3037,7 +3062,7 @@
           id: newId,
           week: weekNum,
           day: dayName,
-          time: timeStr
+          time: sNorm
         };
         rMatch[`name${roleIdx}`] = cleanVal;
         if (roleIdx === 1) rMatch.name1 = cleanVal;
@@ -3052,8 +3077,9 @@
       renderRosterTable();
       renderMyTab();
 
+      // [버그 2 해결] 변경 즉시 구글 스프레드시트로 실시간 전송
       syncRosterToGas(rosterData);
-      showToast(`✓ ${weekNum}주차 ${dayName} ${timeStr} 봉사위원 ${roleIdx}이(가) ${cleanVal || '공석'}(으)로 배정되었습니다.`);
+      showToast(`✓ ${weekNum}주차 ${dayName} ${sNorm} 봉사위원 ${roleIdx}이(가) ${cleanVal || '공석'}(으)로 배정되었습니다.`);
     }
 
     function renderScheduleAssignTable() {
@@ -3187,14 +3213,23 @@
     }
 
     async function syncRosterToGas(roster) {
-      if (!gasApiUrl) return;
+      if (!gasApiUrl) {
+        console.warn('구글 시트 연동 URL이 설정되지 않아 로컬에만 저장되었습니다.');
+        return;
+      }
       try {
+        const cap = Math.max(1, parseInt(slotCapacity, 10) || 2);
         await fetch(gasApiUrl, {
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({ action: 'saveRoster', roster })
+          body: JSON.stringify({
+            action: 'saveRoster',
+            roster: roster,
+            slotCapacity: cap
+          })
         });
+        showToast('구글 시트에 봉사자 순번이 실시간 저장되었습니다.');
       } catch (e) {
         console.warn('순번표 클라우드 동기화 실패:', e);
       }
