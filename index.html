@@ -7,7 +7,7 @@
   ==============================================================================
   [프로그램 정보(Program Information)]
   Project: 꿈빛 (Ggumbit) - 도서관 봉사인력 자원관리 프로그램
-  Version: v1.10 (PWA Mobile Home Screen Standalone App Engine)
+  Version: v1.11 (Mobile UX Polish, Attendance Security Guard & History Navigation)
   Author / Copyright: (c) 2026 Sung soo Kim. All Rights Reserved.
   License: Open Education License (Based on MIT License with Non-Commercial Recommendation)
   
@@ -17,7 +17,7 @@
   제공하지 않습니다. 이용 과정에서 발생하는 데이터 관리 책임은 각 이용 기관에 있습니다.
   ==============================================================================
   -->
-  <title>꿈빛 - 도서관 봉사인력 관리 시스템 v1.10</title>
+  <title>꿈빛 - 도서관 봉사인력 관리 시스템 v1.11</title>
 
   <!-- ============================================================= -->
   <!-- [PWA 모바일 홈 화면 앱 설치 메타 태그 & 펼쳐진 책 아이콘 엔진] -->
@@ -82,7 +82,7 @@
         <div>
           <div class="flex items-center space-x-1.5">
             <span class="font-extrabold text-lg text-slate-900 tracking-tight">꿈빛</span>
-            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-md border border-amber-200/60 font-mono">v1.10</span>
+            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-md border border-amber-200/60 font-mono">v1.11</span>
           </div>
           <p id="topBarOrgName" class="text-xs text-slate-500 font-medium truncate max-w-[180px] sm:max-w-xs">꿈빛도서관</p>
         </div>
@@ -845,7 +845,7 @@
       <!-- 하단 저작권 및 관리자 통로 -->
       <div class="pt-2 flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-100">
         <div class="flex items-center space-x-1.5">
-          <span class="font-bold text-slate-600">꿈빛 v1.10</span>
+          <span class="font-bold text-slate-600">꿈빛 v1.11</span>
           <span>·</span>
           <span>© 2026 Sung soo Kim</span>
         </div>
@@ -1112,9 +1112,19 @@
 
       <div class="flex-grow overflow-y-auto space-y-3.5 text-xs leading-relaxed text-slate-600 pr-1">
         <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
-          <h4 class="font-bold text-slate-800 text-xs">✨ 시스템 개요</h4>
-          <p>꿈빛은 전국 학교 및 공공도서관 자원봉사단의 주차별 순환 배정, 원터치 출석(O/X), 자율 상호 대타 매칭 및 구글 스프레드시트 클라우드 100% 양방향 동기화를 지원하는 단일 경량 솔루션입니다.</p>
-        </div>
+        <h4 class="font-bold text-slate-800 text-xs">📜 지적재산권(IP) 및 비영리 라이선스 안내</h4>
+        <p>• <b>원작자 / Copyright:</b> © 2026 <b>Sung soo Kim</b>. All Rights Reserved.</p>
+        <p>• <b>라이선스 규격:</b> Open Education License (MIT License 기반). 전국 교육기관 및 공공도서관은 비영리 목적으로 본 소프트웨어를 영구히 무상 사용할 수 있습니다.</p>
+        <p>• <b>법적 면책 조항:</b> 본 프로그램은 "있는 그대로" 제공되며 명시적이거나 묵시적인 어떠한 보증도 제공하지 않습니다. 각 기관의 데이터 백업과 관리에 대한 법적 책임은 해당 이용 기관에 귀속됩니다.</p>
+        <p>• <b>소프트웨어 버전:</b> 꿈빛 (Ggumbit) v1.11</p>
+      </div>
+    </div>
+
+    <div class="flex justify-end pt-2 border-t border-slate-100">
+      <button onclick="closeModal('manualModal')" class="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold">확인 완료</button>
+    </div>
+  </div>
+</div>
 
         <!-- 홈 화면 앱 설치 안내 카드 -->
         <div class="p-3.5 bg-amber-50/70 border border-amber-200 rounded-xl space-y-1.5">
@@ -1559,19 +1569,79 @@ ${url}
       }, duration);
     }
 
-    function openModal(id) {
+    // -------------------------------------------------------------
+    // [2-1] 모바일 브라우저 '뒤로 가기(Back)' 튕김 방지 히스토리 가드 엔진
+    // -------------------------------------------------------------
+    let lastBackPressedTime = 0;
+
+    function initNavigationHistory() {
+      try {
+        if (!history.state) {
+          history.replaceState({ appPage: 'main', tab: 'today' }, document.title);
+        }
+      } catch (e) {}
+
+      window.addEventListener('popstate', function(e) {
+        // 1. 열려 있는 모달이 있는지 확인하고 가장 위의 모달을 닫아줌
+        const activeModals = [
+          'qrCodeModal', 'manualModal', 'resetModal', 'substituteAcceptModal',
+          'substituteRequestModal', 'membersModal', 'scheduleAssignmentModal',
+          'adminLoginModal', 'coverModal'
+        ];
+
+        for (const mId of activeModals) {
+          const m = document.getElementById(mId);
+          if (m && !m.classList.contains('hidden') && m.style.display !== 'none') {
+            closeModal(mId, false); // 히스토리 추가 조작 없이 순수 닫기
+            return;
+          }
+        }
+
+        // 2. 모달이 열려있지 않은 상태에서 메인(today) 탭이 아닌 다른 탭에 있는 경우 홈 탭으로 복귀
+        const todaySec = document.getElementById('tabContent-today');
+        const isTodayActive = todaySec && !todaySec.classList.contains('hidden');
+
+        if (!isTodayActive) {
+          showTab('today', false);
+          return;
+        }
+
+        // 3. 메인(당일 현황) 탭에서 뒤로 가기를 눌렀을 때: 바로 튕기지 않고 2초 내 더블 클릭 시 종료
+        const now = Date.now();
+        if (now - lastBackPressedTime < 2000) {
+          // 2초 내에 두 번 누르면 브라우저 기본 뒤로가기(종료) 허용
+          history.back();
+        } else {
+          lastBackPressedTime = now;
+          showToast('뒤로 가기를 한 번 더 누르면 이전 페이지로 이동합니다.');
+          try {
+            history.pushState({ appPage: 'main', tab: 'today' }, document.title);
+          } catch (e) {}
+        }
+      });
+    }
+
+    function openModal(id, pushHistory = true) {
       const m = document.getElementById(id);
       if (m) {
         m.classList.remove('hidden');
         m.style.display = 'flex';
+        if (pushHistory) {
+          try {
+            history.pushState({ appPage: 'modal', modalId: id }, document.title);
+          } catch (e) {}
+        }
       }
     }
 
-    function closeModal(id) {
+    function closeModal(id, handleHistory = false) {
       const m = document.getElementById(id);
       if (m) {
         m.classList.add('hidden');
         m.style.display = 'none';
+        if (handleHistory && history.state && history.state.appPage === 'modal') {
+          try { history.back(); } catch (e) {}
+        }
       }
     }
 
@@ -1628,7 +1698,7 @@ ${url}
     // -------------------------------------------------------------
     // [4] 탭 네비게이션 및 아코디언 제어기
     // -------------------------------------------------------------
-    function showTab(tabId) {
+    function showTab(tabId, pushHistory = true) {
       if (tabId === 'admin' && !isAdminLoggedIn) {
         showToast('도서관 설정은 사서 관리자 인증 후 진입할 수 있습니다.');
         openModal('adminLoginModal');
@@ -1655,6 +1725,12 @@ ${url}
           if (mBtn) mBtn.classList.remove('text-amber-600');
         }
       });
+
+      if (pushHistory && tabId !== 'today') {
+        try {
+          history.pushState({ appPage: 'tab', tab: tabId }, document.title);
+        } catch (e) {}
+      }
 
       if (tabId === 'today') renderTodaySlots();
       if (tabId === 'calendar') renderCalendar();
@@ -1849,7 +1925,7 @@ ${url}
         const rMatch = rosterData.find(r => matchRosterSlot(r, weekCycle, dayName, sNorm));
 
         const roleIndices = Array.from({ length: cap }, (_, i) => i + 1);
-        const slotWorkers = roleIndices.map(roleIdx => {
+        const allSlotWorkers = roleIndices.map(roleIdx => {
           const key = `${currentDateStr}_${sNorm}_${roleIdx}`;
           const rec = getOverrideRecord(key);
           const origName = (rMatch ? (rMatch[`name${roleIdx}`] || (roleIdx === 1 ? rMatch.name1 : (roleIdx === 2 ? rMatch.name2 : ''))) : '') || '공석';
@@ -1864,7 +1940,13 @@ ${url}
           return { roleIdx, key, rec, origName, isReq, isAcc, effName, isAtt, isMy };
         });
 
-        let gridColsClass = (cap === 1) ? 'grid-cols-1' : (cap === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-3');
+        // 🟢 개선 1: 일반 봉사자 접속 시 '공석' 카드는 숨겨서 화면 가독성 극대화 (관리자는 배정을 위해 표시)
+        const visibleWorkers = isAdminLoggedIn 
+          ? allSlotWorkers 
+          : allSlotWorkers.filter(w => w.effName && w.effName !== '공석');
+
+        const activeCap = visibleWorkers.length;
+        let gridColsClass = (activeCap === 1) ? 'grid-cols-1' : (activeCap === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-3');
 
         cardsHtml += `
           <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
@@ -1873,11 +1955,16 @@ ${url}
                 <span class="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">${slot.name.slice(0, 2)}</span>
                 <h4 class="font-bold text-xs sm:text-sm text-slate-800">${slot.name} (${slot.startTime} ~ ${slot.endTime})</h4>
               </div>
-              <span class="text-[11px] font-semibold text-slate-400">${cap}인 봉사 슬롯</span>
+              <span class="text-[11px] font-semibold text-slate-400">${activeCap > 0 ? activeCap + '명 활동' : '공석 슬롯'}</span>
             </div>
 
-            <div class="p-4 sm:p-5 grid ${gridColsClass} gap-3.5">
-              ${slotWorkers.map(w => {
+            <div class="p-4 sm:p-5 ${activeCap === 0 ? 'text-center py-6 text-slate-400 text-xs' : `grid ${gridColsClass} gap-3.5`}">
+              ${activeCap === 0 ? `
+                <div class="flex items-center justify-center space-x-1.5 text-slate-400">
+                  <i class="fa-regular fa-clock"></i>
+                  <span>현재 배정된 봉사위원이 없습니다.</span>
+                </div>
+              ` : visibleWorkers.map(w => {
                 let cardStyle = 'border border-slate-200 rounded-xl p-3.5 transition-all bg-white flex flex-col justify-between space-y-3';
                 if (w.isReq) {
                   cardStyle = 'border-2 border-rose-500 bg-rose-50/90 ring-2 ring-rose-400 animate-pulse rounded-xl p-3.5 shadow-sm flex flex-col justify-between space-y-3';
@@ -1924,7 +2011,7 @@ ${url}
                           ${w.isReq && w.rec?.reason ? `<p class="text-[11px] text-rose-600 font-medium mt-0.5">사유: ${w.rec.reason}</p>` : ''}
                         </div>
 
-                        <!-- O/X 출석 확인 버튼 -->
+                        <!-- O/X 출석 확인 버튼 (본인 인증 보안 가드 체결) -->
                         <button onclick="toggleAttendanceCheck('${w.key}', '${w.effName}')" class="px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center space-x-1.5 ${w.isAtt ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'}">
                           <i class="fa-solid ${w.isAtt ? 'fa-circle-check text-emerald-200' : 'fa-circle text-slate-400'} text-xs"></i>
                           <span>${w.isAtt ? '출석확인 (O)' : '미출석 (X)'}</span>
@@ -1980,11 +2067,31 @@ ${url}
       container.innerHTML = cardsHtml;
     }
 
+    // -------------------------------------------------------------
+    // [7-1] 출석 확인 (O/X) 토글 - 본인 보안 검증 가드 완비
+    // -------------------------------------------------------------
     function toggleAttendanceCheck(key, workerName) {
       if (!workerName || workerName === '공석') {
         showToast('배정된 위원이 없는 공석 슬롯입니다.');
         return;
       }
+
+      // 🛡️ 보안 가드: 관리자가 아닌 일반 사용자일 경우 엄격한 본인 검증
+      if (!isAdminLoggedIn) {
+        const myName = myVolunteerName || safeStorage.getItem('lib_my_name') || '';
+        
+        if (!myName) {
+          showToast('⚠️ 본인 확인이 필요합니다. 먼저 성함을 등록해 주세요.');
+          checkWelcomeGateState();
+          return;
+        }
+
+        if (myName !== workerName) {
+          showToast(`⛔ 출석 확인 불가: 본인(${myName} 위원님)의 봉사 슬롯만 출석을 체크할 수 있습니다.`);
+          return;
+        }
+      }
+
       const isCurrentlyChecked = !!(attendanceLog[key] && attendanceLog[key].status !== 'X');
       const newStatus = isCurrentlyChecked ? 'X' : 'O';
 
@@ -2172,19 +2279,21 @@ ${url}
               const orig = rMatch ? (rMatch[`name${r}`] || (r === 1 ? rMatch.name1 : (r === 2 ? rMatch.name2 : ''))) : '';
               const eff = (rec && rec.status === 'ACCEPTED' && rec.substitute) ? rec.substitute : (rec?.requester || orig || '공석');
               if (rec && rec.status === 'REQUESTED') hasReq = true;
-              names.push(eff);
+              if (eff && eff !== '공석') names.push(eff);
             }
+
+            if (names.length === 0) return; // 공석인 타임은 좁은 달력 칩에서 제외하여 가독성 확보
 
             const isMySlot = myVolunteerName && names.includes(myVolunteerName);
 
-            let chipClass = 'bg-slate-100 text-slate-700';
+            let chipClass = 'bg-slate-100 text-slate-800';
             if (hasReq) chipClass = 'bg-rose-500 text-white font-extrabold animate-pulse';
             else if (isMySlot) chipClass = 'bg-amber-100 text-amber-900 border border-amber-300 font-bold';
 
+            // 🟢 개선 2: 시간 숫자를 생략하고 봉사자 이름(김도서/이하늘)을 우선 표기하여 모바일 잘림 완치
             chipsHtml += `
-              <div class="px-1.5 py-0.5 rounded text-[10px] truncate ${chipClass} mt-1" title="${slot.startTime} ${names.join(', ')}">
-                <span>${slot.startTime.slice(0, 5)}</span>
-                <span class="font-bold ml-0.5">${names.join('/')}</span>
+              <div class="px-1 py-0.5 rounded text-[10px] truncate ${chipClass} mt-0.5 text-center leading-tight shadow-2xs" title="${slot.startTime} ${names.join(', ')}">
+                <span class="font-bold">${names.join('/')}</span>
               </div>
             `;
           });
@@ -2247,16 +2356,17 @@ ${url}
 
       const cap = Math.max(1, parseInt(slotCapacity, 10) || 2);
 
+      // 🟢 개선 3: 관리자 모드 순번표에서 드롭다운 이름이 성 한 글자만 보이지 않도록 최소 너비 넉넉히 확보
       if (thead) {
         let thHtml = `
           <tr>
-            <th class="p-3 text-center w-16">주차</th>
-            <th class="p-3 text-center w-20">요일</th>
-            <th class="p-3 w-28">시간대</th>
+            <th class="p-3 text-center w-16 min-w-[65px] whitespace-nowrap">주차</th>
+            <th class="p-3 text-center w-20 min-w-[70px] whitespace-nowrap">요일</th>
+            <th class="p-3 w-28 min-w-[100px] whitespace-nowrap">시간대</th>
         `;
         for (let r = 1; r <= cap; r++) {
           const roleLabel = (r === 1) ? '봉사위원 1 (정)' : (r === 2 ? '봉사위원 2 (부)' : `봉사위원 ${r}`);
-          thHtml += `<th class="p-3">${roleLabel}${isAdminLoggedIn ? ' <span class="text-amber-500 font-normal text-[10px]">[수정가능]</span>' : ''}</th>`;
+          thHtml += `<th class="p-3 min-w-[150px] whitespace-nowrap">${roleLabel}${isAdminLoggedIn ? ' <span class="text-amber-500 font-normal text-[10px]">[선택수정]</span>' : ''}</th>`;
         }
         thHtml += '</tr>';
         thead.innerHTML = thHtml;
@@ -2292,15 +2402,15 @@ ${url}
           if (isAdminLoggedIn) {
             const opts = getScheduleMemberSelectOptions(workerName);
             colsHtml += `
-              <td class="p-2">
-                <select onchange="updateScheduleAssignment(${r.week}, '${r.day}', '${r.time}', ${i}, this.value)" class="w-full p-1.5 text-xs border border-slate-200 rounded-lg bg-white font-semibold text-slate-800 focus:ring-2 focus:ring-amber-500/20 focus:outline-none">
+              <td class="p-2 min-w-[150px]">
+                <select onchange="updateScheduleAssignment(${r.week}, '${r.day}', '${r.time}', ${i}, this.value)" class="w-full min-w-[140px] p-2 text-xs border border-slate-200 rounded-lg bg-white font-semibold text-slate-800 focus:ring-2 focus:ring-amber-500/20 focus:outline-none">
                   ${opts}
                 </select>
               </td>
             `;
           } else {
             colsHtml += `
-              <td class="p-3">
+              <td class="p-3 min-w-[120px]">
                 <span class="font-bold text-slate-800 ${isMy ? 'text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200' : ''}">${workerName || '공석'}</span>
               </td>
             `;
@@ -2309,9 +2419,9 @@ ${url}
 
         return `
           <tr class="hover:bg-slate-50 transition-colors">
-            <td class="p-3 text-center font-bold text-slate-600">${r.week}주차</td>
-            <td class="p-3 text-center font-semibold text-slate-700">${r.day}</td>
-            <td class="p-3 font-medium text-slate-600">${r.time}</td>
+            <td class="p-3 text-center font-bold text-slate-600 whitespace-nowrap">${r.week}주차</td>
+            <td class="p-3 text-center font-semibold text-slate-700 whitespace-nowrap">${r.day}</td>
+            <td class="p-3 font-medium text-slate-600 whitespace-nowrap">${r.time}</td>
             ${colsHtml}
           </tr>
         `;
@@ -3556,6 +3666,7 @@ ${url}
     // -------------------------------------------------------------
     window.onload = function() {
       setupPwaHomeScreenEngine();
+      initNavigationHistory();
       initUrlParameters();
       loadStoredCache();
       currentDateStr = formatDate(new Date());
