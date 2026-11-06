@@ -7,7 +7,7 @@
   ==============================================================================
   [프로그램 정보(Program Information)]
   Project: 꿈빛 (Ggumbit) - 도서관 봉사인력 자원관리 프로그램
-  Version: v1.02 (Universal N-Worker Engine)
+  Version: v1.05 (Universal N-Worker Engine)
   Author / Copyright: (c) 2026 Sung soo Kim. All Rights Reserved.
   License: Open Education License (Based on MIT License with Non-Commercial Recommendation)
   
@@ -17,7 +17,7 @@
   제공하지 않습니다. 이용 과정에서 발생하는 데이터 관리 책임은 각 이용 기관에 있습니다.
   ==============================================================================
   -->
-  <title>꿈빛 - 도서관 봉사인력 관리 시스템 v1.02</title>
+  <title>꿈빛 - 도서관 봉사인력 관리 시스템 v1.05</title>
 
   <!-- Tailwind CSS & FontAwesome & SheetJS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -59,7 +59,7 @@
         <div>
           <div class="flex items-center space-x-1.5">
             <span class="font-extrabold text-lg text-slate-900 tracking-tight">꿈빛</span>
-            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-md border border-amber-200/60 font-mono">v1.02</span>
+            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-md border border-amber-200/60 font-mono">v1.05</span>
           </div>
           <p id="topBarOrgName" class="text-xs text-slate-500 font-medium truncate max-w-[180px] sm:max-w-xs">꿈빛도서관</p>
         </div>
@@ -438,7 +438,7 @@
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 font-mono">v1.02 가변</span>
+            <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 font-mono">v1.05 가변</span>
             <i id="accordionIcon-3" class="fa-solid fa-chevron-up text-slate-400 text-xs transition-transform duration-200"></i>
           </div>
         </button>
@@ -533,11 +533,11 @@
               <table class="w-full text-left text-xs text-slate-700">
                 <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
                   <tr>
-                    <th class="p-2.5 text-center w-12">순번</th>
-                    <th class="p-2.5">타임 명칭</th>
-                    <th class="p-2.5 text-center w-28">시작 시간</th>
-                    <th class="p-2.5 text-center w-28">종료 시간</th>
-                    <th class="p-2.5 text-center w-28">관리</th>
+                    <th class="p-2.5 text-center w-12 whitespace-nowrap">순번</th>
+                    <th class="p-2.5 min-w-[130px]">타임 명칭</th>
+                    <th class="p-2.5 text-center w-28 min-w-[95px] whitespace-nowrap">시작 시간</th>
+                    <th class="p-2.5 text-center w-28 min-w-[95px] whitespace-nowrap">종료 시간</th>
+                    <th class="p-2.5 text-center w-36 min-w-[135px] whitespace-nowrap">관리</th>
                   </tr>
                 </thead>
                 <tbody id="cfgTimeSlotsTableBody" class="divide-y divide-slate-100">
@@ -701,7 +701,7 @@
   <!-- ============================================================= -->
   <!-- [모달 1: 대문 (웰컴 게이트) - 화이트 미니멀] -->
   <!-- ============================================================= -->
-  <div id="coverModal" onclick="if(event.target===this) closeModal('coverModal')" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+  <div id="coverModal" onclick="if(event.target===this) closeModal('coverModal')" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
     <div id="coverCardContainer" class="bg-white w-full max-w-md rounded-3xl p-6 sm:p-8 text-slate-800 border border-slate-200 shadow-2xl relative overflow-hidden flex flex-col justify-between min-h-[480px]">
       
       <!-- 대문 우측 상단 닫기 (X) 버튼 신설 -->
@@ -784,7 +784,7 @@
       <!-- 하단 저작권 및 관리자 통로 -->
       <div class="pt-2 flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-100">
         <div class="flex items-center space-x-1.5">
-          <span class="font-bold text-slate-600">꿈빛 v1.02</span>
+          <span class="font-bold text-slate-600">꿈빛 v1.05</span>
           <span>·</span>
           <span>© 2026 Sung soo Kim</span>
         </div>
@@ -812,6 +812,18 @@
         <button onclick="closeModal('adminLoginModal')" class="text-slate-400 hover:text-slate-600 text-sm">
           <i class="fa-solid fa-xmark"></i>
         </button>
+      </div>
+
+      <!-- 초기 계정 안내 배너 -->
+      <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 space-y-1">
+        <div class="font-bold text-slate-800 flex items-center space-x-1">
+          <i class="fa-solid fa-circle-info text-amber-500"></i>
+          <span>초기 관리자 계정 안내</span>
+        </div>
+        <div class="flex items-center space-x-3 pt-0.5 text-slate-700">
+          <span>아이디: <b class="font-mono text-slate-900 bg-white px-1.5 py-0.5 rounded border border-slate-200">admin</b></span>
+          <span>비밀번호: <b class="font-mono text-slate-900 bg-white px-1.5 py-0.5 rounded border border-slate-200">admin1234</b></span>
+        </div>
       </div>
 
       <div class="space-y-2.5">
@@ -1048,6 +1060,7 @@
           <p>• <b>원작자 / Copyright:</b> © 2026 <b>Sung soo Kim</b>. All Rights Reserved.</p>
           <p>• <b>라이선스 규격:</b> Open Education License (MIT License 기반). 전국 교육기관 및 공공도서관은 비영리 목적으로 본 소프트웨어를 영구히 무상 사용할 수 있습니다.</p>
           <p>• <b>법적 면책 조항:</b> 본 프로그램은 "있는 그대로" 제공되며 명시적이거나 묵시적인 어떠한 보증도 제공하지 않습니다. 각 기관의 데이터 백업과 관리에 대한 법적 책임은 해당 이용 기관에 귀속됩니다.</p>
+          <p>• <b>소프트웨어 버전:</b> 꿈빛 (Ggumbit) v1.05</p>
         </div>
       </div>
 
@@ -1076,7 +1089,7 @@
     let orgName = '꿈빛도서관';
     let adminName = '사서교사';
     let adminId = 'admin';
-    let adminPw = '1234';
+    let adminPw = 'admin1234';
     let isAdminLoggedIn = false;
     let gasApiUrl = '';
     let connectedSheetUrl = '';
@@ -1356,6 +1369,7 @@
         renderAllViews();
         showTab('today');
       } else {
+        closeModal('coverModal');
         openModal('adminLoginModal');
       }
     }
@@ -1369,6 +1383,7 @@
       if (id === adminId && pw === adminPw) {
         isAdminLoggedIn = true;
         closeModal('adminLoginModal');
+        closeModal('coverModal');
         document.getElementById('adminAuthBtnText').textContent = '로그아웃';
         document.getElementById('tabBtn-admin').classList.remove('hidden');
         document.getElementById('mTabBtn-admin').classList.remove('hidden');
@@ -2050,17 +2065,17 @@
 
       tbody.innerHTML = timeSlots.map((slot, idx) => `
         <tr id="timeSlotRow_${slot.id}" class="hover:bg-slate-50 transition-colors">
-          <td class="p-2.5 text-center font-bold text-slate-400">${idx + 1}</td>
+          <td class="p-2.5 text-center font-bold text-slate-400 whitespace-nowrap">${idx + 1}</td>
           <td class="p-2.5 font-bold text-slate-800" id="slotNameCell_${slot.id}">${slot.name}</td>
-          <td class="p-2.5 text-center font-mono font-semibold text-slate-600" id="slotStartCell_${slot.id}">${slot.startTime}</td>
-          <td class="p-2.5 text-center font-mono font-semibold text-slate-600" id="slotEndCell_${slot.id}">${slot.endTime}</td>
-          <td class="p-2.5 text-center" id="slotActionCell_${slot.id}">
-            <div class="flex items-center justify-center space-x-1.5">
-              <button type="button" onclick="editTimeSlotInline('${slot.id}')" class="px-2 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md font-bold" title="시간대 수정">
-                ✏️ 수정
+          <td class="p-2.5 text-center font-mono font-semibold text-slate-600 whitespace-nowrap" id="slotStartCell_${slot.id}">${slot.startTime}</td>
+          <td class="p-2.5 text-center font-mono font-semibold text-slate-600 whitespace-nowrap" id="slotEndCell_${slot.id}">${slot.endTime}</td>
+          <td class="p-2.5 text-center whitespace-nowrap" id="slotActionCell_${slot.id}">
+            <div class="flex items-center justify-center space-x-1.5 whitespace-nowrap">
+              <button type="button" onclick="editTimeSlotInline('${slot.id}')" class="px-2.5 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md font-bold whitespace-nowrap shrink-0 inline-flex items-center space-x-1" title="시간대 수정">
+                <span>✏️</span><span>수정</span>
               </button>
               ${timeSlots.length > 1 ? `
-                <button type="button" onclick="deleteTimeSlot('${slot.id}')" class="px-2 py-1 text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-md font-bold" title="시간대 삭제">
+                <button type="button" onclick="deleteTimeSlot('${slot.id}')" class="px-2.5 py-1 text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-md font-bold whitespace-nowrap shrink-0 inline-flex items-center" title="시간대 삭제">
                   🗑️
                 </button>
               ` : ''}
@@ -2080,13 +2095,13 @@
       const actionCell = document.getElementById(`slotActionCell_${slotId}`);
 
       if (nameCell && startCell && endCell && actionCell) {
-        nameCell.innerHTML = `<input type="text" id="inlineEditName_${slotId}" value="${slot.name}" class="w-full p-1 text-xs border border-slate-300 rounded font-bold">`;
-        startCell.innerHTML = `<input type="time" id="inlineEditStart_${slotId}" value="${slot.startTime}" class="w-full p-1 text-xs border border-slate-300 rounded text-center">`;
-        endCell.innerHTML = `<input type="time" id="inlineEditEnd_${slotId}" value="${slot.endTime}" class="w-full p-1 text-xs border border-slate-300 rounded text-center">`;
+        nameCell.innerHTML = `<input type="text" id="inlineEditName_${slotId}" value="${slot.name}" class="w-full min-w-[100px] p-1 text-xs border border-slate-300 rounded font-bold">`;
+        startCell.innerHTML = `<input type="time" id="inlineEditStart_${slotId}" value="${slot.startTime}" class="w-full min-w-[95px] p-1 text-xs border border-slate-300 rounded text-center font-mono">`;
+        endCell.innerHTML = `<input type="time" id="inlineEditEnd_${slotId}" value="${slot.endTime}" class="w-full min-w-[95px] p-1 text-xs border border-slate-300 rounded text-center font-mono">`;
         actionCell.innerHTML = `
-          <div class="flex items-center justify-center space-x-1">
-            <button type="button" onclick="saveEditedTimeSlot('${slotId}')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded">저장</button>
-            <button type="button" onclick="renderTimeSlotsManager()" class="px-2 py-1 bg-slate-200 text-slate-700 text-xs rounded">취소</button>
+          <div class="flex items-center justify-center space-x-1.5 whitespace-nowrap">
+            <button type="button" onclick="saveEditedTimeSlot('${slotId}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded whitespace-nowrap shadow-2xs">저장</button>
+            <button type="button" onclick="renderTimeSlotsManager()" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded whitespace-nowrap">취소</button>
           </div>
         `;
       }
@@ -2763,6 +2778,74 @@
       }
 
       showToast(`구글 시트에 ${calendarMonth}월 배정표 및 달력 탭을 원격 구축 중입니다...`);
+
+      const cap = Math.max(1, parseInt(slotCapacity, 10) || 2);
+      const lastDate = new Date(calendarYear, calendarMonth, 0).getDate();
+      const firstDate = new Date(calendarYear, calendarMonth - 1, 1);
+      const firstDayIdx = firstDate.getDay();
+      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+
+      // 1. 목록형 배정표 행(scheduleRows) 생성
+      const scheduleRows = [];
+      // 2. 달력형 격자 행(gridRows) 생성
+      const gridRows = [];
+      let currentWeekGrid = ['', '', '', '', '', '', ''];
+
+      for (let d = 1; d <= lastDate; d++) {
+        const curDate = new Date(calendarYear, calendarMonth - 1, d);
+        const dateStr = formatDate(curDate);
+        const dow = curDate.getDay();
+        const dayShort = dayNames[dow];
+        const status = checkDayStatusClient(curDate, dateStr);
+
+        if (status.isClosed) {
+          const row = [dateStr, `${dayShort}요일`, '-', '-'];
+          for (let r = 1; r <= cap; r++) row.push('-');
+          row.push(status.title);
+          scheduleRows.push(row);
+          currentWeekGrid[dow] = `${d}일\n(${status.title})`;
+        } else {
+          const weekCycle = calculateContinuousWeekCycle(curDate, cycleBaseDate, cycleBaseWeek, cycleType);
+          let cellDayText = `${d}일 [${weekCycle}주]\n`;
+
+          timeSlots.forEach(slot => {
+            const sNorm = normalizeTimeStr(slot.startTime);
+            const rMatch = rosterData.find(r => matchRosterSlot(r, weekCycle, dayShort, sNorm));
+            const workerNames = [];
+            const notes = [];
+
+            for (let r = 1; r <= cap; r++) {
+              const k = `${dateStr}_${sNorm}_${r}`;
+              const rec = getOverrideRecord(k);
+              const orig = rMatch ? (rMatch[`name${r}`] || (r === 1 ? rMatch.name1 : (r === 2 ? rMatch.name2 : ''))) : '';
+              const eff = (rec && rec.status === 'ACCEPTED' && rec.substitute) ? rec.substitute : (rec?.requester || orig || '공석');
+              workerNames.push(eff || '공석');
+
+              if (rec && rec.status === 'ACCEPTED') notes.push(`[위원${r} 대타] ${rec.substitute}`);
+              if (rec && rec.status === 'REQUESTED') notes.push(`[위원${r} 대타요청]`);
+            }
+
+            scheduleRows.push([
+              dateStr,
+              `${dayShort}요일`,
+              `${weekCycle}주차`,
+              `${slot.startTime} (${slot.name})`,
+              ...workerNames,
+              notes.join(' / ')
+            ]);
+
+            cellDayText += `${slot.startTime.slice(0, 5)} ${workerNames.join('/')}\n`;
+          });
+
+          currentWeekGrid[dow] = cellDayText.trim();
+        }
+
+        if (dow === 6 || d === lastDate) {
+          gridRows.push(currentWeekGrid);
+          currentWeekGrid = ['', '', '', '', '', '', ''];
+        }
+      }
+
       fetch(gasApiUrl, {
         method: 'POST',
         mode: 'no-cors',
@@ -2771,7 +2854,9 @@
           action: 'createMonthlySheet',
           year: calendarYear,
           month: calendarMonth,
-          slotCapacity: slotCapacity
+          slotCapacity: slotCapacity,
+          scheduleRows: scheduleRows,
+          gridRows: gridRows
         })
       })
       .then(() => {
@@ -2906,7 +2991,7 @@
               <span>사서교사 확인: __________________ (서명)</span>
             </div>
           </div>
-          <p style="text-align: right; font-size: 10px; color: #94a3b8; margin-top: 24px;">꿈빛 (Ggumbit) v1.02 · Author Sung soo Kim</p>
+          <p style="text-align: right; font-size: 10px; color: #94a3b8; margin-top: 24px;">꿈빛 (Ggumbit) v1.05 · Author Sung soo Kim</p>
         </div>
       `;
 
@@ -2929,7 +3014,11 @@
       orgName = safeStorage.getItem('lib_org_name') || orgName;
       adminName = safeStorage.getItem('lib_admin_name') || adminName;
       adminId = safeStorage.getItem('lib_admin_id') || adminId;
-      adminPw = safeStorage.getItem('lib_admin_pw') || adminPw;
+      adminPw = safeStorage.getItem('lib_admin_pw') || 'admin1234';
+      if (adminPw === '1234' || adminPw === 'admin') {
+        adminPw = 'admin1234';
+        safeStorage.setItem('lib_admin_pw', adminPw);
+      }
       cycleType = safeStorage.getItem('lib_cycle_type') || cycleType;
       gasApiUrl = safeStorage.getItem('lib_gas_url') || '';
       connectedSheetUrl = safeStorage.getItem('lib_connected_sheet_url') || '';
