@@ -7,7 +7,7 @@
   ==============================================================================
   [프로그램 정보(Program Information)]
   Project: 꿈빛 (Ggumbit) - 도서관 봉사인력 자원관리 프로그램
-  Version: v1.06 (Universal N-Worker Engine)
+  Version: v1.07 (Universal N-Worker Engine)
   Author / Copyright: (c) 2026 Sung soo Kim. All Rights Reserved.
   License: Open Education License (Based on MIT License with Non-Commercial Recommendation)
   
@@ -17,7 +17,7 @@
   제공하지 않습니다. 이용 과정에서 발생하는 데이터 관리 책임은 각 이용 기관에 있습니다.
   ==============================================================================
   -->
-  <title>꿈빛 - 도서관 봉사인력 관리 시스템 v1.06</title>
+  <title>꿈빛 - 도서관 봉사인력 관리 시스템 v1.07</title>
 
   <!-- Tailwind CSS & FontAwesome & SheetJS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -59,7 +59,7 @@
         <div>
           <div class="flex items-center space-x-1.5">
             <span class="font-extrabold text-lg text-slate-900 tracking-tight">꿈빛</span>
-            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-md border border-amber-200/60 font-mono">v1.06</span>
+            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-md border border-amber-200/60 font-mono">v1.07</span>
           </div>
           <p id="topBarOrgName" class="text-xs text-slate-500 font-medium truncate max-w-[180px] sm:max-w-xs">꿈빛도서관</p>
         </div>
@@ -784,7 +784,7 @@
       <!-- 하단 저작권 및 관리자 통로 -->
       <div class="pt-2 flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-100">
         <div class="flex items-center space-x-1.5">
-          <span class="font-bold text-slate-600">꿈빛 v1.06</span>
+          <span class="font-bold text-slate-600">꿈빛 v1.07</span>
           <span>·</span>
           <span>© 2026 Sung soo Kim</span>
         </div>
@@ -1060,7 +1060,7 @@
           <p>• <b>원작자 / Copyright:</b> © 2026 <b>Sung soo Kim</b>. All Rights Reserved.</p>
           <p>• <b>라이선스 규격:</b> Open Education License (MIT License 기반). 전국 교육기관 및 공공도서관은 비영리 목적으로 본 소프트웨어를 영구히 무상 사용할 수 있습니다.</p>
           <p>• <b>법적 면책 조항:</b> 본 프로그램은 "있는 그대로" 제공되며 명시적이거나 묵시적인 어떠한 보증도 제공하지 않습니다. 각 기관의 데이터 백업과 관리에 대한 법적 책임은 해당 이용 기관에 귀속됩니다.</p>
-          <p>• <b>소프트웨어 버전:</b> 꿈빛 (Ggumbit) v1.06</p>
+          <p>• <b>소프트웨어 버전:</b> 꿈빛 (Ggumbit) v1.07</p>
         </div>
       </div>
 
@@ -2850,12 +2850,11 @@
         return;
       }
 
-      showToast(`구글 시트에 ${calendarMonth}월 배정표 및 달력 탭을 원격 구축 중입니다...`);
+      showToast(`구글 시트에 ${calendarMonth}월 배정표 및 7열 달력 탭을 원격 구축 중입니다...`);
 
       const cap = Math.max(1, parseInt(slotCapacity, 10) || 2);
       const lastDate = new Date(calendarYear, calendarMonth, 0).getDate();
       const firstDate = new Date(calendarYear, calendarMonth - 1, 1);
-      const firstDayIdx = firstDate.getDay();
       const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
 
       // 1. 목록형 배정표 행(scheduleRows) 생성
@@ -2933,7 +2932,7 @@
         })
       })
       .then(() => {
-        showToast(`🎉 구글 시트에 [${calendarYear}-${String(calendarMonth).padStart(2,'0')} 봉사배정표] 및 [달력] 탭 생성이 완료되었습니다!`);
+        showToast(`🎉 구글 시트에 [${calendarYear}-${String(calendarMonth).padStart(2,'0')} 봉사배정표] 및 [달력] 탭이 서식 최적화와 함께 생성되었습니다!`);
       })
       .catch(() => {
         showToast('구글 시트 통신 중 오류가 발생했습니다.');
@@ -2960,7 +2959,7 @@
     }
 
     function copyAppsScriptCode() {
-      const codeSnippet = `// 구글 스프레드시트 확장프로그램 > Apps Script에 복사할 백엔드 코드\n// 꿈빛 v1.02 공식 엔진`;
+      const codeSnippet = `// 구글 스프레드시트 확장프로그램 > Apps Script에 복사할 백엔드 코드\n// 꿈빛 v1.05 공식 엔진`;
       navigator.clipboard.writeText(codeSnippet).then(() => {
         showToast('📋 Apps Script 코드가 클립보드에 복사되었습니다.');
       });
@@ -3064,7 +3063,7 @@
               <span>사서교사 확인: __________________ (서명)</span>
             </div>
           </div>
-          <p style="text-align: right; font-size: 10px; color: #94a3b8; margin-top: 24px;">꿈빛 (Ggumbit) v1.06 · Author Sung soo Kim</p>
+          <p style="text-align: right; font-size: 10px; color: #94a3b8; margin-top: 24px;">꿈빛 (Ggumbit) v1.07 · Author Sung soo Kim</p>
         </div>
       `;
 
