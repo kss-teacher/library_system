@@ -4,7 +4,7 @@
   ==============================================================================
   [프로그램 정보(Program Information)]
   Project: 꿈빛 (Ggumbit) - 도서관 봉사인력 자원관리 프로그램
-  Version: v1.00
+  Version: v1.01
   Author / Copyright: (c) 2026 Sung soo Kim. All Rights Reserved.
   License: Open Education License (Based on MIT License with Non-Commercial Recommendation)
 
@@ -100,7 +100,7 @@
   <header class="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-xs backdrop-blur-md bg-white/95">
     <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
       
-      <!-- 좌측: 브랜드 로고 및 도서관 명칭 (꿈빛 v1.00 공식 명명) -->
+      <!-- 좌측: 브랜드 로고 및 도서관 명칭 (꿈빛 v1.01 공식 명명) -->
       <div class="flex items-center space-x-3 cursor-pointer" onclick="openCoverModal()">
         <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white shadow-md shadow-amber-500/20">
           <i class="fa-solid fa-book-open-reader text-lg"></i>
@@ -424,415 +424,456 @@
     </section>
 
     <!-- [탭 5] 도서관 설정 (관리자 전용: 엄격한 인증 상태에서만 렌더링) -->
-    <section id="tabContent-admin" class="hidden space-y-6">
+    <section id="tabContent-admin" class="hidden space-y-3.5">
 
-      <!-- [순차 블록 1] 구글 클라우드 원스톱 5단계 순차 연동 센터 -->
-      <div class="bg-white p-5 rounded-2xl border-2 border-emerald-500/40 shadow-xs space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-          <div>
-            <h4 class="font-bold text-sm sm:text-base text-slate-900 flex items-center space-x-2">
-              <span class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs">1</span>
-              <span>도서관 구글 클라우드(Google Sheet) 원스톱 연동 센터</span>
-            </h4>
-            <p class="text-xs text-slate-500 mt-0.5">우리 도서관만의 구글 시트에 연결하여 데이터를 안전하게 독립 보관합니다.</p>
-          </div>
-          <span id="gasStatusBadge" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-500">
-            연동 대기
-          </span>
-        </div>
-
-        <!-- 3대 준비 퀵 버튼 (STEP 01 ~ 03) -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-          <a href="https://sheets.new" target="_blank" class="p-3 rounded-xl border border-emerald-200 hover:bg-emerald-50/50 bg-emerald-50/20 text-left transition-colors block">
-            <div class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-0.5">STEP 01</div>
-            <div class="font-bold text-xs text-slate-800 flex items-center justify-between">
-              <span>새 구글 시트 만들기</span>
-              <i class="fa-solid fa-arrow-up-right-from-square text-emerald-500 text-[11px]"></i>
-            </div>
-            <div class="text-[11px] text-slate-500 mt-0.5">sheets.new 즉시 생성</div>
-          </a>
-
-          <button onclick="copyEmbeddedGasScriptCode()" class="p-3 rounded-xl border border-blue-200 hover:bg-blue-50/50 bg-blue-50/20 text-left transition-colors">
-            <div class="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-0.5">STEP 02</div>
-            <div class="font-bold text-xs text-slate-800 flex items-center justify-between">
-              <span>백엔드 코드 복사하기</span>
-              <i class="fa-solid fa-copy text-blue-500 text-[11px]"></i>
-            </div>
-            <div class="text-[11px] text-slate-500 mt-0.5">Apps Script 코드 클립보드 복사</div>
-          </button>
-
-          <button type="button" onclick="openGuideSlides()" class="p-3 rounded-xl border border-amber-200 hover:bg-amber-50/50 bg-amber-50/20 text-left transition-colors block w-full">
-            <div class="text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-0.5">STEP 03</div>
-            <div class="font-bold text-xs text-slate-800 flex items-center justify-between">
-              <span>8장 슬라이드 설명서</span>
-              <i class="fa-solid fa-chalkboard-user text-amber-500 text-[11px]"></i>
-            </div>
-            <div class="text-[11px] text-slate-500 mt-0.5">배포 가이드 새 창 보기</div>
-          </button>
-        </div>
-
-        <!-- STEP 04. 웹앱 URL 입력 및 연동 즉시 내 구글 시트 확인 카드 -->
-        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3">
-          <div class="flex items-center justify-between">
-            <label class="text-xs font-bold text-slate-700">STEP 04. 우리 도서관 발급 웹 앱 URL 등록 & 연동</label>
-            <span class="text-[11px] text-slate-400">/exec 웹앱 배포 주소 입력</span>
-          </div>
-          <div class="flex space-x-2">
-            <input type="url" id="cfgGasUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="flex-grow p-2.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-white">
-            <button onclick="saveGasUrlFromSettings()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors shrink-0 shadow-xs">
-              연동 저장
-            </button>
-          </div>
-
-          <!-- 연동 즉시 나타나는 내 구글 시트 확인 카드 -->
-          <div id="connectedSheetCard" class="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200/90 flex flex-col sm:flex-row items-center justify-between gap-3 mt-1">
-            <div class="space-y-0.5 flex-grow">
-              <div class="font-bold text-xs text-slate-900 flex items-center space-x-1.5">
-                <i class="fa-solid fa-table-cells text-emerald-600"></i>
-                <span>내 구글 스프레드시트 연결 확인</span>
-              </div>
-              <p id="connectedSheetStatusText" class="text-[11px] text-slate-600 leading-tight">
-                웹 앱 URL을 등록하면 연결된 구글 시트 주소가 자동으로 감지되어 새 창으로 열 수 있습니다.
-              </p>
-            </div>
-            <button type="button" onclick="openConnectedGoogleSheet()" class="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs shrink-0 flex items-center justify-center space-x-1.5">
-              <i class="fa-solid fa-arrow-up-right-from-square"></i>
-              <span>내 구글 시트 열기</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- STEP 05. 필수 5대 탭 자동 구성 원격 트리거 -->
-        <div class="p-4 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div>
-            <div class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider mb-0.5">STEP 05 (원클릭 자동 구성)</div>
-            <div class="font-bold text-xs text-slate-900">내 구글 시트에 표준 5대 탭 자동 구성하기</div>
-            <p class="text-[11px] text-slate-500">확인된 내 시트에 1.설정, 2.순번, 3.정보, 4.출석부, 5.동의이력 탭을 원격 자동 생성합니다.</p>
-          </div>
-          <button onclick="triggerSetupSheetsFromUI()" class="w-full sm:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs shrink-0 flex items-center justify-center space-x-1.5">
-            <i class="fa-solid fa-wand-magic-sparkles"></i>
-            <span>5대 탭 원격 자동 생성</span>
-          </button>
-        </div>
-
-        <!-- 로컬 저장소 청소 도구 -->
-        <div class="p-4 rounded-xl bg-rose-50/60 border border-rose-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div>
-            <div class="text-[10px] font-bold text-rose-600 uppercase tracking-wider mb-0.5">로컬 저장소 청소 도구</div>
-            <div class="font-bold text-xs text-slate-900">기기 로컬 캐시 및 이전 활동 기록(출석/대타) 전체 초기화</div>
-            <p class="text-[11px] text-slate-500">이 단말기 브라우저에 고착된 이전 출석, 대타 지정, 임시 캐시를 말끔히 비웁니다.</p>
-          </div>
-          <button onclick="clearLocalCacheAndLogs()" class="w-full sm:w-auto px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs shrink-0 flex items-center justify-center space-x-1.5">
-            <i class="fa-solid fa-trash-can"></i>
-            <span>로컬 기록 전체 초기화</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- [순차 블록 2] 관리자 보안 계정(ID / 비밀번호) 변경 -->
-      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-          <h4 class="font-bold text-sm text-slate-800">2. 관리자 보안 계정(ID / 비밀번호) 관리</h4>
-          <span id="accountSyncStatusBadge" class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
-            🟢 시트 1:1 독립 동기화
-          </span>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="space-y-1.5">
-            <label class="block text-xs font-bold text-slate-700">관리자 아이디 (대소문자 무관)</label>
-            <input type="text" id="cfgAdminIdInput" placeholder="예: admin 또는 mylib" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20">
-            <p class="text-[11px] text-slate-400">모바일 자동 대문자 변환에도 동일하게 인식됩니다.</p>
-          </div>
-
-          <div class="space-y-1.5">
-            <label class="block text-xs font-bold text-slate-700">새 비밀번호 (8자 이상 복합 규칙)</label>
-            <input type="password" id="cfgAdminPwInput" oninput="validatePasswordLive(this.value)" placeholder="••••••••••••" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20">
-            
-            <!-- 비밀번호 4대 규칙 실시간 상태 바 -->
-            <div class="flex items-center space-x-2 text-[10px] text-slate-400 pt-1">
-              <span id="pwBadgeLen" class="px-1.5 py-0.5 rounded bg-slate-100">8자 이상</span>
-              <span id="pwBadgeAlpha" class="px-1.5 py-0.5 rounded bg-slate-100">영문소문자</span>
-              <span id="pwBadgeNum" class="px-1.5 py-0.5 rounded bg-slate-100">숫자</span>
-              <span id="pwBadgeSpecial" class="px-1.5 py-0.5 rounded bg-slate-100">특수문자</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="space-y-1.5">
-          <label class="block text-xs font-bold text-slate-700">새 비밀번호 재입력 확인</label>
-          <input type="password" id="cfgAdminPwConfirmInput" placeholder="새 비밀번호를 한 번 더 입력하세요" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20">
-        </div>
-
-        <div class="flex justify-between items-center pt-2">
-          <p class="text-[11px] text-slate-400">계정 정보는 본 도서관의 구글 스프레드시트에 안전하게 보관됩니다.</p>
-          <button onclick="saveAdminAccountFromSettings()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold shadow-xs transition-colors shrink-0">
-            계정 변경 저장
-          </button>
-        </div>
-      </div>
-
-      <!-- [순차 블록 3] 도서관 기본 운영 정보 설정 -->
-      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-5">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-          <h4 class="font-bold text-sm text-slate-800 flex items-center space-x-2">
-            <span class="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">3</span>
-            <span>기본 운영 파라미터 (전국 표준 설정 센터)</span>
-          </h4>
-          <span class="text-[11px] text-slate-400 font-medium">꿈빛 v1.01 가변 엔진</span>
-        </div>
-        
-        <!-- 기본 명칭, 순환 주기, 슬롯당 정원 (3열 배치) -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-          <div class="space-y-1.5">
-            <label class="block text-xs font-bold text-slate-700">도서관 공식 명칭</label>
-            <input type="text" id="cfgOrgNameInput" placeholder="예: 홍남초등학교 꿈빛도서관" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-medium">
-          </div>
-
-          <div class="space-y-1.5">
-            <label class="block text-xs font-bold text-slate-700">순번 배정 운영 주기</label>
-            <select id="cfgCycleTypeSelect" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-medium">
-              <option value="1주">1주 순환 (매주 동일)</option>
-              <option value="2주">2주 순환 (1·2주 교대 - 권장)</option>
-              <option value="1달">1달 순환 (4주 주기)</option>
-            </select>
-          </div>
-
-          <div class="space-y-1.5">
-            <label class="block text-xs font-bold text-slate-700 flex items-center justify-between">
-              <span>슬롯당 봉사위원 정원</span>
-              <span class="text-[10px] text-amber-600 font-bold">N명 직접 입력</span>
-            </label>
-            <div class="relative">
-              <input type="number" id="cfgSlotCapacityInput" min="1" max="20" value="2" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-bold text-slate-800 pr-8">
-              <span class="absolute right-3 top-2.5 text-xs text-slate-400 font-semibold pointer-events-none">명</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 정기 운영 요일 선택 및 공휴일 정책 패널 -->
-        <div class="p-4 rounded-xl bg-slate-50/70 border border-slate-200/80 space-y-3">
-          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-            <label class="block text-xs font-bold text-slate-700">정기 운영 요일 선택 (체크된 요일에만 슬롯 생성)</label>
-            <label class="flex items-center space-x-1.5 text-xs text-slate-600 cursor-pointer font-medium">
-              <input type="checkbox" id="cfgAutoHolidaysCheck" checked class="rounded text-amber-500 focus:ring-0">
-              <span>국가 법정 공휴일 자동 휴관 적용</span>
-            </label>
-          </div>
-
-          <div class="flex flex-wrap items-center gap-2 pt-1" id="cfgOperatingDaysContainer">
-            <!-- 요일 체크 버튼 7개 (월~일) -->
-            <label class="flex items-center space-x-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 cursor-pointer hover:bg-slate-50 transition-colors shadow-2xs">
-              <input type="checkbox" value="월" class="cfg-day-check rounded text-amber-500 focus:ring-0" checked>
-              <span>월요일</span>
-            </label>
-            <label class="flex items-center space-x-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 cursor-pointer hover:bg-slate-50 transition-colors shadow-2xs">
-              <input type="checkbox" value="화" class="cfg-day-check rounded text-amber-500 focus:ring-0" checked>
-              <span>화요일</span>
-            </label>
-            <label class="flex items-center space-x-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 cursor-pointer hover:bg-slate-50 transition-colors shadow-2xs">
-              <input type="checkbox" value="수" class="cfg-day-check rounded text-amber-500 focus:ring-0" checked>
-              <span>수요일</span>
-            </label>
-            <label class="flex items-center space-x-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 cursor-pointer hover:bg-slate-50 transition-colors shadow-2xs">
-              <input type="checkbox" value="목" class="cfg-day-check rounded text-amber-500 focus:ring-0" checked>
-              <span>목요일</span>
-            </label>
-            <label class="flex items-center space-x-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 cursor-pointer hover:bg-slate-50 transition-colors shadow-2xs">
-              <input type="checkbox" value="금" class="cfg-day-check rounded text-amber-500 focus:ring-0" checked>
-              <span>금요일</span>
-            </label>
-            <label class="flex items-center space-x-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-blue-600 cursor-pointer hover:bg-blue-50/50 transition-colors shadow-2xs">
-              <input type="checkbox" value="토" class="cfg-day-check rounded text-amber-500 focus:ring-0">
-              <span>토요일 (주말개관)</span>
-            </label>
-            <label class="flex items-center space-x-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-rose-600 cursor-pointer hover:bg-rose-50/50 transition-colors shadow-2xs">
-              <input type="checkbox" value="일" class="cfg-day-check rounded text-amber-500 focus:ring-0">
-              <span>일요일 (주말개관)</span>
-            </label>
-          </div>
-        </div>
-
-        <!-- 가변 타임슬롯(Time Slots) 동적 설정 패널 -->
-        <div class="p-4 rounded-xl bg-slate-50/70 border border-slate-200/80 space-y-3">
-          <div class="flex items-center justify-between">
+      <!-- [순차 블록 1] 1. 구글 시트 연동 (아코디언) -->
+      <div class="bg-white rounded-2xl border-2 border-emerald-500/40 shadow-xs overflow-hidden transition-all">
+        <!-- 아코디언 헤더 -->
+        <button type="button" onclick="toggleAdminAccordion(1)" class="w-full p-4 sm:p-5 flex items-center justify-between bg-white hover:bg-slate-50/80 transition-colors text-left focus:outline-none">
+          <div class="flex items-center space-x-3">
+            <span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold shrink-0">1</span>
             <div>
-              <h5 class="text-xs font-bold text-slate-800">봉사 시간대(Time Slots) 자율 설정</h5>
-              <p class="text-[11px] text-slate-500">도서관 일과표에 맞춰 시간대를 자유롭게 추가·수정·삭제할 수 있습니다.</p>
-            </div>
-            <button type="button" onclick="showAddTimeSlotRow()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold transition-all shadow-2xs flex items-center space-x-1">
-              <i class="fa-solid fa-plus text-[10px]"></i>
-              <span>시간대 추가</span>
-            </button>
-          </div>
-
-          <!-- 타임슬롯 테이블 -->
-          <div class="overflow-x-auto border border-slate-200 rounded-xl bg-white">
-            <table class="w-full text-left text-xs text-slate-700">
-              <thead class="bg-slate-100/70 border-b border-slate-200 text-slate-600 font-bold">
-                <tr>
-                  <th class="p-2.5 text-center w-12">순번</th>
-                  <th class="p-2.5">타임 명칭</th>
-                  <th class="p-2.5 text-center w-28">시작 시간</th>
-                  <th class="p-2.5 text-center w-28">종료 시간</th>
-                  <th class="p-2.5 text-center w-16">관리</th>
-                </tr>
-              </thead>
-              <tbody id="cfgTimeSlotsTableBody" class="divide-y divide-slate-100">
-                <!-- 동적 렌더링 -->
-              </tbody>
-            </table>
-          </div>
-
-          <!-- 새 시간대 추가 인라인 폼 (기본 숨김) -->
-          <div id="cfgNewTimeSlotForm" class="hidden p-3 rounded-xl bg-amber-50/60 border border-amber-200 space-y-2">
-            <div class="text-xs font-bold text-amber-900 flex items-center space-x-1">
-              <i class="fa-solid fa-clock"></i>
-              <span>새 봉사 시간대 등록</span>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <input type="text" id="newSlotNameInput" placeholder="타임 명칭 (예: 방과후 3차)" class="p-2 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20">
-              <div class="flex items-center space-x-1">
-                <span class="text-[11px] text-slate-500 shrink-0">시작:</span>
-                <input type="time" id="newSlotStartInput" value="13:30" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20">
-              </div>
-              <div class="flex items-center space-x-1">
-                <span class="text-[11px] text-slate-500 shrink-0">종료:</span>
-                <input type="time" id="newSlotEndInput" value="15:30" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20">
-              </div>
-            </div>
-            <div class="flex justify-end space-x-2 pt-1">
-              <button type="button" onclick="hideAddTimeSlotRow()" class="px-2.5 py-1 text-xs text-slate-500 hover:bg-slate-100 rounded-md">취소</button>
-              <button type="button" onclick="confirmAddNewTimeSlot()" class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-md text-xs font-bold shadow-2xs">등록하기</button>
+              <h4 class="font-bold text-sm sm:text-base text-slate-900">1. 구글 시트 연동</h4>
+              <p class="text-xs text-slate-500 mt-0.5">우리 도서관만의 구글 시트에 연결하여 데이터를 안전하게 독립 보관합니다.</p>
             </div>
           </div>
-        </div>
-
-
-        <!-- [신설] 순번 기준 주차 재정렬 (캘리브레이션) 패널 -->
-        <div class="p-4 rounded-xl bg-amber-50/50 border border-amber-200/80 space-y-3 mt-2">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-              <span class="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs shadow-2xs">
-                <i class="fa-solid fa-calendar-week"></i>
-              </span>
-              <div>
-                <h5 class="font-bold text-xs sm:text-sm text-slate-900">순번 기준 주차 재정렬 (주차 순환 캘리브레이션)</h5>
-                <p class="text-[11px] text-slate-500">연휴·방학 등으로 주차가 꼬였을 때, 기존 배정표는 유지하면서 기준 일자와 주차를 바로잡습니다.</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            <div class="space-y-1">
-              <label class="block text-xs font-bold text-slate-700">기준 일자 선택 (과거/현재/미래)</label>
-              <input type="date" id="cfgCycleBaseDateInput" onchange="updateCycleCalibrationPreview()" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white font-medium focus:ring-2 focus:ring-amber-500/20 focus:outline-none">
-              <p class="text-[10px] text-slate-400">지정한 날짜가 속한 주를 기준으로 순환 주차가 다시 줄을 섭니다.</p>
-            </div>
-
-            <div class="space-y-1">
-              <label class="block text-xs font-bold text-slate-700">해당 일자의 순번 주차 지정</label>
-              <select id="cfgCycleBaseWeekSelect" onchange="updateCycleCalibrationPreview()" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white font-medium focus:ring-2 focus:ring-amber-500/20 focus:outline-none">
-                <option value="1">1주차 팀 활동</option>
-                <option value="2">2주차 팀 활동</option>
-                <option value="3">3주차 팀 활동 (1달 순환 시)</option>
-                <option value="4">4주차 팀 활동 (1달 순환 시)</option>
-              </select>
-              <p class="text-[10px] text-slate-400">해당 기준 주에 활동할 순번 주차를 선택하세요.</p>
-            </div>
-          </div>
-
-          <div class="p-2.5 rounded-lg bg-white/80 border border-amber-200/60 text-[11px] text-slate-600 flex items-center justify-between flex-wrap gap-2">
-            <span id="cycleCalibrationPreviewText" class="truncate max-w-[280px] sm:max-w-md font-medium text-slate-700">
-              💡 기준일 주차를 재정렬하면 모든 캘린더와 슬롯에 즉시 실시간 반영됩니다.
+          <div class="flex items-center space-x-2 shrink-0">
+            <span id="gasStatusBadge" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-500">
+              연동 대기
             </span>
-            <button type="button" onclick="setCycleCalibrationToCurrentWeek()" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-[11px] font-bold shrink-0 transition-colors">
-              이번 주로 맞추기
-            </button>
+            <i id="adminSecArrow1" class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform duration-200"></i>
           </div>
-        </div>
+        </button>
 
-        <!-- [신설] 신학기 설정 (봉사단 안전 초기화 패널) -->
-        <div class="p-4 rounded-xl bg-rose-50/50 border border-rose-200/80 space-y-3 mt-3">
-          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div class="flex items-start space-x-2.5">
-              <span class="w-7 h-7 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center text-xs shadow-2xs shrink-0 mt-0.5">
-                <i class="fa-solid fa-graduation-cap"></i>
-              </span>
-              <div>
-                <h5 class="font-bold text-xs sm:text-sm text-slate-900">신학기 설정 (봉사단 리셋 & 새 학년 맞이)</h5>
-                <p class="text-[11px] text-slate-500 leading-snug">새 학기 시작 시 기존 명부·순번·출석 기록을 안전하게 백업 및 초기화하고 새로운 봉사단을 맞이합니다.</p>
+        <!-- 아코디언 본문 -->
+        <div id="adminSecBody1" class="hidden p-5 pt-3 border-t border-slate-100 space-y-4">
+          <!-- 3대 준비 퀵 버튼 (STEP 01 ~ 03) -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <a href="https://sheets.new" target="_blank" class="p-3 rounded-xl border border-emerald-200 hover:bg-emerald-50/50 bg-emerald-50/20 text-left transition-colors block">
+              <div class="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-0.5">STEP 01</div>
+              <div class="font-bold text-xs text-slate-800 flex items-center justify-between">
+                <span>새 구글 시트 만들기</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-emerald-500 text-[11px]"></i>
               </div>
-            </div>
-            <button type="button" onclick="openNewSemesterResetModal()" class="w-full sm:w-auto px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs shrink-0 flex items-center justify-center space-x-1.5">
-              <i class="fa-solid fa-rotate-right"></i>
-              <span>신학기 리셋 마법사</span>
+              <div class="text-[11px] text-slate-500 mt-0.5">sheets.new 즉시 생성</div>
+            </a>
+
+            <button onclick="copyEmbeddedGasScriptCode()" class="p-3 rounded-xl border border-blue-200 hover:bg-blue-50/50 bg-blue-50/20 text-left transition-colors">
+              <div class="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-0.5">STEP 02</div>
+              <div class="font-bold text-xs text-slate-800 flex items-center justify-between">
+                <span>백엔드 코드 복사하기</span>
+                <i class="fa-solid fa-copy text-blue-500 text-[11px]"></i>
+              </div>
+              <div class="text-[11px] text-slate-500 mt-0.5">Apps Script 코드 클립보드 복사</div>
+            </button>
+
+            <button type="button" onclick="openGuideSlides()" class="p-3 rounded-xl border border-amber-200 hover:bg-amber-50/50 bg-amber-50/20 text-left transition-colors block w-full">
+              <div class="text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-0.5">STEP 03</div>
+              <div class="font-bold text-xs text-slate-800 flex items-center justify-between">
+                <span>8장 슬라이드 설명서</span>
+                <i class="fa-solid fa-chalkboard-user text-amber-500 text-[11px]"></i>
+              </div>
+              <div class="text-[11px] text-slate-500 mt-0.5">배포 가이드 새 창 보기</div>
             </button>
           </div>
-        </div>
 
-        <div class="flex justify-end pt-2">
-          <button onclick="saveBasicSettingsFromUI()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold shadow-xs transition-colors">
-            기본 설정 저장
-          </button>
+          <!-- STEP 04. 웹앱 URL 입력 및 연동 즉시 내 구글 시트 확인 카드 -->
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-bold text-slate-700">STEP 04. 우리 도서관 발급 웹 앱 URL 등록 & 연동</label>
+              <span class="text-[11px] text-slate-400">/exec 웹앱 배포 주소 입력</span>
+            </div>
+            <div class="flex space-x-2">
+              <input type="url" id="cfgGasUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="flex-grow p-2.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-white">
+              <button onclick="saveGasUrlFromSettings()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors shrink-0 shadow-xs">
+                연동 저장
+              </button>
+            </div>
+
+            <!-- 연동 즉시 나타나는 내 구글 시트 확인 카드 -->
+            <div id="connectedSheetCard" class="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200/90 flex flex-col sm:flex-row items-center justify-between gap-3 mt-1">
+              <div class="space-y-0.5 flex-grow">
+                <div class="font-bold text-xs text-slate-900 flex items-center space-x-1.5">
+                  <i class="fa-solid fa-table-cells text-emerald-600"></i>
+                  <span>내 구글 스프레드시트 연결 확인</span>
+                </div>
+                <p id="connectedSheetStatusText" class="text-[11px] text-slate-600 leading-tight">
+                  웹 앱 URL을 등록하면 연결된 구글 시트 주소가 자동으로 감지되어 새 창으로 열 수 있습니다.
+                </p>
+              </div>
+              <button type="button" onclick="openConnectedGoogleSheet()" class="w-full sm:w-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs shrink-0 flex items-center justify-center space-x-1.5">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                <span>내 구글 시트 열기</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- STEP 05. 필수 5대 탭 자동 구성 원격 트리거 -->
+          <div class="p-4 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div>
+              <div class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider mb-0.5">STEP 05 (원클릭 자동 구성)</div>
+              <div class="font-bold text-xs text-slate-900">내 구글 시트에 표준 5대 탭 자동 구성하기</div>
+              <p class="text-[11px] text-slate-500">확인된 내 시트에 1.설정, 2.순번, 3.정보, 4.출석부, 5.동의이력 탭을 원격 자동 생성합니다.</p>
+            </div>
+            <button onclick="triggerSetupSheetsFromUI()" class="w-full sm:w-auto px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs shrink-0 flex items-center justify-center space-x-1.5">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              <span>5대 탭 원격 자동 생성</span>
+            </button>
+          </div>
+
+          <!-- 로컬 저장소 청소 도구 -->
+          <div class="p-4 rounded-xl bg-rose-50/60 border border-rose-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div>
+              <div class="text-[10px] font-bold text-rose-600 uppercase tracking-wider mb-0.5">로컬 저장소 청소 도구</div>
+              <div class="font-bold text-xs text-slate-900">기기 로컬 캐시 및 이전 활동 기록(출석/대타) 전체 초기화</div>
+              <p class="text-[11px] text-slate-500">이 단말기 브라우저에 고착된 이전 출석, 대타 지정, 임시 캐시를 말끔히 비웁니다.</p>
+            </div>
+            <button onclick="clearLocalCacheAndLogs()" class="w-full sm:w-auto px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs shrink-0 flex items-center justify-center space-x-1.5">
+              <i class="fa-solid fa-trash-can"></i>
+              <span>로컬 기록 전체 초기화</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- [순차 블록 4] 인원 관리 및 엑셀 일괄 연동 (실적 정산 제거 & 대형 드롭존 확장) -->
-      <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-          <h4 class="font-bold text-sm text-slate-800">4. 인원 관리 및 엑셀 일괄 연동</h4>
-          <span class="text-[11px] text-slate-400">봉사단 명부 및 순번표 통합 관리</span>
-        </div>
-        
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <button onclick="openModal('membersModal')" class="p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-left transition-colors flex items-start space-x-3 group">
-            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 group-hover:bg-amber-100 flex items-center justify-center text-lg shrink-0 transition-colors">
-              <i class="fa-solid fa-users"></i>
-            </div>
+      <!-- [순차 블록 2] 2. 계정 관리 (아코디언) -->
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden transition-all">
+        <!-- 아코디언 헤더 -->
+        <button type="button" onclick="toggleAdminAccordion(2)" class="w-full p-4 sm:p-5 flex items-center justify-between bg-white hover:bg-slate-50/80 transition-colors text-left focus:outline-none">
+          <div class="flex items-center space-x-3">
+            <span class="w-7 h-7 rounded-lg bg-slate-900 text-white flex items-center justify-center text-xs font-bold shrink-0">2</span>
             <div>
-              <div class="font-bold text-xs sm:text-sm text-slate-800">1. 명부 관리</div>
-              <div class="text-[11px] text-slate-500 mt-0.5">봉사위원 등록·수정·삭제</div>
+              <h4 class="font-bold text-sm sm:text-base text-slate-800">2. 계정 관리</h4>
+              <p class="text-xs text-slate-500 mt-0.5">사서 관리자 로그인 계정(ID / PW) 보안 설정</p>
             </div>
-          </button>
-
-          <button onclick="openScheduleAssignmentModal()" class="p-3.5 rounded-xl border-2 border-indigo-200 hover:border-indigo-400 bg-indigo-50/30 hover:bg-indigo-50/60 text-left transition-all flex items-start space-x-3 group shadow-2xs">
-            <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 group-hover:bg-indigo-200 flex items-center justify-center text-lg shrink-0 transition-colors">
-              <i class="fa-solid fa-calendar-check"></i>
-            </div>
-            <div>
-              <div class="font-bold text-xs sm:text-sm text-indigo-950 flex items-center space-x-1">
-                <span>2. 봉사 일정</span>
-                <span class="text-[10px] bg-indigo-200 text-indigo-800 px-1.5 py-0.2 rounded font-bold">배정</span>
-              </div>
-              <div class="text-[11px] text-indigo-600/80 mt-0.5">주차·요일별 위원 배정</div>
-            </div>
-          </button>
-          
-          <button onclick="downloadExcelTemplate()" class="p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-left transition-colors flex items-start space-x-3 group">
-            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100 flex items-center justify-center text-lg shrink-0 transition-colors">
-              <i class="fa-solid fa-file-excel"></i>
-            </div>
-            <div>
-              <div class="font-bold text-xs sm:text-sm text-slate-800">3. 엑셀 양식 다운로드</div>
-              <div class="text-[11px] text-slate-500 mt-0.5">2개 탭 표준 서식 (.xlsx)</div>
-            </div>
-          </button>
-        </div>
-
-        <!-- [200% 대형 확장] 엑셀 파일 드래그 앤 드롭 안심 영역 -->
-        <div id="dropZone" 
-             ondragover="event.preventDefault(); this.classList.add('border-amber-500', 'bg-amber-50/60', 'scale-[1.01]');" 
-             ondragleave="event.preventDefault(); this.classList.remove('border-amber-500', 'bg-amber-50/60', 'scale-[1.01]');" 
-             ondrop="event.preventDefault(); this.classList.remove('border-amber-500', 'bg-amber-50/60', 'scale-[1.01]'); handleExcelUpload(event);" 
-             class="border-2 border-dashed border-slate-300 hover:border-amber-500 rounded-2xl p-8 sm:p-11 text-center transition-all bg-slate-50/70 hover:bg-amber-50/30 cursor-pointer shadow-2xs group mt-2" 
-             onclick="document.getElementById('excelFileInput').click()">
-          <input type="file" id="excelFileInput" accept=".xlsx, .xls" class="hidden" onclick="event.stopPropagation()" onchange="handleExcelUpload(event)">
-          <div class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-amber-100/80 group-hover:bg-amber-200 text-amber-600 flex items-center justify-center text-3xl shadow-sm transition-transform group-hover:scale-110 pointer-events-none">
-            <i class="fa-solid fa-cloud-arrow-up"></i>
           </div>
-          <p class="text-sm font-bold text-slate-800 pointer-events-none">작성하신 엑셀 파일을 이곳에 끌어다 놓거나 클릭하여 선택하세요</p>
-          <p class="text-xs text-slate-500 mt-1 pointer-events-none">표준 엑셀 서식(.xlsx)을 업로드하면 봉사단 명부 및 순번표가 한 번에 일괄 동기화됩니다.</p>
+          <div class="flex items-center space-x-2 shrink-0">
+            <span id="accountSyncStatusBadge" class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+              🟢 시트 동기화
+            </span>
+            <i id="adminSecArrow2" class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform duration-200"></i>
+          </div>
+        </button>
+
+        <!-- 아코디언 본문 -->
+        <div id="adminSecBody2" class="hidden p-5 pt-3 border-t border-slate-100 space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="space-y-1.5">
+              <label class="block text-xs font-bold text-slate-700">관리자 아이디 (대소문자 무관)</label>
+              <input type="text" id="cfgAdminIdInput" placeholder="예: admin 또는 mylib" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20">
+              <p class="text-[11px] text-slate-400">모바일 자동 대문자 변환에도 동일하게 인식됩니다.</p>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="block text-xs font-bold text-slate-700">새 비밀번호 (8자 이상 복합 규칙)</label>
+              <input type="password" id="cfgAdminPwInput" oninput="validatePasswordLive(this.value)" placeholder="••••••••••••" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20">
+              
+              <!-- 비밀번호 4대 규칙 실시간 상태 바 -->
+              <div class="flex items-center space-x-2 text-[10px] text-slate-400 pt-1">
+                <span id="pwBadgeLen" class="px-1.5 py-0.5 rounded bg-slate-100">8자 이상</span>
+                <span id="pwBadgeAlpha" class="px-1.5 py-0.5 rounded bg-slate-100">영문소문자</span>
+                <span id="pwBadgeNum" class="px-1.5 py-0.5 rounded bg-slate-100">숫자</span>
+                <span id="pwBadgeSpecial" class="px-1.5 py-0.5 rounded bg-slate-100">특수문자</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-slate-700">새 비밀번호 재입력 확인</label>
+            <input type="password" id="cfgAdminPwConfirmInput" placeholder="새 비밀번호를 한 번 더 입력하세요" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20">
+          </div>
+
+          <div class="flex justify-between items-center pt-2">
+            <p class="text-[11px] text-slate-400">계정 정보는 본 도서관의 구글 스프레드시트에 안전하게 보관됩니다.</p>
+            <button onclick="saveAdminAccountFromSettings()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold shadow-xs transition-colors shrink-0">
+              계정 변경 저장
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- [순차 블록 3] 3. 기본 설정 (아코디언 - 기본 펼침) -->
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden transition-all">
+        <!-- 아코디언 헤더 -->
+        <button type="button" onclick="toggleAdminAccordion(3)" class="w-full p-4 sm:p-5 flex items-center justify-between bg-white hover:bg-slate-50/80 transition-colors text-left focus:outline-none">
+          <div class="flex items-center space-x-3">
+            <span class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold shrink-0">3</span>
+            <div>
+              <h4 class="font-bold text-sm sm:text-base text-slate-800">3. 기본 설정</h4>
+              <p class="text-xs text-slate-500 mt-0.5">명칭, 운영 주기, 정원, 운영 요일, 운영 시간, 순번 설정</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2 shrink-0">
+            <span class="text-[11px] text-slate-400 font-medium">꿈빛 v1.01 가변 엔진</span>
+            <i id="adminSecArrow3" class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform duration-200 rotate-180"></i>
+          </div>
+        </button>
+
+        <!-- 아코디언 본문 (기본 열림) -->
+        <div id="adminSecBody3" class="p-5 pt-3 border-t border-slate-100 space-y-5">
+          <!-- 기본 명칭, 순환 주기, 슬롯당 정원 (3열 배치) -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            <div class="space-y-1.5">
+              <label class="block text-xs font-bold text-slate-700">도서관 공식 명칭</label>
+              <input type="text" id="cfgOrgNameInput" placeholder="예: 홍남초등학교 꿈빛도서관" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-medium">
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="block text-xs font-bold text-slate-700">순번 배정 운영 주기</label>
+              <select id="cfgCycleTypeSelect" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-medium">
+                <option value="1주">1주 순환 (매주 동일)</option>
+                <option value="2주">2주 순환 (1·2주 교대 - 권장)</option>
+                <option value="1달">1달 순환 (4주 주기)</option>
+              </select>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="block text-xs font-bold text-slate-700 flex items-center justify-between">
+                <span>봉사위원 정원</span>
+                <span class="text-[10px] text-amber-600 font-bold">N명 직접 입력</span>
+              </label>
+              <div class="relative">
+                <input type="number" id="cfgSlotCapacityInput" min="1" max="20" value="2" class="w-full p-2.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 font-bold text-slate-800 pr-8">
+                <span class="absolute right-3 top-2.5 text-xs text-slate-400 font-semibold pointer-events-none">명</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 정기 운영 요일 선택 및 공휴일 정책 패널 -->
+          <div class="p-4 rounded-xl bg-slate-50/70 border border-slate-200/80 space-y-3">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+              <label class="block text-xs font-bold text-slate-700">정기 운영 요일 선택 (체크된 요일에만 슬롯 생성)</label>
+              <label class="flex items-center space-x-1.5 text-xs text-slate-600 cursor-pointer font-medium">
+                <input type="checkbox" id="cfgAutoHolidaysCheck" checked class="rounded text-amber-500 focus:ring-0">
+                <span>국가 법정 공휴일 자동 휴관 적용</span>
+              </label>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 pt-1" id="cfgOperatingDaysContainer">
+              <label class="flex items-center space-x-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 cursor-pointer hover:bg-slate-50 transition-colors shadow-2xs">
+                <input type="checkbox" value="월" class="cfg-day-check rounded text-amber-500 focus:ring-0" checked>
+                <span>월요일</span>
+              </label>
+              <label class="flex items-center space-x-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 cursor-pointer hover:bg-slate-50 transition-colors shadow-2xs">
+                <input type="checkbox" value="화" class="cfg-day-check rounded text-amber-500 focus:ring-0" checked>
+                <span>화요일</span>
+              </label>
+              <label class="flex items-center space-x-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 cursor-pointer hover:bg-slate-50 transition-colors shadow-2xs">
+                <input type="checkbox" value="수" class="cfg-day-check rounded text-amber-500 focus:ring-0" checked>
+                <span>수요일</span>
+              </label>
+              <label class="flex items-center space-x-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 cursor-pointer hover:bg-slate-50 transition-colors shadow-2xs">
+                <input type="checkbox" value="목" class="cfg-day-check rounded text-amber-500 focus:ring-0" checked>
+                <span>목요일</span>
+              </label>
+              <label class="flex items-center space-x-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 cursor-pointer hover:bg-slate-50 transition-colors shadow-2xs">
+                <input type="checkbox" value="금" class="cfg-day-check rounded text-amber-500 focus:ring-0" checked>
+                <span>금요일</span>
+              </label>
+              <label class="flex items-center space-x-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-blue-600 cursor-pointer hover:bg-blue-50/50 transition-colors shadow-2xs">
+                <input type="checkbox" value="토" class="cfg-day-check rounded text-amber-500 focus:ring-0">
+                <span>토요일 (주말개관)</span>
+              </label>
+              <label class="flex items-center space-x-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-rose-600 cursor-pointer hover:bg-rose-50/50 transition-colors shadow-2xs">
+                <input type="checkbox" value="일" class="cfg-day-check rounded text-amber-500 focus:ring-0">
+                <span>일요일 (주말개관)</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 가변 타임슬롯(Time Slots) 동적 설정 패널 -->
+          <div class="p-4 rounded-xl bg-slate-50/70 border border-slate-200/80 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h5 class="text-xs font-bold text-slate-800">운영 시간 설정</h5>
+                <p class="text-[11px] text-slate-500">도서관 일과표에 맞춰 시간대를 자유롭게 추가·수정·삭제할 수 있습니다.</p>
+              </div>
+              <button type="button" onclick="showAddTimeSlotRow()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold transition-all shadow-2xs flex items-center space-x-1">
+                <i class="fa-solid fa-plus text-[10px]"></i>
+                <span>시간대 추가</span>
+              </button>
+            </div>
+
+            <!-- 타임슬롯 테이블 -->
+            <div class="overflow-x-auto border border-slate-200 rounded-xl bg-white">
+              <table class="w-full text-left text-xs text-slate-700">
+                <thead class="bg-slate-100/70 border-b border-slate-200 text-slate-600 font-bold">
+                  <tr>
+                    <th class="p-2.5 text-center w-12">순번</th>
+                    <th class="p-2.5">타임 명칭</th>
+                    <th class="p-2.5 text-center w-28">시작 시간</th>
+                    <th class="p-2.5 text-center w-28">종료 시간</th>
+                    <th class="p-2.5 text-center w-24">관리</th>
+                  </tr>
+                </thead>
+                <tbody id="cfgTimeSlotsTableBody" class="divide-y divide-slate-100">
+                  <!-- 동적 렌더링 -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- 새 시간대 추가 인라인 폼 -->
+            <div id="cfgNewTimeSlotForm" class="hidden p-3 rounded-xl bg-amber-50/60 border border-amber-200 space-y-2">
+              <div class="text-xs font-bold text-amber-900 flex items-center space-x-1">
+                <i class="fa-solid fa-clock"></i>
+                <span>새 봉사 시간대 등록</span>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <input type="text" id="newSlotNameInput" placeholder="타임 명칭 (예: 방과후 3차)" class="p-2 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20">
+                <div class="flex items-center space-x-1">
+                  <span class="text-[11px] text-slate-500 shrink-0">시작:</span>
+                  <input type="time" id="newSlotStartInput" value="13:30" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20">
+                </div>
+                <div class="flex items-center space-x-1">
+                  <span class="text-[11px] text-slate-500 shrink-0">종료:</span>
+                  <input type="time" id="newSlotEndInput" value="15:30" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20">
+                </div>
+              </div>
+              <div class="flex justify-end space-x-2 pt-1">
+                <button type="button" onclick="hideAddTimeSlotRow()" class="px-2.5 py-1 text-xs text-slate-500 hover:bg-slate-100 rounded-md">취소</button>
+                <button type="button" onclick="confirmAddNewTimeSlot()" class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-md text-xs font-bold shadow-2xs">등록하기</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- [신설] 순번 설정 패널 -->
+          <div class="p-4 rounded-xl bg-amber-50/50 border border-amber-200/80 space-y-3 mt-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <span class="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs shadow-2xs">
+                  <i class="fa-solid fa-calendar-week"></i>
+                </span>
+                <div>
+                  <h5 class="font-bold text-xs sm:text-sm text-slate-900">순번 설정</h5>
+                  <p class="text-[11px] text-slate-500">연휴·방학 등으로 주차가 꼬였을 때, 기존 배정표는 유지하면서 기준 일자와 주차를 바로잡습니다.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div class="space-y-1">
+                <label class="block text-xs font-bold text-slate-700">기준 일자 선택 (과거/현재/미래)</label>
+                <input type="date" id="cfgCycleBaseDateInput" onchange="updateCycleCalibrationPreview()" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white font-medium focus:ring-2 focus:ring-amber-500/20 focus:outline-none">
+                <p class="text-[10px] text-slate-400">지정한 날짜가 속한 주를 기준으로 순환 주차가 다시 줄을 섭니다.</p>
+              </div>
+
+              <div class="space-y-1">
+                <label class="block text-xs font-bold text-slate-700">해당 일자의 순번 주차 지정</label>
+                <select id="cfgCycleBaseWeekSelect" onchange="updateCycleCalibrationPreview()" class="w-full p-2 text-xs border border-slate-200 rounded-lg bg-white font-medium focus:ring-2 focus:ring-amber-500/20 focus:outline-none">
+                  <option value="1">1주차 팀 활동</option>
+                  <option value="2">2주차 팀 활동</option>
+                  <option value="3">3주차 팀 활동 (1달 순환 시)</option>
+                  <option value="4">4주차 팀 활동 (1달 순환 시)</option>
+                </select>
+                <p class="text-[10px] text-slate-400">해당 기준 주에 활동할 순번 주차를 선택하세요.</p>
+              </div>
+            </div>
+
+            <div class="p-2.5 rounded-lg bg-white/80 border border-amber-200/60 text-[11px] text-slate-600 flex items-center justify-between flex-wrap gap-2">
+              <span id="cycleCalibrationPreviewText" class="truncate max-w-[280px] sm:max-w-md font-medium text-slate-700">
+                💡 기준일 주차를 재정렬하면 모든 캘린더와 슬롯에 즉시 실시간 반영됩니다.
+              </span>
+              <button type="button" onclick="setCycleCalibrationToCurrentWeek()" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md text-[11px] font-bold shrink-0 transition-colors">
+                이번 주로 맞추기
+              </button>
+            </div>
+          </div>
+
+          <!-- [신설] 시트 초기화 패널 -->
+          <div class="p-4 rounded-xl bg-rose-50/50 border border-rose-200/80 space-y-3 mt-3">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div class="flex items-start space-x-2.5">
+                <span class="w-7 h-7 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center text-xs shadow-2xs shrink-0 mt-0.5">
+                  <i class="fa-solid fa-graduation-cap"></i>
+                </span>
+                <div>
+                  <h5 class="font-bold text-xs sm:text-sm text-slate-900">시트 초기화</h5>
+                  <p class="text-[11px] text-slate-500 leading-snug">새 학기 시작 시 기존 명부·순번·출석 기록을 안전하게 백업 및 초기화하고 새로운 봉사단을 맞이합니다.</p>
+                </div>
+              </div>
+              <button type="button" onclick="openNewSemesterResetModal()" class="w-full sm:w-auto px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs shrink-0 flex items-center justify-center space-x-1.5">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span>초기화</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <button onclick="saveBasicSettingsFromUI()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold shadow-xs transition-colors">
+              기본 설정 저장
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- [순차 블록 4] 4. 봉사단 인원 관리 (아코디언) -->
+      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden transition-all">
+        <!-- 아코디언 헤더 -->
+        <button type="button" onclick="toggleAdminAccordion(4)" class="w-full p-4 sm:p-5 flex items-center justify-between bg-white hover:bg-slate-50/80 transition-colors text-left focus:outline-none">
+          <div class="flex items-center space-x-3">
+            <span class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold shrink-0">4</span>
+            <div>
+              <h4 class="font-bold text-sm sm:text-base text-slate-800">4. 봉사단 인원 관리</h4>
+              <p class="text-xs text-slate-500 mt-0.5">봉사단 명부, 봉사 일정 배정 및 엑셀 일괄 연동</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2 shrink-0">
+            <span class="text-[11px] text-slate-400">명부/배정/엑셀</span>
+            <i id="adminSecArrow4" class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform duration-200"></i>
+          </div>
+        </button>
+
+        <!-- 아코디언 본문 -->
+        <div id="adminSecBody4" class="hidden p-5 pt-3 border-t border-slate-100 space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button onclick="openModal('membersModal')" class="p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-left transition-colors flex items-start space-x-3 group">
+              <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 group-hover:bg-amber-100 flex items-center justify-center text-lg shrink-0 transition-colors">
+                <i class="fa-solid fa-users"></i>
+              </div>
+              <div>
+                <div class="font-bold text-xs sm:text-sm text-slate-800">1. 명부 관리</div>
+                <div class="text-[11px] text-slate-500 mt-0.5">봉사위원 등록·수정·삭제</div>
+              </div>
+            </button>
+
+            <button onclick="openScheduleAssignmentModal()" class="p-3.5 rounded-xl border-2 border-indigo-200 hover:border-indigo-400 bg-indigo-50/30 hover:bg-indigo-50/60 text-left transition-all flex items-start space-x-3 group shadow-2xs">
+              <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 group-hover:bg-indigo-200 flex items-center justify-center text-lg shrink-0 transition-colors">
+                <i class="fa-solid fa-calendar-check"></i>
+              </div>
+              <div>
+                <div class="font-bold text-xs sm:text-sm text-indigo-950 flex items-center space-x-1">
+                  <span>2. 봉사 일정</span>
+                  <span class="text-[10px] bg-indigo-200 text-indigo-800 px-1.5 py-0.2 rounded font-bold">배정</span>
+                </div>
+                <div class="text-[11px] text-indigo-600/80 mt-0.5">주차·요일별 위원 배정</div>
+              </div>
+            </button>
+            
+            <button onclick="downloadExcelTemplate()" class="p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-left transition-colors flex items-start space-x-3 group">
+              <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100 flex items-center justify-center text-lg shrink-0 transition-colors">
+                <i class="fa-solid fa-file-excel"></i>
+              </div>
+              <div>
+                <div class="font-bold text-xs sm:text-sm text-slate-800">3. 엑셀 양식 다운로드</div>
+                <div class="text-[11px] text-slate-500 mt-0.5">2개 탭 표준 서식 (.xlsx)</div>
+              </div>
+            </button>
+          </div>
+
+          <!-- [200% 대형 확장] 엑셀 파일 드래그 앤 드롭 안심 영역 -->
+          <div id="dropZone" 
+               ondragover="event.preventDefault(); this.classList.add('border-amber-500', 'bg-amber-50/60', 'scale-[1.01]');" 
+               ondragleave="event.preventDefault(); this.classList.remove('border-amber-500', 'bg-amber-50/60', 'scale-[1.01]');" 
+               ondrop="event.preventDefault(); this.classList.remove('border-amber-500', 'bg-amber-50/60', 'scale-[1.01]'); handleExcelUpload(event);" 
+               class="border-2 border-dashed border-slate-300 hover:border-amber-500 rounded-2xl p-8 sm:p-11 text-center transition-all bg-slate-50/70 hover:bg-amber-50/30 cursor-pointer shadow-2xs group mt-2" 
+               onclick="document.getElementById('excelFileInput').click()">
+            <input type="file" id="excelFileInput" accept=".xlsx, .xls" class="hidden" onclick="event.stopPropagation()" onchange="handleExcelUpload(event)">
+            <div class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-amber-100/80 group-hover:bg-amber-200 text-amber-600 flex items-center justify-center text-3xl shadow-sm transition-transform group-hover:scale-110 pointer-events-none">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+            </div>
+            <p class="text-sm font-bold text-slate-800 pointer-events-none">작성하신 엑셀 파일을 이곳에 끌어다 놓거나 클릭하여 선택하세요</p>
+            <p class="text-xs text-slate-500 mt-1 pointer-events-none">표준 엑셀 서식(.xlsx)을 업로드하면 봉사단 명부 및 순번표가 한 번에 일괄 동기화됩니다.</p>
+          </div>
         </div>
       </div>
     </section>
@@ -842,7 +883,7 @@
   <!-- 모달 창 컬렉션                                                    -->
   <!-- ================================================================= -->
 
-  <!-- 1. 봉사처 표지 (웰컴 게이트) 모달 - [꿈빛 v1.00 화이트 미니멀 & Sung soo Kim 라이선스] -->
+  <!-- 1. 봉사처 표지 (웰컴 게이트) 모달 - [꿈빛 v1.01 화이트 미니멀 & Sung soo Kim 라이선스] -->
   <div id="coverModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div id="coverCardContainer" class="bg-white w-full max-w-md rounded-3xl p-6 sm:p-8 text-slate-800 border border-slate-200 shadow-2xl relative overflow-hidden flex flex-col justify-between min-h-[520px]">
       
@@ -852,7 +893,7 @@
           <i class="fa-solid fa-landmark"></i>
         </div>
         <p id="coverOrgName" class="text-xs font-bold tracking-wider text-amber-700 uppercase">꿈빛도서관</p>
-        <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">꿈 길</h2>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">꿈 빛</h2>
         <p class="text-xs text-slate-500 font-medium">도서관 봉사인력 자원관리 솔루션</p>
       </div>
 
@@ -1206,7 +1247,7 @@
           <span>지적재산권(IP) 및 라이선스 고지</span>
         </div>
         <div class="space-y-1 text-[11px]">
-          <p>• <b>솔루션 명칭:</b> 꿈빛 (Ggumbit) v1.00</p>
+          <p>• <b>솔루션 명칭:</b> 꿈빛 (Ggumbit) v1.01</p>
           <p>• <b>원작자 / 저작권:</b> © 2026 <b>Sung soo Kim</b>. All Rights Reserved.</p>
           <p>• <b>이용 허락 (License):</b> 본 시스템은 전국 초·중·고교 및 공공도서관의 봉사 활성화를 위해 비영리 교육기관 무상 이용 라이선스(MIT License 기반)로 배포됩니다.</p>
           <p class="text-[10px] text-slate-500 pt-1 leading-normal">
@@ -1361,10 +1402,12 @@
     let cycleType = '2주';
     let cycleBaseDate = '2026-03-02';
     let cycleBaseWeek = 1;
+    let noticeMemo = '오늘도 아이들의 꿈을 위해 따뜻한 사랑으로 함께해 주시는 모든 도서관 봉사위원님들께 진심으로 감사드립니다.';
+
+    // [35.1 신설] 가변 운영 파라미터 상태 변수
     let operatingDays = ['월', '화', '수', '목', '금']; // 기본 평일 운영
     let autoHolidaysClose = true;                        // 공휴일 자동 휴관 (기본 ON)
     let slotCapacity = 2;                                // 슬롯당 정원 (기본 2명, 직접입력)
-    let noticeMemo = '오늘도 아이들의 꿈을 위해 따뜻한 사랑으로 함께해 주시는 모든 도서관 봉사위원님들께 진심으로 감사드립니다.';
 
     let timeSlots = [
       { id: 't1', name: '오전 1차', startTime: '08:30', endTime: '10:30' },
@@ -1460,6 +1503,8 @@
       const savedBaseWeek = safeStorage.getItem('lib_cycle_base_week');
       if (savedBaseWeek) cycleBaseWeek = parseInt(savedBaseWeek, 10) || 1;
       noticeMemo = safeStorage.getItem('lib_notice_memo') || noticeMemo;
+      myVolunteerName = safeStorage.getItem('lib_my_name') || '';
+
       const savedDays = safeStorage.getItem('lib_operating_days');
       if (savedDays) { try { operatingDays = JSON.parse(savedDays); } catch (e) {} }
       const savedAutoHolidays = safeStorage.getItem('lib_auto_holidays');
@@ -1468,7 +1513,6 @@
       if (savedCap) slotCapacity = parseInt(savedCap, 10) || 2;
       const savedSlots = safeStorage.getItem('lib_time_slots');
       if (savedSlots) { try { timeSlots = JSON.parse(savedSlots); } catch (e) {} }
-      myVolunteerName = safeStorage.getItem('lib_my_name') || '';
 
       const cachedMembers = safeStorage.getItem('lib_cache_members');
       if (cachedMembers) {
@@ -1833,7 +1877,7 @@
       const parts = slotKey.split('_');
       const dStr = parts[0];
       const tStr = parts[1];
-      const role = parts[2] === '1' ? '봉사위원 1' : '봉사위원 2';
+      const role = parts[2] === '1' ? '봉사위원 1' : (parts[2] === '2' ? '봉사위원 2' : `봉사위원 ${parts[2]}`);
       const infoEl = document.getElementById('subAcceptModalSlotInfo');
       if (infoEl) infoEl.textContent = `${dStr} [${tStr}] ${role}`;
       const reqEl = document.getElementById('subAcceptModalRequester');
@@ -1925,7 +1969,7 @@
           <div class="p-3 bg-slate-900 text-white rounded-xl text-xs flex items-center justify-between shadow-xs">
             <div class="flex items-center space-x-2">
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-              <span class="font-bold">👑 사서 관리자 직권 모드 활성화됨 (슬롯당 정원: ${cap}명)</span>
+              <span class="font-bold">👑 사서 관리자 전용 직권 모드 활성화됨 (슬롯당 정원: ${cap}명)</span>
             </div>
             <span class="text-[11px] text-slate-300">슬롯별 봉사위원을 즉시 변경하거나 원상복구할 수 있습니다.</span>
           </div>
@@ -1936,7 +1980,6 @@
         const sNorm = slot.startTime;
         const rMatch = rosterData.find(r => r.week === weekCycle && r.day.startsWith(dayName.slice(0, 1)) && r.time === sNorm);
 
-        // 1부터 N(cap)까지 동적으로 위원 슬롯 생성
         const roleIndices = Array.from({ length: cap }, (_, i) => i + 1);
         const slotWorkers = roleIndices.map(roleIdx => {
           const key = `${currentDateStr}_${sNorm}_${roleIdx}`;
@@ -1953,14 +1996,12 @@
           return { roleIdx, key, rec, origName, isReq, isAcc, effName, isAtt, isMy };
         });
 
-        // 1명일 때는 1열, 2명일 때는 2열, 3명 이상일 때는 화면 크기에 맞춰 다열 분할
         let gridColsClass = 'grid-cols-1 md:grid-cols-2';
         if (cap === 1) gridColsClass = 'grid-cols-1';
         else if (cap >= 3) gridColsClass = 'grid-cols-1 md:grid-cols-3';
 
         cardsHtml += `
           <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-            <!-- 슬롯 헤더 -->
             <div class="bg-slate-50/70 border-b border-slate-100 px-4 sm:px-5 py-3 flex items-center justify-between">
               <div class="flex items-center space-x-2">
                 <span class="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-xs font-bold">${slot.name.slice(0, 2)}</span>
@@ -1969,7 +2010,6 @@
               <span class="text-[11px] font-semibold text-slate-400">${cap}인 봉사 슬롯</span>
             </div>
 
-            <!-- 슬롯 내부 N인 위원 카드 그리드 -->
             <div class="p-4 sm:p-5 grid ${gridColsClass} gap-3.5">
               ${slotWorkers.map(w => {
                 let cardStyle = 'border border-slate-200 rounded-xl p-3.5 transition-all bg-white flex flex-col justify-between space-y-3';
@@ -1984,7 +2024,6 @@
                 return `
                   <div class="${cardStyle}">
                     <div>
-                      <!-- 역할 배지 & 대타 상태 -->
                       <div class="flex items-center justify-between mb-1.5">
                         <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${w.roleIdx === 1 ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-slate-100 text-slate-600 border border-slate-200'}">
                           ${roleLabel}
@@ -2010,7 +2049,6 @@
                         ` : ''}
                       </div>
 
-                      <!-- 위원 이름 및 출석 상태 -->
                       <div class="flex items-center justify-between pt-1">
                         <div>
                           <div class="font-extrabold text-sm sm:text-base text-slate-900 tracking-tight flex items-center space-x-1.5">
@@ -2020,7 +2058,6 @@
                           ${w.isReq && w.rec?.reason ? `<p class="text-[11px] text-rose-600 font-medium mt-0.5">사유: ${w.rec.reason}</p>` : ''}
                         </div>
 
-                        <!-- 출석 확인 (O/X) 토글 버튼 -->
                         <button onclick="toggleAttendanceCheck('${w.key}', '${w.effName}')" class="px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center space-x-1.5 ${w.isAtt ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'}">
                           <i class="fa-solid ${w.isAtt ? 'fa-circle-check text-emerald-200' : 'fa-circle text-slate-400'} text-xs"></i>
                           <span>${w.isAtt ? '출석확인 (O)' : '미출석 (X)'}</span>
@@ -2028,7 +2065,6 @@
                       </div>
                     </div>
 
-                    <!-- 하단 액션 구역 -->
                     ${isAdminLoggedIn ? `
                       <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
                         <div class="flex items-center space-x-1 flex-grow">
@@ -2072,7 +2108,6 @@
           </div>
         `;
       });
-
 
       container.innerHTML = cardsHtml;
     }
@@ -2235,9 +2270,9 @@
       if (btnText) btnText.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> <span>${calendarMonth}월 목록+달력 생성 중...</span>`;
       showToast(`구글 시트에 [${calendarYear}-${String(calendarMonth).padStart(2, '0')} 배정표] 및 [달력] 듀얼 탭 생성을 요청합니다...`);
 
+      const cap = Math.max(1, parseInt(slotCapacity, 10) || 2);
       const lastDate = new Date(calendarYear, calendarMonth, 0).getDate();
       const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-      const cap = Math.max(1, parseInt(slotCapacity, 10) || 2);
       const scheduleRows = [];
 
       for (let d = 1; d <= lastDate; d++) {
@@ -2285,7 +2320,6 @@
         }
       }
 
-
       try {
         await fetch(gasApiUrl, {
           method: 'POST',
@@ -2328,14 +2362,13 @@
       renderRosterTable();
     }
 
-function renderRosterTable() {
+    function renderRosterTable() {
       const tbody = document.getElementById('rosterTableBody');
       if (!tbody) return;
 
       const cap = Math.max(1, parseInt(slotCapacity, 10) || 2);
       const thead = tbody.closest('table')?.querySelector('thead tr');
 
-      // 1. thead 헤더 열을 slotCapacity(N명)에 맞춰 동적 재구성
       if (thead) {
         let thHtml = `
           <th class="p-3 text-center w-16">주차</th>
@@ -2989,7 +3022,7 @@ function renderRosterTable() {
       return html;
     }
 
-      function updateScheduleAssignment(weekNum, dayName, timeStr, roleIdx, selectedVal) {
+    function updateScheduleAssignment(weekNum, dayName, timeStr, roleIdx, selectedVal) {
       const cleanVal = (selectedVal === '공석') ? '' : selectedVal.trim();
       const dayShort = dayName.slice(0, 1);
       
@@ -3030,7 +3063,6 @@ function renderRosterTable() {
       const cap = Math.max(1, parseInt(slotCapacity, 10) || 2);
       const thead = tbody.closest('table')?.querySelector('thead tr');
 
-      // thead 동적 구성
       if (thead) {
         let thHtml = `
           <th class="p-2.5 text-center w-20">요일</th>
@@ -3252,47 +3284,179 @@ function renderRosterTable() {
     }
 
     // -------------------------------------------------------------
-    // [16] 기본 운영 설정 & 공지사항 저장
+    // [15-1] 도서관 설정 아코디언(접기·펴기) 제어 엔진 (36.3 신설)
     // -------------------------------------------------------------
-    function setCycleCalibrationToCurrentWeek() {
-      const now = new Date();
-      const input = document.getElementById('cfgCycleBaseDateInput');
-      if (input) {
-        input.value = formatDate(now);
-        updateCycleCalibrationPreview();
+    function toggleAdminAccordion(secNum) {
+      const targetBody = document.getElementById(`adminSecBody${secNum}`);
+      const targetArrow = document.getElementById(`adminSecArrow${secNum}`);
+      if (!targetBody) return;
+      const isCurrentlyOpen = !targetBody.classList.contains('hidden');
+
+      for (let i = 1; i <= 4; i++) {
+        const b = document.getElementById(`adminSecBody${i}`);
+        const a = document.getElementById(`adminSecArrow${i}`);
+        if (b) b.classList.add('hidden');
+        if (a) a.classList.remove('rotate-180');
+      }
+
+      if (!isCurrentlyOpen) {
+        targetBody.classList.remove('hidden');
+        if (targetArrow) targetArrow.classList.add('rotate-180');
       }
     }
 
-    function updateCycleCalibrationPreview() {
-      const baseDateInput = document.getElementById('cfgCycleBaseDateInput');
-      const baseWeekSelect = document.getElementById('cfgCycleBaseWeekSelect');
-      const previewEl = document.getElementById('cycleCalibrationPreviewText');
-      if (!baseDateInput || !baseWeekSelect || !previewEl) return;
-
-      const dVal = baseDateInput.value || cycleBaseDate;
-      const wVal = baseWeekSelect.value || cycleBaseWeek;
-      previewEl.innerHTML = `💡 <b>${dVal}</b>이 속한 주를 <b>${wVal}주차</b>로 설정하여 전역 주차 순환이 정렬됩니다.`;
-    }
+    // -------------------------------------------------------------
+    // [16] 기본 운영 설정 & 공지사항 저장
+    // -------------------------------------------------------------
+    let editingTimeSlotId = null;
 
     function renderTimeSlotsManager() {
       const tbody = document.getElementById('cfgTimeSlotsTableBody');
       if (!tbody) return;
 
-      tbody.innerHTML = timeSlots.map((slot, idx) => `
-        <tr class="hover:bg-slate-50 transition-colors">
-          <td class="p-2.5 text-center font-bold text-slate-400">${idx + 1}</td>
-          <td class="p-2.5 font-bold text-slate-800">${slot.name}</td>
-          <td class="p-2.5 text-center font-mono font-semibold text-slate-600">${slot.startTime}</td>
-          <td class="p-2.5 text-center font-mono font-semibold text-slate-600">${slot.endTime}</td>
-          <td class="p-2.5 text-center">
-            ${timeSlots.length > 1 ? `
-              <button type="button" onclick="deleteTimeSlot('${slot.id}')" class="text-rose-500 hover:text-rose-700 font-bold text-xs" title="시간대 삭제">
-                <i class="fa-solid fa-trash-can"></i>
+      tbody.innerHTML = timeSlots.map((slot, idx) => {
+        const isEditing = (editingTimeSlotId === slot.id);
+        if (isEditing) {
+          return `
+            <tr class="bg-amber-50/50 border-2 border-amber-300">
+              <td class="p-2 text-center font-bold text-slate-500">${idx + 1}</td>
+              <td class="p-2">
+                <input type="text" id="editSlotName_${slot.id}" value="${slot.name}" class="w-full p-1.5 text-xs border border-amber-300 rounded-lg bg-white font-medium focus:outline-none focus:ring-1 focus:ring-amber-500">
+              </td>
+              <td class="p-2 text-center">
+                <input type="time" id="editSlotStart_${slot.id}" value="${slot.startTime}" class="w-full p-1.5 text-xs border border-amber-300 rounded-lg bg-white text-center font-mono focus:outline-none focus:ring-1 focus:ring-amber-500">
+              </td>
+              <td class="p-2 text-center">
+                <input type="time" id="editSlotEnd_${slot.id}" value="${slot.endTime}" class="w-full p-1.5 text-xs border border-amber-300 rounded-lg bg-white text-center font-mono focus:outline-none focus:ring-1 focus:ring-amber-500">
+              </td>
+              <td class="p-2 text-center whitespace-nowrap">
+                <button type="button" onclick="saveEditedTimeSlot('${slot.id}')" class="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-md text-[11px] font-bold shadow-2xs mr-1">저장</button>
+                <button type="button" onclick="cancelEditTimeSlot()" class="px-2 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-md text-[11px] font-semibold">취소</button>
+              </td>
+            </tr>
+          `;
+        }
+
+        return `
+          <tr class="hover:bg-slate-50 transition-colors">
+            <td class="p-2.5 text-center font-bold text-slate-400">${idx + 1}</td>
+            <td class="p-2.5 font-bold text-slate-800">${slot.name}</td>
+            <td class="p-2.5 text-center font-mono font-semibold text-slate-600">${slot.startTime}</td>
+            <td class="p-2.5 text-center font-mono font-semibold text-slate-600">${slot.endTime}</td>
+            <td class="p-2.5 text-center whitespace-nowrap space-x-1.5">
+              <button type="button" onclick="startEditTimeSlot('${slot.id}')" class="text-amber-600 hover:text-amber-800 font-bold text-xs p-1" title="시간대 수정">
+                <i class="fa-solid fa-pen-to-square"></i>
               </button>
-            ` : '<span class="text-[10px] text-slate-300">최소1개</span>'}
-          </td>
-        </tr>
-      `).join('');
+              ${timeSlots.length > 1 ? `
+                <button type="button" onclick="deleteTimeSlot('${slot.id}')" class="text-rose-500 hover:text-rose-700 font-bold text-xs p-1" title="시간대 삭제">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              ` : '<span class="text-[10px] text-slate-300">고정</span>'}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function startEditTimeSlot(slotId) {
+      editingTimeSlotId = slotId;
+      renderTimeSlotsManager();
+    }
+
+    function cancelEditTimeSlot() {
+      editingTimeSlotId = null;
+      renderTimeSlotsManager();
+    }
+
+    function saveEditedTimeSlot(slotId) {
+      const slot = timeSlots.find(s => s.id === slotId);
+      if (!slot) return;
+
+      const nameInput = document.getElementById(`editSlotName_${slotId}`);
+      const startInput = document.getElementById(`editSlotStart_${slotId}`);
+      const endInput = document.getElementById(`editSlotEnd_${slotId}`);
+
+      const newName = nameInput ? nameInput.value.trim() : '';
+      const newStart = startInput ? startInput.value.trim() : '';
+      const newEnd = endInput ? endInput.value.trim() : '';
+
+      if (!newName) {
+        showToast('타임 명칭을 입력해 주세요.');
+        return;
+      }
+      if (!newStart || !newEnd) {
+        showToast('시작 시간과 종료 시간을 모두 지정해 주세요.');
+        return;
+      }
+
+      const oldStart = slot.startTime;
+      slot.name = newName;
+      slot.startTime = newStart;
+      slot.endTime = newEnd;
+
+      safeStorage.setItem('lib_time_slots', JSON.stringify(timeSlots));
+
+      // 시작 시간이 변경된 경우 기존 배정 데이터 및 로그 키 마이그레이션
+      if (oldStart && oldStart !== newStart) {
+        let rosterUpdated = false;
+        rosterData.forEach(r => {
+          if (r.time === oldStart) {
+            r.time = newStart;
+            rosterUpdated = true;
+          }
+        });
+        if (rosterUpdated) {
+          safeStorage.setItem('lib_cache_roster', JSON.stringify(rosterData));
+          syncRosterToGas(rosterData);
+        }
+
+        const updatedOverrides = {};
+        Object.keys(overrideLog).forEach(key => {
+          const parts = key.split('_');
+          if (parts[1] === oldStart) {
+            const newKey = `${parts[0]}_${newStart}_${parts[2]}`;
+            updatedOverrides[newKey] = overrideLog[key];
+          } else {
+            updatedOverrides[key] = overrideLog[key];
+          }
+        });
+        overrideLog = updatedOverrides;
+        safeStorage.setItem('lib_cache_overrides', JSON.stringify(overrideLog));
+
+        const updatedAttendance = {};
+        Object.keys(attendanceLog).forEach(key => {
+          const parts = key.split('_');
+          if (parts[1] === oldStart) {
+            const newKey = `${parts[0]}_${newStart}_${parts[2]}`;
+            updatedAttendance[newKey] = attendanceLog[key];
+          } else {
+            updatedAttendance[key] = attendanceLog[key];
+          }
+        });
+        attendanceLog = updatedAttendance;
+        safeStorage.setItem('lib_cache_attendance', JSON.stringify(attendanceLog));
+      }
+
+      editingTimeSlotId = null;
+      renderTimeSlotsManager();
+      renderTodaySlots();
+      renderCalendar();
+      renderRosterTable();
+      renderMyTab();
+
+      if (gasApiUrl) {
+        fetch(gasApiUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'saveSystemConfig',
+            timeSlots: timeSlots
+          })
+        }).catch(() => {});
+      }
+
+      showToast(`'${newName}' 시간대 설정이 저장되었습니다.`);
     }
 
     function showAddTimeSlotRow() {
@@ -3343,8 +3507,25 @@ function renderRosterTable() {
       
       timeSlots = timeSlots.filter(s => s.id !== slotId);
       safeStorage.setItem('lib_time_slots', JSON.stringify(timeSlots));
+      if (editingTimeSlotId === slotId) editingTimeSlotId = null;
       renderTimeSlotsManager();
+      renderTodaySlots();
+      renderCalendar();
+      renderRosterTable();
+      renderMyTab();
       showToast(`'${name}'가 삭제되었습니다.`);
+
+      if (gasApiUrl) {
+        fetch(gasApiUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'saveSystemConfig',
+            timeSlots: timeSlots
+          })
+        }).catch(() => {});
+      }
     }
 
     function setCycleCalibrationToCurrentWeek() {
@@ -3392,7 +3573,6 @@ function renderRosterTable() {
         safeStorage.setItem('lib_auto_holidays', String(autoHolidaysClose));
       }
 
-      // 요일 체크박스 수집
       const dayChecks = document.querySelectorAll('.cfg-day-check:checked');
       operatingDays = Array.from(dayChecks).map(cb => cb.value);
       safeStorage.setItem('lib_operating_days', JSON.stringify(operatingDays));
@@ -3433,7 +3613,7 @@ function renderRosterTable() {
         }).catch(() => {});
       }
     }
-    
+
     // -------------------------------------------------------------
     // [16-1] 신학기 봉사단 안전 초기화 컨트롤러 (3중 가드 장착)
     // -------------------------------------------------------------
@@ -3578,7 +3758,6 @@ function renderRosterTable() {
       const wb = XLSX.utils.book_new();
       const cap = Math.max(1, parseInt(slotCapacity, 10) || 2);
 
-      // 1. [봉사자 정보] 탭
       const infoHeaders = ['순번', '이름', '연락처'];
       const infoRows = [infoHeaders];
       if (membersData && membersData.length > 0) {
@@ -3593,7 +3772,6 @@ function renderRosterTable() {
       const wsInfo = XLSX.utils.aoa_to_sheet(infoRows);
       wsInfo['!cols'] = [{ wch: 8 }, { wch: 18 }, { wch: 22 }];
 
-      // 2. [봉사자 순번] 탭 (N명 정원 및 운영 요일에 맞춘 동적 열 생성)
       const rosterHeaders = ['순번', '주차', '요일', '시간대'];
       for (let r = 1; r <= cap; r++) {
         const roleLabel = (r === 1) ? '봉사위원 1 (정)' : (r === 2 ? '봉사위원 2 (부)' : `봉사위원 ${r}`);
@@ -3751,7 +3929,7 @@ function renderRosterTable() {
               let weekCol = 1;
               let dayCol = 2;
               let timeCol = 3;
-              const workerColMap = []; // { roleIdx, colIdx }
+              const workerColMap = [];
 
               header.forEach((h, idx) => {
                 const hStr = String(h || '').trim();
@@ -3769,13 +3947,11 @@ function renderRosterTable() {
                 }
               });
 
-              // 기본 Fallback (봉사위원 열이 특정되지 않은 경우 4열, 5열 기본 배정)
               if (workerColMap.length === 0) {
                 workerColMap.push({ roleIdx: 1, colIdx: 4 });
                 workerColMap.push({ roleIdx: 2, colIdx: 5 });
               }
 
-              // 최대 정원 동적 감지
               const detectedCap = Math.max(...workerColMap.map(w => w.roleIdx));
               if (detectedCap > slotCapacity) {
                 slotCapacity = detectedCap;
@@ -3828,7 +4004,6 @@ function renderRosterTable() {
               }
             }
           }
-
 
           if (parsedMembersCount > 0 || parsedRosterCount > 0) {
             renderTodaySlots();
@@ -4307,22 +4482,24 @@ function renderRosterTable() {
       const baseWeekSelect = document.getElementById('cfgCycleBaseWeekSelect');
       if (baseWeekSelect) baseWeekSelect.value = String(cycleBaseWeek);
 
+      const capInput = document.getElementById('cfgSlotCapacityInput');
+      if (capInput) capInput.value = slotCapacity;
+
+      const holidayCheck = document.getElementById('cfgAutoHolidaysCheck');
+      if (holidayCheck) holidayCheck.checked = autoHolidaysClose;
+
+      document.querySelectorAll('.cfg-day-check').forEach(cb => {
+        cb.checked = operatingDays.includes(cb.value);
+      });
+
       updateCycleCalibrationPreview();
+      renderTimeSlotsManager();
 
       renderTodaySlots();
       renderCalendar();
       renderRosterTable();
       renderMembersTable();
       renderMyTab();
-
-      const capInput = document.getElementById('cfgSlotCapacityInput');
-      if (capInput) capInput.value = slotCapacity;
-      const holidayCheck = document.getElementById('cfgAutoHolidaysCheck');
-      if (holidayCheck) holidayCheck.checked = autoHolidaysClose;
-      document.querySelectorAll('.cfg-day-check').forEach(cb => {
-        cb.checked = operatingDays.includes(cb.value);
-      });
-      renderTimeSlotsManager();
       updateConnectedSheetUI();
     }
 
@@ -4435,13 +4612,11 @@ function renderRosterTable() {
       const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
       const dayShort = dayNames[day];
 
-      // 1. 관리자가 설정한 정기 운영 요일에 포함되지 않은 경우 휴관 처리
       const opDays = (operatingDays && operatingDays.length > 0) ? operatingDays : ['월', '화', '수', '목', '금'];
       if (!opDays.includes(dayShort)) {
         return { isClosed: true, title: `${dayShort}요일 정기휴관` };
       }
 
-      // 2. 법정 공휴일 자동 휴관 적용 옵션이 켜져 있는 경우
       if (autoHolidaysClose) {
         const holidays = {
           '2026-01-01': '신정', '2026-02-16': '설연휴', '2026-02-17': '설날', '2026-02-18': '설연휴',
@@ -4458,7 +4633,6 @@ function renderRosterTable() {
 
       return { isClosed: false, title: '' };
     }
-
   </script>
 </body>
 </html>
