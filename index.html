@@ -2,12 +2,12 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <!--
   ==============================================================================
   [프로그램 정보(Program Information)]
   Project: 꿈빛 (Ggumbit) - 도서관 봉사인력 자원관리 프로그램
-  Version: v1.09 (Dedicated Invite Link & QR Provisioning Engine)
+  Version: v1.10 (PWA Mobile Home Screen Standalone App Engine)
   Author / Copyright: (c) 2026 Sung soo Kim. All Rights Reserved.
   License: Open Education License (Based on MIT License with Non-Commercial Recommendation)
   
@@ -17,7 +17,29 @@
   제공하지 않습니다. 이용 과정에서 발생하는 데이터 관리 책임은 각 이용 기관에 있습니다.
   ==============================================================================
   -->
-  <title>꿈빛 - 도서관 봉사인력 관리 시스템 v1.09</title>
+  <title>꿈빛 - 도서관 봉사인력 관리 시스템 v1.10</title>
+
+  <!-- ============================================================= -->
+  <!-- [PWA 모바일 홈 화면 앱 설치 메타 태그 & 펼쳐진 책 아이콘 엔진] -->
+  <!-- ============================================================= -->
+  <!-- 안드로이드 / 크롬 모바일 웹앱 명칭 및 테마 색상 -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="꿈빛">
+  <meta name="theme-color" content="#f59e0b">
+
+  <!-- iOS 사파리 홈 화면 바로가기(PWA) 전용 메타 태그 -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="꿈빛">
+
+  <!-- 펼쳐진 책 모양 고해상도 벡터 SVG 파비콘 (기본 탑재) -->
+  <link rel="icon" id="dynamicFavicon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='bgGrad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23f59e0b'/%3E%3Cstop offset='100%25' stop-color='%23d97706'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='128' fill='url(%23bgGrad)'/%3E%3Cpath d='M256 168c-38-22-92-26-146-8-14 5-22 17-22 32v176c0 14 13 24 27 20 45-14 93-11 133 10 4-21 4-21 8 0 40-21 88-24 133-10 14 4 27-6 27-20V192c0-15-8-27-22-32-54-18-108-14-146 8z' fill='%23ffffff'/%3E%3Cpath d='M256 182v218' stroke='%23d97706' stroke-width='14' stroke-linecap='round'/%3E%3Cpath d='M130 226c36-10 74-8 106 6M130 274c36-10 74-8 106 6M382 226c-36-10-74-8-106 6M382 274c-36-10-74-8-106 6' stroke='%23fef3c7' stroke-width='10' stroke-linecap='round'/%3E%3C/svg%3E">
+
+  <!-- iOS 홈 화면 추가 시 적용될 펼쳐진 책 터치 아이콘 -->
+  <link rel="apple-touch-icon" id="dynamicAppleIcon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='bgGrad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23f59e0b'/%3E%3Cstop offset='100%25' stop-color='%23d97706'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='128' fill='url(%23bgGrad)'/%3E%3Cpath d='M256 168c-38-22-92-26-146-8-14 5-22 17-22 32v176c0 14 13 24 27 20 45-14 93-11 133 10 4-21 4-21 8 0 40-21 88-24 133-10 14 4 27-6 27-20V192c0-15-8-27-22-32-54-18-108-14-146 8z' fill='%23ffffff'/%3E%3Cpath d='M256 182v218' stroke='%23d97706' stroke-width='14' stroke-linecap='round'/%3E%3Cpath d='M130 226c36-10 74-8 106 6M130 274c36-10 74-8 106 6M382 226c-36-10-74-8-106 6M382 274c-36-10-74-8-106 6' stroke='%23fef3c7' stroke-width='10' stroke-linecap='round'/%3E%3C/svg%3E">
+
+  <!-- 인라인 웹 앱 매니페스트 (안드로이드 '홈 화면에 추가' 시 '꿈빛' 앱 명칭 및 독립 창 실행 보장) -->
+  <link rel="manifest" id="dynamicManifestLink">
 
   <!-- Tailwind CSS & FontAwesome & SheetJS & QRCodeJS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -52,7 +74,7 @@
   <header class="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-2xs">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
       
-      <!-- 로고 및 브랜드 명칭 -->
+      <!-- 로고 및 브랜드 명칭 (펼쳐진 책 아이콘 장착) -->
       <div class="flex items-center space-x-3">
         <div class="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-lg shadow-xs shadow-amber-500/20">
           <i class="fa-solid fa-book-open-reader"></i>
@@ -60,7 +82,7 @@
         <div>
           <div class="flex items-center space-x-1.5">
             <span class="font-extrabold text-lg text-slate-900 tracking-tight">꿈빛</span>
-            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-md border border-amber-200/60 font-mono">v1.09</span>
+            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-md border border-amber-200/60 font-mono">v1.10</span>
           </div>
           <p id="topBarOrgName" class="text-xs text-slate-500 font-medium truncate max-w-[180px] sm:max-w-xs">꿈빛도서관</p>
         </div>
@@ -376,7 +398,7 @@
             </a>
           </div>
 
-          <!-- [38.2 신설] 우리 학교 봉사위원 전용 배포 센터 -->
+          <!-- 우리 학교 봉사위원 전용 배포 센터 -->
           <div id="dedicatedSchoolShareCard" class="hidden p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-50/90 via-white to-purple-50/60 border border-indigo-200 shadow-2xs space-y-3.5">
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-2.5">
@@ -477,7 +499,7 @@
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 font-mono">v1.06 가변</span>
+            <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 font-mono">v1.10 가변</span>
             <i id="accordionIcon-3" class="fa-solid fa-chevron-up text-slate-400 text-xs transition-transform duration-200"></i>
           </div>
         </button>
@@ -712,7 +734,7 @@
             </button>
           </div>
 
-          <!-- 대형 엑셀 드래그 앤 드롭 업로드 구역 (드래그앤드롭 리스너 완비) -->
+          <!-- 대형 엑셀 드래그 앤 드롭 업로드 구역 -->
           <div id="excelDropZone" ondragover="handleExcelDragOver(event)" ondragleave="handleExcelDragLeave(event)" ondrop="handleExcelDrop(event)" class="p-8 sm:p-11 border-2 border-dashed border-slate-300 hover:border-amber-500 rounded-2xl bg-white text-center space-y-3 transition-all cursor-pointer" onclick="document.getElementById('excelFileInput').click()">
             <input type="file" id="excelFileInput" accept=".xlsx, .xls" class="hidden" onchange="handleExcelUpload(event)">
             <div class="w-12 h-12 mx-auto rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl shadow-2xs">
@@ -743,7 +765,7 @@
   <div id="coverModal" onclick="if(event.target===this) closeModal('coverModal')" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
     <div id="coverCardContainer" class="bg-white w-full max-w-md rounded-3xl p-6 sm:p-8 text-slate-800 border border-slate-200 shadow-2xl relative overflow-hidden flex flex-col justify-between min-h-[480px]">
       
-      <!-- 대문 우측 상단 닫기 (X) 버튼 신설 -->
+      <!-- 대문 우측 상단 닫기 (X) 버튼 -->
       <button type="button" onclick="closeModal('coverModal')" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center text-sm transition-colors z-10" title="대문 닫기">
         <i class="fa-solid fa-xmark"></i>
       </button>
@@ -823,7 +845,7 @@
       <!-- 하단 저작권 및 관리자 통로 -->
       <div class="pt-2 flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-100">
         <div class="flex items-center space-x-1.5">
-          <span class="font-bold text-slate-600">꿈빛 v1.09</span>
+          <span class="font-bold text-slate-600">꿈빛 v1.10</span>
           <span>·</span>
           <span>© 2026 Sung soo Kim</span>
         </div>
@@ -1094,12 +1116,24 @@
           <p>꿈빛은 전국 학교 및 공공도서관 자원봉사단의 주차별 순환 배정, 원터치 출석(O/X), 자율 상호 대타 매칭 및 구글 스프레드시트 클라우드 100% 양방향 동기화를 지원하는 단일 경량 솔루션입니다.</p>
         </div>
 
+        <!-- 홈 화면 앱 설치 안내 카드 -->
+        <div class="p-3.5 bg-amber-50/70 border border-amber-200 rounded-xl space-y-1.5">
+          <h4 class="font-bold text-amber-950 text-xs flex items-center space-x-1.5">
+            <i class="fa-solid fa-mobile-screen-button text-amber-600"></i>
+            <span>스마트폰 홈 화면에 '꿈빛' 앱으로 설치하기</span>
+          </h4>
+          <p class="text-[11px] text-amber-900 leading-relaxed">
+            • <b>삼성/크롬:</b> 우측 상단 메뉴(⋮) ➔ <b>[홈 화면에 추가]</b> 또는 <b>[앱 설치]</b> 선택 시 펼쳐진 책 아이콘의 <b>[꿈빛]</b> 앱이 설치됩니다.<br>
+            • <b>아이폰(Safari):</b> 하단 공유 버튼(⎋) ➔ <b>[홈 화면에 추가]</b>를 누르면 주소창 없이 앱처럼 깔끔하게 구동됩니다.
+          </p>
+        </div>
+
         <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
           <h4 class="font-bold text-slate-800 text-xs">📜 지적재산권(IP) 및 비영리 라이선스 안내</h4>
           <p>• <b>원작자 / Copyright:</b> © 2026 <b>Sung soo Kim</b>. All Rights Reserved.</p>
           <p>• <b>라이선스 규격:</b> Open Education License (MIT License 기반). 전국 교육기관 및 공공도서관은 비영리 목적으로 본 소프트웨어를 영구히 무상 사용할 수 있습니다.</p>
           <p>• <b>법적 면책 조항:</b> 본 프로그램은 "있는 그대로" 제공되며 명시적이거나 묵시적인 어떠한 보증도 제공하지 않습니다. 각 기관의 데이터 백업과 관리에 대한 법적 책임은 해당 이용 기관에 귀속됩니다.</p>
-          <p>• <b>소프트웨어 버전:</b> 꿈빛 (Ggumbit) v1.09</p>
+          <p>• <b>소프트웨어 버전:</b> 꿈빛 (Ggumbit) v1.10</p>
         </div>
       </div>
 
@@ -1158,6 +1192,93 @@
   <!-- ============================================================= -->
   <script>
     // -------------------------------------------------------------
+    // [0] PWA 홈 화면 바로가기 & 펼쳐진 책 아이콘/매니페스트 자동 생성기
+    // -------------------------------------------------------------
+    function setupPwaHomeScreenEngine() {
+      try {
+        // 펼쳐진 책 SVG 아이콘 데이터
+        const bookSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+          <defs>
+            <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#f59e0b"/>
+              <stop offset="100%" stop-color="#d97706"/>
+            </linearGradient>
+          </defs>
+          <rect width="512" height="512" rx="128" fill="url(#bgGrad)"/>
+          <path d="M256 168c-38-22-92-26-146-8-14 5-22 17-22 32v176c0 14 13 24 27 20 45-14 93-11 133 10 4-21 4-21 8 0 40-21 88-24 133-10 14 4 27-6 27-20V192c0-15-8-27-22-32-54-18-108-14-146 8z" fill="#ffffff"/>
+          <path d="M256 182v218" stroke="#d97706" stroke-width="14" stroke-linecap="round"/>
+          <path d="M130 226c36-10 74-8 106 6M130 274c36-10 74-8 106 6M382 226c-36-10-74-8-106 6M382 274c-36-10-74-8-106 6" stroke="#fef3c7" stroke-width="10" stroke-linecap="round"/>
+        </svg>`;
+
+        const svgDataUri = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(bookSvg);
+
+        // 캔버스 기반 고해상도(192x192, 512x512) PNG 즉석 생성
+        const canvas192 = document.createElement('canvas');
+        canvas192.width = 192;
+        canvas192.height = 192;
+        const ctx192 = canvas192.getContext('2d');
+
+        const canvas512 = document.createElement('canvas');
+        canvas512.width = 512;
+        canvas512.height = 512;
+        const ctx512 = canvas512.getContext('2d');
+
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = function() {
+          ctx192.drawImage(img, 0, 0, 192, 192);
+          ctx512.drawImage(img, 0, 0, 512, 512);
+
+          let png192 = svgDataUri;
+          let png512 = svgDataUri;
+          try {
+            png192 = canvas192.toDataURL('image/png');
+            png512 = canvas512.toDataURL('image/png');
+          } catch (e) {}
+
+          // iOS 사파리 터치 아이콘에 PNG 적용
+          const appleIcon = document.getElementById('dynamicAppleIcon');
+          if (appleIcon && png192) appleIcon.href = png192;
+
+          // 인라인 웹 앱 매니페스트 동적 조립 (앱 이름: [꿈빛], 아이콘: [펼쳐진 책])
+          const manifestObj = {
+            "name": "꿈빛 - 도서관 봉사인력 관리 시스템",
+            "short_name": "꿈빛",
+            "description": "도서관 봉사인력 자원관리 시스템",
+            "start_url": window.location.href,
+            "display": "standalone",
+            "background_color": "#ffffff",
+            "theme_color": "#f59e0b",
+            "orientation": "portrait-primary",
+            "icons": [
+              {
+                "src": png192,
+                "sizes": "192x192",
+                "type": "image/png",
+                "purpose": "any maskable"
+              },
+              {
+                "src": png512,
+                "sizes": "512x512",
+                "type": "image/png",
+                "purpose": "any maskable"
+              }
+            ]
+          };
+
+          const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: 'application/manifest+json' });
+          const manifestUrl = URL.createObjectURL(manifestBlob);
+          const manifestLink = document.getElementById('dynamicManifestLink');
+          if (manifestLink) manifestLink.href = manifestUrl;
+        };
+        img.src = svgDataUri;
+
+      } catch (err) {
+        console.warn('PWA 아이콘 엔진 경미 예외:', err);
+      }
+    }
+
+    // -------------------------------------------------------------
     // [1] 전역 시스템 상태 및 로컬 스토리지 안전망
     // -------------------------------------------------------------
     const safeStorage = {
@@ -1174,7 +1295,7 @@
     let gasApiUrl = '';
     let connectedSheetUrl = '';
 
-    // 운영 파라미터 (v1.02 가변 엔진)
+    // 운영 파라미터 (v1.10 가변 엔진)
     let cycleType = '2주';
     let slotCapacity = 2; // N인 무제한 직접 입력
     let operatingDays = ['월', '화', '수', '목', '금'];
@@ -1358,7 +1479,7 @@ ${url}
           </div>
 
           <div style="font-size: 11px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 12px;">
-            꿈빛 (Ggumbit) v1.09 도서관 봉사인력 관리 시스템 · (c) 2026 Sung soo Kim
+            꿈빛 (Ggumbit) v1.10 도서관 봉사인력 관리 시스템 · (c) 2026 Sung soo Kim
           </div>
         </div>
       `;
@@ -1375,7 +1496,6 @@ ${url}
           if (decoded && decoded.startsWith('https://script.google.com')) {
             gasApiUrl = decoded;
             safeStorage.setItem('lib_gas_url', gasApiUrl);
-            // 주소창에서 긴 파라미터를 깔끔하게 제거(Clean URL)
             try {
               const cleanUrl = window.location.origin + window.location.pathname;
               window.history.replaceState({}, document.title, cleanUrl);
@@ -1464,7 +1584,6 @@ ${url}
       const bWeekNum = parseInt(bWeek, 10) || 1;
       const cycleLimit = (cycle === '1달') ? 4 : 2;
 
-      // 주 단위 차이 계산 (월요일 기준 정렬)
       const targetDay = (targetDate.getDay() + 6) % 7;
       const baseDay = (bDate.getDay() + 6) % 7;
       const targetMonday = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate() - targetDay);
@@ -1597,7 +1716,6 @@ ${url}
       safeStorage.setItem('lib_my_name', name);
       safeStorage.setItem('lib_my_phone4', phone4);
 
-      // 명부에 자동 등록 및 시트 연동
       const exists = membersData.find(m => m.name === name);
       if (!exists) {
         membersData.push({ id: membersData.length + 1, name: name, phone: `010-****-${phone4}` });
@@ -1814,7 +1932,7 @@ ${url}
                       </div>
                     </div>
 
-                    <!-- 하단 액션 구역 (관리자 직권 vs 봉사자 자율) -->
+                    <!-- 하단 액션 구역 -->
                     ${isAdminLoggedIn ? `
                       <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
                         <div class="flex items-center space-x-1 flex-grow">
@@ -2221,7 +2339,6 @@ ${url}
         return;
       }
 
-      // 당월 배정 일자 수집
       const curYear = new Date().getFullYear();
       const curMonth = new Date().getMonth() + 1;
       const lastDate = new Date(curYear, curMonth, 0).getDate();
@@ -2273,7 +2390,6 @@ ${url}
         }
       }
 
-      // 미니 달력 그리드 렌더링
       if (miniBody) {
         const firstDayIdx = new Date(curYear, curMonth - 1, 1).getDay();
         let mHtml = '';
@@ -2308,7 +2424,6 @@ ${url}
       myVolunteerName = newName;
       safeStorage.setItem('lib_my_name', newName);
 
-      // membersData 동기화
       const target = membersData.find(m => m.name === prevName) || membersData.find(m => m.name === newName);
       if (target) {
         target.name = newName;
@@ -2396,7 +2511,6 @@ ${url}
         slot.startTime = normalizeTimeStr(newStart);
         slot.endTime = normalizeTimeStr(newEnd);
 
-        // rosterData 내 기존 시간대 문자열 자동 승계
         rosterData.forEach(r => {
           if (normalizeTimeStr(r.time) === normalizeTimeStr(oldStart)) {
             r.time = slot.startTime;
@@ -2795,7 +2909,6 @@ ${url}
       showToast(`표준 ${cap}인 정원 엑셀 양식이 다운로드되었습니다.`);
     }
 
-    // 드래그 앤 드롭 시각 피드백 & 이벤트 제어기
     function handleExcelDragOver(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -2829,7 +2942,6 @@ ${url}
       event.target.value = '';
     }
 
-    // 엑셀 파서 & 원자적 구글 시트 2개 탭 일괄 덮어쓰기 엔진
     function processExcelFile(file) {
       if (!file) return;
 
@@ -2842,7 +2954,6 @@ ${url}
           let parsedMemberCount = 0;
           let parsedRosterCount = 0;
 
-          // 스마트 시트 탐색기 (공백 무시 및 유연한 키워드 매칭)
           const sheetNames = workbook.SheetNames || [];
           const findSheet = (keywords, fallbackIdx) => {
             for (let name of sheetNames) {
@@ -2856,7 +2967,6 @@ ${url}
           const infoSheet = findSheet(['봉사자정보', '정보', '명부', '회원'], 0);
           const rosterSheet = findSheet(['봉사자순번', '순번', '배정'], 1);
 
-          // 1. [봉사자 정보] 파싱
           if (infoSheet) {
             const infoRows = XLSX.utils.sheet_to_json(infoSheet, { header: 1 });
             if (infoRows && infoRows.length > 1) {
@@ -2878,7 +2988,6 @@ ${url}
             }
           }
 
-          // 2. [봉사자 순번] 파싱 (N인 가변 열 자동 감지)
           if (rosterSheet) {
             const rosterRows = XLSX.utils.sheet_to_json(rosterSheet, { header: 1 });
             if (rosterRows && rosterRows.length > 1) {
@@ -2952,8 +3061,6 @@ ${url}
           }
 
           renderAllViews();
-
-          // 3. 구글 시트 단일 트랜잭션 일괄 동기화 실행 (충돌 0% 보장)
           syncExcelBatchToGas(membersData, rosterData, slotCapacity, parsedMemberCount, parsedRosterCount);
 
         } catch (err) {
@@ -3127,9 +3234,7 @@ ${url}
       const firstDate = new Date(calendarYear, calendarMonth - 1, 1);
       const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
 
-      // 1. 목록형 배정표 행(scheduleRows) 생성
       const scheduleRows = [];
-      // 2. 달력형 격자 행(gridRows) 생성
       const gridRows = [];
       let currentWeekGrid = ['', '', '', '', '', '', ''];
 
@@ -3331,7 +3436,7 @@ ${url}
               <span>사서교사 확인: __________________ (서명)</span>
             </div>
           </div>
-          <p style="text-align: right; font-size: 10px; color: #94a3b8; margin-top: 24px;">꿈빛 (Ggumbit) v1.09 · Author Sung soo Kim</p>
+          <p style="text-align: right; font-size: 10px; color: #94a3b8; margin-top: 24px;">꿈빛 (Ggumbit) v1.10 · Author Sung soo Kim</p>
         </div>
       `;
 
@@ -3391,7 +3496,6 @@ ${url}
       const sAtt = safeStorage.getItem('lib_cache_attendance');
       if (sAtt) { try { attendanceLog = JSON.parse(sAtt); } catch (e) {} }
 
-      // 기본 데모 명부 및 순번 Fallback
       if (membersData.length === 0) {
         membersData = [
           { id: 1, name: '김도서', phone: '010-1234-5678' },
@@ -3421,7 +3525,6 @@ ${url}
         }
       }
 
-      // UI 요소 반영
       document.getElementById('topBarOrgName').textContent = orgName;
       document.getElementById('coverOrgName').textContent = orgName;
 
@@ -3452,6 +3555,7 @@ ${url}
     // [19] 시스템 초기 기동 (window.onload)
     // -------------------------------------------------------------
     window.onload = function() {
+      setupPwaHomeScreenEngine();
       initUrlParameters();
       loadStoredCache();
       currentDateStr = formatDate(new Date());
