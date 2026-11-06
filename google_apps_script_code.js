@@ -2,7 +2,7 @@
  * ==============================================================================
  * [프로그램 정보]
  * Project: 꿈빛 (Ggumbit) - 도서관 봉사인력 자원관리 시스템
- * Version: Google Apps Script 클라우드 백엔드 엔진 v1.01
+ * Version: Google Apps Script 클라우드 백엔드 엔진 v1.03
  * Author / Copyright: (c) 2026 Sung soo Kim. All Rights Reserved.
  * License: Open Education License (Based on MIT License)
  * ==============================================================================
@@ -261,12 +261,14 @@ function doPost(e) {
         .setMimeType(ContentService.MimeType.JSON);
     }
 
-    // 7. 월별 배정표 및 달력 듀얼 탭 원격 생성
+    // 7. 월별 배정표 및 달력 듀얼 탭 원격 생성 (세부 데이터 완전 적재)
     if (action === 'createMonthlySheet') {
       const year = parseInt(postData.year, 10);
       const month = parseInt(postData.month, 10);
       const cap = Math.max(1, parseInt(postData.slotCapacity, 10) || 2);
-      createMonthlySheet(year, month, cap);
+      const scheduleRows = postData.scheduleRows || [];
+      const gridRows = postData.gridRows || [];
+      createMonthlySheet(year, month, cap, scheduleRows, gridRows);
       return ContentService.createTextOutput(JSON.stringify({ status: 'success' }))
         .setMimeType(ContentService.MimeType.JSON);
     }
@@ -354,7 +356,7 @@ function getSystemConfig(sheet) {
     libraryName: '꿈빛도서관',
     adminName: '사서교사',
     adminId: 'admin',
-    adminPassword: 'admin',
+    adminPassword: 'admin1234',
     adminEmail: '',
     cycleType: '2주',
     slotCapacity: 2,
@@ -405,7 +407,7 @@ function setupStandardSheets(ss) {
     s1.appendRow(['libraryName', '꿈빛도서관']);
     s1.appendRow(['adminName', '사서교사']);
     s1.appendRow(['adminId', 'admin']);
-    s1.appendRow(['adminPassword', '1234']);
+    s1.appendRow(['adminPassword', 'admin1234']);
     s1.appendRow(['cycleType', '2주']);
     s1.appendRow(['slotCapacity', '2']);
     s1.appendRow(['operatingDays', '["월","화","수","목","금"]']);
@@ -456,7 +458,7 @@ function resetNewSemesterSheets(ss) {
 // -------------------------------------------------------------
 // [6] 월별 배정표 및 7열 격자 달력 탭 동시 생성 엔진
 // -------------------------------------------------------------
-function createMonthlySheet(year, month, slotCapacity) {
+function createMonthlySheet(year, month, slotCapacity, scheduleRows, gridRows) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const cap = slotCapacity || 2;
   const sheetName = year + '-' + String(month).padStart(2, '0') + ' 봉사배정표';
@@ -474,13 +476,27 @@ function createMonthlySheet(year, month, slotCapacity) {
   sheet.getRange(1, 1, 1, header.length)
     .setBackground('#059669')
     .setFontColor('#ffffff')
-    .setFontWeight('bold');
+    .setFontWeight('bold')
+    .setHorizontalAlignment('center');
+
+  // 세부 배정 데이터 적재
+  if (scheduleRows && scheduleRows.length > 0) {
+    const dataRange = sheet.getRange(2, 1, scheduleRows.length, header.length);
+    dataRange.setValues(scheduleRows);
+    dataRange.setVerticalAlignment('middle');
+    sheet.getRange(2, 1, scheduleRows.length, 3).setHorizontalAlignment('center');
+  }
+
+  // 열 너비 자동 조정
+  for (let c = 1; c <= header.length; c++) {
+    sheet.autoResizeColumn(c);
+  }
 
   // 달력형 그리드 탭 동시 생성
-  createMonthlyCalendarGridSheet(ss, year, month, cap);
+  createMonthlyCalendarGridSheet(ss, year, month, cap, gridRows);
 }
 
-function createMonthlyCalendarGridSheet(ss, year, month, slotCapacity) {
+function createMonthlyCalendarGridSheet(ss, year, month, slotCapacity, gridRows) {
   const gridSheetName = year + '-' + String(month).padStart(2, '0') + ' 달력';
   let gSheet = ss.getSheetByName(gridSheetName);
   if (gSheet) ss.deleteSheet(gSheet);
@@ -493,4 +509,22 @@ function createMonthlyCalendarGridSheet(ss, year, month, slotCapacity) {
     .setFontColor('#ffffff')
     .setFontWeight('bold')
     .setHorizontalAlignment('center');
+
+  // 일요일 빨강, 토요일 파랑 헤더 강조
+  gSheet.getRange(1, 1).setBackground('#e11d48');
+  gSheet.getRange(1, 7).setBackground('#2563eb');
+
+  if (gridRows && gridRows.length > 0) {
+    const range = gSheet.getRange(2, 1, gridRows.length, 7);
+    range.setValues(gridRows);
+    range.setVerticalAlignment('top');
+    range.setWrap(true);
+    for (let r = 2; r <= gridRows.length + 1; r++) {
+      gSheet.setRowHeight(r, 85);
+    }
+  }
+
+  for (let c = 1; c <= 7; c++) {
+    gSheet.setColumnWidth(c, 135);
+  }
 }
