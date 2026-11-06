@@ -7,7 +7,7 @@
   ==============================================================================
   [프로그램 정보(Program Information)]
   Project: 꿈빛 (Ggumbit) - 도서관 봉사인력 자원관리 프로그램
-  Version: v1.07 (Universal N-Worker Engine)
+  Version: v1.09 (Dedicated Invite Link & QR Provisioning Engine)
   Author / Copyright: (c) 2026 Sung soo Kim. All Rights Reserved.
   License: Open Education License (Based on MIT License with Non-Commercial Recommendation)
   
@@ -17,12 +17,13 @@
   제공하지 않습니다. 이용 과정에서 발생하는 데이터 관리 책임은 각 이용 기관에 있습니다.
   ==============================================================================
   -->
-  <title>꿈빛 - 도서관 봉사인력 관리 시스템 v1.07</title>
+  <title>꿈빛 - 도서관 봉사인력 관리 시스템 v1.09</title>
 
-  <!-- Tailwind CSS & FontAwesome & SheetJS -->
+  <!-- Tailwind CSS & FontAwesome & SheetJS & QRCodeJS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap');
@@ -59,7 +60,7 @@
         <div>
           <div class="flex items-center space-x-1.5">
             <span class="font-extrabold text-lg text-slate-900 tracking-tight">꿈빛</span>
-            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-md border border-amber-200/60 font-mono">v1.07</span>
+            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-md border border-amber-200/60 font-mono">v1.09</span>
           </div>
           <p id="topBarOrgName" class="text-xs text-slate-500 font-medium truncate max-w-[180px] sm:max-w-xs">꿈빛도서관</p>
         </div>
@@ -373,6 +374,44 @@
             <a id="connectedSheetLink" href="#" target="_blank" class="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-bold transition-colors">
               📑 시트 새창 열기
             </a>
+          </div>
+
+          <!-- [38.2 신설] 우리 학교 봉사위원 전용 배포 센터 -->
+          <div id="dedicatedSchoolShareCard" class="hidden p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-50/90 via-white to-purple-50/60 border border-indigo-200 shadow-2xs space-y-3.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2.5">
+                <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shadow-2xs">
+                  <i class="fa-solid fa-share-nodes"></i>
+                </span>
+                <div>
+                  <h5 class="text-xs sm:text-sm font-extrabold text-indigo-950">우리 학교 봉사위원 전용 배포 센터</h5>
+                  <p class="text-[11px] text-indigo-700/80">봉사위원들이 이 링크로 접속하면 자동으로 우리 학교 시트와 연동됩니다.</p>
+                </div>
+              </div>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-800 border border-indigo-200 shrink-0">원터치 록온</span>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="block text-[11px] font-bold text-indigo-900">학교 전용 접속 URL (Base64 시트키 내장)</label>
+              <div class="flex space-x-1.5">
+                <input type="text" id="dedicatedShareUrlInput" readonly class="flex-grow p-2.5 text-xs border border-indigo-200 rounded-xl bg-white font-mono text-slate-700 select-all focus:outline-none" onclick="this.select()">
+                <button type="button" onclick="copyDedicatedUrlOnly()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-colors shrink-0 shadow-2xs flex items-center space-x-1.5">
+                  <i class="fa-regular fa-copy"></i>
+                  <span>주소 복사</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              <button type="button" onclick="copyKakaoInviteMessage()" class="p-2.5 bg-amber-400 hover:bg-amber-500 text-amber-950 rounded-xl text-xs font-bold transition-colors shadow-2xs flex items-center justify-center space-x-1.5">
+                <i class="fa-solid fa-comment"></i>
+                <span>카카오톡 맞춤 안내문 복사</span>
+              </button>
+              <button type="button" onclick="openQrModal()" class="p-2.5 bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-colors shadow-2xs flex items-center justify-center space-x-1.5">
+                <i class="fa-solid fa-qrcode"></i>
+                <span>도서관 비치용 QR코드 보기 / 인쇄</span>
+              </button>
+            </div>
           </div>
 
           <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between">
@@ -784,7 +823,7 @@
       <!-- 하단 저작권 및 관리자 통로 -->
       <div class="pt-2 flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-100">
         <div class="flex items-center space-x-1.5">
-          <span class="font-bold text-slate-600">꿈빛 v1.07</span>
+          <span class="font-bold text-slate-600">꿈빛 v1.09</span>
           <span>·</span>
           <span>© 2026 Sung soo Kim</span>
         </div>
@@ -1060,12 +1099,53 @@
           <p>• <b>원작자 / Copyright:</b> © 2026 <b>Sung soo Kim</b>. All Rights Reserved.</p>
           <p>• <b>라이선스 규격:</b> Open Education License (MIT License 기반). 전국 교육기관 및 공공도서관은 비영리 목적으로 본 소프트웨어를 영구히 무상 사용할 수 있습니다.</p>
           <p>• <b>법적 면책 조항:</b> 본 프로그램은 "있는 그대로" 제공되며 명시적이거나 묵시적인 어떠한 보증도 제공하지 않습니다. 각 기관의 데이터 백업과 관리에 대한 법적 책임은 해당 이용 기관에 귀속됩니다.</p>
-          <p>• <b>소프트웨어 버전:</b> 꿈빛 (Ggumbit) v1.07</p>
+          <p>• <b>소프트웨어 버전:</b> 꿈빛 (Ggumbit) v1.09</p>
         </div>
       </div>
 
       <div class="flex justify-end pt-2 border-t border-slate-100">
         <button onclick="closeModal('manualModal')" class="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold">확인 완료</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- [모달 9: 도서관 비치용 QR코드 및 안내문 인쇄] -->
+  <!-- ============================================================= -->
+  <div id="qrCodeModal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-sm rounded-2xl p-6 border border-slate-200 shadow-2xl space-y-4 text-center">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-bold text-sm text-slate-900 flex items-center space-x-1.5">
+          <i class="fa-solid fa-qrcode text-indigo-600"></i>
+          <span>도서관 비치용 QR코드</span>
+        </h3>
+        <button onclick="closeModal('qrCodeModal')" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="space-y-1 text-center">
+        <h4 id="qrModalOrgName" class="font-extrabold text-base text-slate-900">꿈빛도서관</h4>
+        <p class="text-xs text-slate-500">스마트폰 기본 카메라로 비추시면 전용 화면으로 즉시 연결됩니다.</p>
+      </div>
+
+      <!-- QR 코드 렌더링 컨테이너 -->
+      <div class="p-4 bg-white border border-slate-200 rounded-2xl inline-block shadow-inner mx-auto">
+        <div id="qrCodeDisplay" class="w-48 h-48 mx-auto flex items-center justify-center"></div>
+      </div>
+
+      <div class="text-[11px] text-slate-400 leading-tight">
+        A4 용지로 인쇄하여 도서관 출입문 또는 데스크에 비치해 두시면 학부모님들이 편리하게 참여하실 수 있습니다.
+      </div>
+
+      <div class="flex space-x-2 pt-1">
+        <button onclick="closeModal('qrCodeModal')" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors">
+          닫기
+        </button>
+        <button onclick="printQrFlyer()" class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition-colors shadow-xs flex items-center justify-center space-x-1">
+          <i class="fa-solid fa-print"></i>
+          <span>A4 안내문 인쇄</span>
+        </button>
       </div>
     </div>
   </div>
@@ -1122,6 +1202,194 @@
     // -------------------------------------------------------------
     // [2] 유틸리티 함수군
     // -------------------------------------------------------------
+    function decodeLibParam(str) {
+      if (!str) return '';
+      const s = String(str).trim();
+      if (s.startsWith('http://') || s.startsWith('https://')) {
+        return decodeURIComponent(s);
+      }
+      try {
+        const decoded = atob(s);
+        if (decoded.startsWith('http://') || decoded.startsWith('https://')) {
+          return decoded;
+        }
+      } catch (e) {}
+      try {
+        return decodeURIComponent(s);
+      } catch (e) {
+        return s;
+      }
+    }
+
+    function encodeLibParam(str) {
+      if (!str) return '';
+      try {
+        return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1)));
+      } catch (e) {
+        return encodeURIComponent(str);
+      }
+    }
+
+    // 아이프레임 제약 없이 100% 작동하는 안전 클립보드 복사 엔진
+    function copyTextToClipboard(text, successMsg) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      textarea.style.top = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+          showToast(successMsg || '클립보드에 복사되었습니다.');
+        } else {
+          throw new Error('execCommand copy failed');
+        }
+      } catch (err) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => {
+            showToast(successMsg || '클립보드에 복사되었습니다.');
+          }).catch(() => {
+            showToast('복사에 실패했습니다. 주소를 직접 선택하여 복사해 주세요.');
+          });
+        } else {
+          showToast('복사에 실패했습니다. 주소를 직접 선택하여 복사해 주세요.');
+        }
+      } finally {
+        document.body.removeChild(textarea);
+      }
+    }
+
+    function getDedicatedShareUrl() {
+      if (!gasApiUrl) return window.location.href;
+      const base = window.location.origin + window.location.pathname;
+      return `${base}?lib=${encodeLibParam(gasApiUrl)}`;
+    }
+
+    function updateDedicatedShareUI() {
+      const card = document.getElementById('dedicatedSchoolShareCard');
+      const input = document.getElementById('dedicatedShareUrlInput');
+      if (!card) return;
+
+      if (gasApiUrl) {
+        card.classList.remove('hidden');
+        if (input) input.value = getDedicatedShareUrl();
+      } else {
+        card.classList.add('hidden');
+      }
+    }
+
+    function copyDedicatedUrlOnly() {
+      const url = getDedicatedShareUrl();
+      copyTextToClipboard(url, '🔗 우리 학교 전용 접속 링크가 복사되었습니다!');
+    }
+
+    function copyKakaoInviteMessage() {
+      const url = getDedicatedShareUrl();
+      const message = `[${orgName || '꿈빛도서관'}] 학부모 자원봉사단 안내
+
+안녕하세요! 우리 도서관 봉사단 전용 모바일 시스템입니다.
+아래 링크를 터치하시면 별도의 회원가입 없이 당일 봉사 일정 확인, 간편 출석 확인(O/X), 자율 대타 요청을 바로 이용하실 수 있습니다.
+
+🔗 학교 전용 접속 링크:
+${url}
+
+※ 첫 접속 시 본인 성함과 전화번호 끝 4자리를 등록하시면 이 기기에 안전하게 저장되어 다음부터 바로 입장합니다.`;
+
+      copyTextToClipboard(message, '💬 카카오톡 전송용 맞춤 안내문이 복사되었습니다! 카톡방에 붙여넣기(Ctrl+V) 하세요.');
+    }
+
+    function openQrModal() {
+      const modalOrgName = document.getElementById('qrModalOrgName');
+      if (modalOrgName) modalOrgName.textContent = orgName || '꿈빛도서관';
+
+      const qrContainer = document.getElementById('qrCodeDisplay');
+      if (qrContainer) {
+        qrContainer.innerHTML = '';
+        const targetUrl = getDedicatedShareUrl();
+        if (typeof QRCode !== 'undefined') {
+          new QRCode(qrContainer, {
+            text: targetUrl,
+            width: 192,
+            height: 192,
+            colorDark: "#0f172a",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.M
+          });
+        } else {
+          qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=192x192&data=${encodeURIComponent(targetUrl)}" alt="QR" class="w-48 h-48 rounded-lg">`;
+        }
+      }
+      openModal('qrCodeModal');
+    }
+
+    function printQrFlyer() {
+      const printDiv = document.getElementById('printArea');
+      if (!printDiv) return;
+
+      const targetUrl = getDedicatedShareUrl();
+      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(targetUrl)}`;
+
+      printDiv.innerHTML = `
+        <div style="font-family: sans-serif; text-align: center; padding: 40px 20px; max-width: 650px; margin: 0 auto; border: 2px solid #e2e8f0; border-radius: 24px;">
+          <div style="margin-bottom: 24px;">
+            <div style="display: inline-block; padding: 8px 18px; background: #fef3c7; color: #92400e; font-weight: bold; font-size: 14px; border-radius: 9999px; margin-bottom: 12px; border: 1px solid #fde68a;">
+              ${orgName || '꿈빛도서관'} 학부모 자원봉사단
+            </div>
+            <h1 style="font-size: 26px; font-weight: 800; color: #0f172a; margin: 0 0 8px 0; letter-spacing: -0.5px;">
+              스마트폰으로 오늘의 봉사 확인하기
+            </h1>
+            <p style="font-size: 13px; color: #64748b; margin: 0;">
+              스마트폰 기본 카메라를 켜고 아래 QR코드를 비추시면 전용 화면으로 즉시 연결됩니다.
+            </p>
+          </div>
+
+          <div style="padding: 24px; background: #ffffff; border: 2px dashed #cbd5e1; border-radius: 20px; display: inline-block; margin-bottom: 24px;">
+            <img src="${qrApiUrl}" style="width: 220px; height: 220px; display: block; margin: 0 auto;">
+          </div>
+
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px; text-align: left; font-size: 12px; color: #334155; margin-bottom: 20px; line-height: 1.7;">
+            <div style="font-weight: bold; margin-bottom: 6px; color: #0f172a;">📱 간편 이용 방법:</div>
+            <div>1. 스마트폰 카메라를 켜고 QR코드를 비춥니다.</div>
+            <div>2. 화면에 나타나는 안내 링크를 터치하여 웹사이트로 이동합니다.</div>
+            <div>3. 성함 확인 후 오늘의 봉사 일정 확인 및 간편 출석체크(O/X)를 진행하세요.</div>
+          </div>
+
+          <div style="font-size: 11px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 12px;">
+            꿈빛 (Ggumbit) v1.09 도서관 봉사인력 관리 시스템 · (c) 2026 Sung soo Kim
+          </div>
+        </div>
+      `;
+
+      window.print();
+    }
+
+    function initUrlParameters() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const libParam = urlParams.get('lib') || urlParams.get('gas');
+        if (libParam) {
+          const decoded = decodeLibParam(libParam);
+          if (decoded && decoded.startsWith('https://script.google.com')) {
+            gasApiUrl = decoded;
+            safeStorage.setItem('lib_gas_url', gasApiUrl);
+            // 주소창에서 긴 파라미터를 깔끔하게 제거(Clean URL)
+            try {
+              const cleanUrl = window.location.origin + window.location.pathname;
+              window.history.replaceState({}, document.title, cleanUrl);
+            } catch (e) {}
+            setTimeout(() => {
+              showToast('🔗 학교 전용 도서관 구글 시트와 자동 연동되었습니다!');
+            }, 500);
+          }
+        }
+      } catch (err) {
+        console.warn('URL 파라미터 파싱 경미 오류:', err);
+      }
+    }
+
     function formatDate(d) {
       const y = d.getFullYear();
       const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -2800,6 +3068,8 @@
       card.classList.remove('hidden');
       if (link) link.href = connectedSheetUrl;
       if (nameEl) nameEl.textContent = `연결됨: ${orgName || '도서관'} 스프레드시트`;
+
+      updateDedicatedShareUI();
     }
 
     function syncMembersToGas(mList) {
@@ -2960,9 +3230,7 @@
 
     function copyAppsScriptCode() {
       const codeSnippet = `// 구글 스프레드시트 확장프로그램 > Apps Script에 복사할 백엔드 코드\n// 꿈빛 v1.05 공식 엔진`;
-      navigator.clipboard.writeText(codeSnippet).then(() => {
-        showToast('📋 Apps Script 코드가 클립보드에 복사되었습니다.');
-      });
+      copyTextToClipboard(codeSnippet, '📋 Apps Script 코드가 클립보드에 복사되었습니다.');
     }
 
     // -------------------------------------------------------------
@@ -3063,7 +3331,7 @@
               <span>사서교사 확인: __________________ (서명)</span>
             </div>
           </div>
-          <p style="text-align: right; font-size: 10px; color: #94a3b8; margin-top: 24px;">꿈빛 (Ggumbit) v1.07 · Author Sung soo Kim</p>
+          <p style="text-align: right; font-size: 10px; color: #94a3b8; margin-top: 24px;">꿈빛 (Ggumbit) v1.09 · Author Sung soo Kim</p>
         </div>
       `;
 
@@ -3177,12 +3445,14 @@
       });
 
       if (connectedSheetUrl) updateConnectedSheetUI();
+      if (gasApiUrl) updateDedicatedShareUI();
     }
 
     // -------------------------------------------------------------
     // [19] 시스템 초기 기동 (window.onload)
     // -------------------------------------------------------------
     window.onload = function() {
+      initUrlParameters();
       loadStoredCache();
       currentDateStr = formatDate(new Date());
 
