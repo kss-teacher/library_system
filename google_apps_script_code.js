@@ -2,7 +2,7 @@
  * ==============================================================================
  * [프로그램 정보]
  * Project: 꿈빛 (Ggumbit) - 도서관 봉사인력 자원관리 시스템
- * Version: Google Apps Script 클라우드 백엔드 엔진 v1.03
+ * Version: Google Apps Script 클라우드 백엔드 엔진 v1.04
  * Author / Copyright: (c) 2026 Sung soo Kim. All Rights Reserved.
  * License: Open Education License (Based on MIT License)
  * ==============================================================================
@@ -190,6 +190,57 @@ function doPost(e) {
 
       return ContentService.createTextOutput(JSON.stringify({ status: 'success' }))
         .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // 2-1. 엑셀 일괄 동기화 (명부 + 순번 2개 탭 원자적 덮어쓰기 & LockService 완비)
+    if (action === 'saveExcelBatch') {
+      const lock = LockService.getScriptLock();
+      try {
+        lock.waitLock(15000);
+
+        // 1) 봉사자 정보 탭 덮어쓰기
+        const memberSheet = ss.getSheetByName('봉사자 정보') || ss.insertSheet('봉사자 정보');
+        const members = postData.members || [];
+        memberSheet.clearContents();
+        memberSheet.appendRow(['순번', '이름', '연락처']);
+        const mRows = members.map((m, idx) => [idx + 1, m.name || '', m.phone || '']);
+        if (mRows.length > 0) {
+          memberSheet.getRange(2, 1, mRows.length, 3).setValues(mRows);
+        }
+
+        // 2) 봉사자 순번 탭 덮어쓰기 (N인 가변 열 동적 구성)
+        const rosterSheet = ss.getSheetByName('봉사자 순번') || ss.insertSheet('봉사자 순번');
+        const roster = postData.roster || [];
+        const cap = Math.max(1, parseInt(postData.slotCapacity, 10) || 2);
+
+        rosterSheet.clearContents();
+        const header = ['순번', '주차', '요일', '시간대'];
+        for (let r = 1; r <= cap; r++) {
+          header.push(r === 1 ? '봉사위원 1 (정)' : (r === 2 ? '봉사위원 2 (부)' : '봉사위원 ' + r));
+        }
+        rosterSheet.appendRow(header);
+
+        const rRows = roster.map((r, idx) => {
+          const row = [idx + 1, r.week + '주차', r.day, normalizeTimeStr(r.time)];
+          for (let i = 1; i <= cap; i++) {
+            row.push(r['name' + i] || (i === 1 ? r.name1 : (i === 2 ? r.name2 : '')) || '');
+          }
+          return row;
+        });
+
+        if (rRows.length > 0) {
+          rosterSheet.getRange(2, 1, rRows.length, header.length).setValues(rRows);
+        }
+
+        return ContentService.createTextOutput(JSON.stringify({ status: 'success', message: 'excel_batch_saved' }))
+          .setMimeType(ContentService.MimeType.JSON);
+
+      } catch (err) {
+        return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: err.toString() }))
+          .setMimeType(ContentService.MimeType.JSON);
+      } finally {
+        lock.releaseLock();
+      }
     }
 
     // 3. 봉사위원 명부 저장
