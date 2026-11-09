@@ -12,8 +12,8 @@
   <!--
   ==============================================================================
   [프로그램 정보(Program Information)]
-  Project: 꿈빛 (Ggumbit) - 도서관 봉사인력 자원관리 프로그램
-  Version: v1.16 (대문 상시 가동, 관리자 전용 시트 생성 가드, 월별 달력 데이터 완비)
+  Project: 꿈빛 (Ggumbit) - 도서관 봉사인력 자원관리 시스템
+  Version: v1.17 (홈 화면 앱 설치 엔진, PWA 자가치유 Auto-Healing, 대문 무결성 보존)
   Author / Copyright: (c) 2026 Sung soo Kim. All Rights Reserved.
   License: Open Education License (Based on MIT License with Non-Commercial Recommendation)
   
@@ -23,12 +23,12 @@
   제공하지 않습니다. 이용 과정에서 발생하는 데이터 관리 책임은 각 이용 기관에 있습니다.
   ==============================================================================
   -->
-  <title>꿈빛 - 도서관 봉사인력 관리 시스템 v1.16</title>
+  <title>꿈빛 - 도서관 봉사인력 관리 시스템 v1.17</title>
 
-  <!-- PWA Web App Manifest (Data URI) -->
-  <link rel="manifest" href="data:application/manifest+json;utf-8,%7B%22name%22%3A%22%EA%BF%88%EB%B9%9B%22%2C%22short_name%22%3A%22%EA%BF%88%EB%B9%9B%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23ffffff%22%2C%22theme_color%22%3A%22%23f59e0b%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%3Butf8%2C%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20192%20192'%3E%3Crect%20width%3D'192'%20height%3D'192'%20rx%3D'42'%20fill%3D'%23f59e0b'%2F%3E%3Cpath%20d%3D'M44%2064c14-8%2034-8%2052%204v72c-18-12-38-12-52-4V64zm104%200c-14-8-34-8-52%204v72c18-12%2038-12%2052-4V64z'%20fill%3D'%23ffffff'%2F%3E%3C%2Fsvg%3E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+  <!-- PWA Web App Manifest (초기 기본값 및 동적 자가치유 교체 타겟) -->
+  <link id="pwaManifestLink" rel="manifest" href="data:application/manifest+json;utf-8,%7B%22name%22%3A%22%EA%BF%88%EB%B9%9B%22%2C%22short_name%22%3A%22%EA%BF%88%EB%B9%9B%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23ffffff%22%2C%22theme_color%22%3A%22%23f59e0b%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%3Butf8%2C%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20192%20192'%3E%3Crect%20width%3D'192'%20height%3D'192'%20rx%3D'42'%20fill%3D'%23f59e0b'%2F%3E%3Cpath%20d%3D'M44%2064c14-8%2034-8%2052%204v72c-18-12-38-12-52-4V64zm104%200c-14-8-34-8-52%204v72c18-12%2038-12%2052-4V64z'%20fill%3D'%23ffffff'%2F%3E%3C%2Fsvg%3E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
 
-  <!-- iOS PWA Touch Icon -->
+  <!-- iOS PWA Touch Icon (펼쳐진 책 아이콘) -->
   <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%23f59e0b'/><path d='M40 60c14-8 34-8 50 4v68c-16-12-36-12-50-4V60zm100 0c-14-8-34-8-50 4v68c16-12 36-12 50-4V60z' fill='%23ffffff'/></svg>">
 
   <!-- Tailwind CSS CDN -->
@@ -68,9 +68,9 @@
         <div>
           <div class="flex items-center space-x-1.5">
             <span class="font-extrabold text-lg text-slate-900 tracking-tight">꿈빛</span>
-            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-md border border-amber-200/60 font-mono">v1.16</span>
+            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-md border border-amber-200/60 font-mono">v1.17</span>
           </div>
-          <p id="topBarOrgName" class="text-xs text-slate-500 font-medium truncate max-w-[150px] sm:max-w-xs">꿈빛도서관</p>
+          <p id="topBarOrgName" class="text-xs text-slate-500 font-medium truncate max-w-[140px] sm:max-w-xs">꿈빛도서관</p>
         </div>
       </div>
 
@@ -148,6 +148,13 @@
     <!-- 1. [당일 현황] 탭 콘텐츠 (기본 뷰) -->
     <!-- ----------------------------------------------------------- -->
     <div id="tabContent-today" class="space-y-4">
+
+      <!-- ========================================================= -->
+      <!-- [신설: 스마트폰 홈 화면 앱 설치 스마트 반응형 배너] -->
+      <!-- ========================================================= -->
+      <div id="pwaInstallBanner" class="hidden rounded-2xl border p-4 sm:p-5 shadow-xs transition-all">
+        <!-- renderPwaInstallBanner() 동적 렌더링 -->
+      </div>
       
       <!-- 상단 날짜 이동 및 순번 주차 안내 바 -->
       <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-3">
@@ -301,9 +308,7 @@
     <!-- ----------------------------------------------------------- -->
     <div id="tabContent-admin" class="hidden space-y-4">
 
-      <!-- ========================================================= -->
       <!-- 아코디언 1: 1. 구글 시트 연동 -->
-      <!-- ========================================================= -->
       <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden transition-all">
         <button type="button" onclick="toggleAdminSection(1)" class="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/70 transition-colors">
           <div class="flex items-center space-x-3">
@@ -321,7 +326,6 @@
 
         <div id="accordionBody-1" class="hidden p-5 border-t border-slate-100 space-y-5 bg-slate-50/30">
           
-          <!-- 원스톱 단계별 가이드 배너 -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <a href="https://sheets.new" target="_blank" class="p-3 bg-white hover:bg-emerald-50/50 border border-slate-200 rounded-xl text-left transition-colors flex items-center space-x-3 group">
               <span class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold shrink-0">01</span>
@@ -346,7 +350,6 @@
             </button>
           </div>
 
-          <!-- URL 입력 필드 및 연동 버튼 -->
           <div class="space-y-2">
             <label class="block text-xs font-bold text-slate-700">STEP 04. Apps Script 웹 앱 URL (/exec)</label>
             <div class="flex space-x-2">
@@ -357,7 +360,7 @@
             </div>
           </div>
 
-          <!-- 연결된 구글 시트 카드: [시트 새창 열기] + [5대 탭 자동 구성] 나란히 배치 -->
+          <!-- 연결된 구글 시트 카드: [시트 새창 열기] + [5대 탭 자동 구성] -->
           <div id="connectedSheetCard" class="hidden p-3.5 rounded-xl bg-white border border-emerald-200 flex flex-wrap items-center justify-between gap-2">
             <div class="flex items-center space-x-2">
               <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -451,9 +454,7 @@
         </div>
       </div>
 
-      <!-- ========================================================= -->
       <!-- 아코디언 2: 2. 계정 관리 -->
-      <!-- ========================================================= -->
       <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden transition-all">
         <button type="button" onclick="toggleAdminSection(2)" class="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/70 transition-colors">
           <div class="flex items-center space-x-3">
@@ -491,9 +492,7 @@
         </div>
       </div>
 
-      <!-- ========================================================= -->
       <!-- 아코디언 3: 3. 기본 설정 (기본 열림) -->
-      <!-- ========================================================= -->
       <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden transition-all">
         <button type="button" onclick="toggleAdminSection(3)" class="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/70 transition-colors">
           <div class="flex items-center space-x-3">
@@ -504,14 +503,13 @@
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 font-mono">v1.16 가변</span>
+            <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 font-mono">v1.17 가변</span>
             <i id="accordionIcon-3" class="fa-solid fa-chevron-up text-slate-400 text-xs transition-transform duration-200"></i>
           </div>
         </button>
 
         <div id="accordionBody-3" class="p-5 border-t border-slate-100 space-y-5 bg-slate-50/30">
           
-          <!-- 기본 명칭, 순환 주기, 슬롯당 정원 -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
             <div class="space-y-1.5">
               <label class="block text-xs font-bold text-slate-700">도서관 공식 명칭</label>
@@ -539,7 +537,6 @@
             </div>
           </div>
 
-          <!-- 정기 운영 요일 선택 및 공휴일 정책 패널 -->
           <div class="p-4 rounded-xl bg-white border border-slate-200 space-y-3">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
               <label class="block text-xs font-bold text-slate-700">정기 운영 요일 선택 (체크된 요일에만 슬롯 생성)</label>
@@ -581,7 +578,7 @@
             </div>
           </div>
 
-          <!-- 운영 시간 설정 (가변 타임슬롯 빌더) -->
+          <!-- 운영 시간 설정 -->
           <div class="p-4 rounded-xl bg-white border border-slate-200 space-y-3">
             <div class="flex items-center justify-between">
               <div>
@@ -594,7 +591,6 @@
               </button>
             </div>
 
-            <!-- 타임슬롯 테이블 -->
             <div class="overflow-x-auto border border-slate-200 rounded-xl bg-white">
               <table class="w-full text-left text-xs text-slate-700">
                 <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
@@ -607,12 +603,11 @@
                   </tr>
                 </thead>
                 <tbody id="cfgTimeSlotsTableBody" class="divide-y divide-slate-100">
-                  <!-- renderTimeSlotsManager() 동적 렌더링 -->
+                  <!-- renderTimeSlotsManager() -->
                 </tbody>
               </table>
             </div>
 
-            <!-- 새 시간대 추가 인라인 폼 -->
             <div id="cfgNewTimeSlotForm" class="hidden p-3 rounded-xl bg-amber-50/60 border border-amber-200 space-y-2">
               <div class="text-xs font-bold text-amber-900 flex items-center space-x-1">
                 <i class="fa-solid fa-clock"></i>
@@ -636,7 +631,7 @@
             </div>
           </div>
 
-          <!-- 순번 설정 (주차 순환 기준 캘리브레이션) -->
+          <!-- 순번 설정 -->
           <div class="p-4 rounded-xl bg-white border border-slate-200 space-y-3">
             <div class="flex items-center justify-between">
               <h5 class="text-xs font-bold text-slate-800">순번 설정 (주차 기준선 정렬)</h5>
@@ -662,7 +657,6 @@
             <p id="cycleCalibrationPreviewText" class="text-[11px] text-slate-500">💡 기준일자가 속한 주를 지정한 주차로 묶어 연중 자동 순환합니다.</p>
           </div>
 
-          <!-- 기본 설정 저장 버튼 -->
           <div class="flex justify-end pt-2">
             <button type="button" onclick="saveBasicSettingsFromUI()" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs transition-colors">
               💾 기본 설정 저장
@@ -672,9 +666,7 @@
         </div>
       </div>
 
-      <!-- ========================================================= -->
       <!-- 아코디언 4: 4. 봉사단 인원 관리 -->
-      <!-- ========================================================= -->
       <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden transition-all">
         <button type="button" onclick="toggleAdminSection(4)" class="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-slate-50/70 transition-colors">
           <div class="flex items-center space-x-3">
@@ -692,7 +684,6 @@
 
         <div id="accordionBody-4" class="hidden p-5 border-t border-slate-100 space-y-5 bg-slate-50/30">
           
-          <!-- 3개 메뉴: 1.명부 관리, 2.봉사 일정 배정, 3.엑셀 양식 다운로드 -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <button type="button" onclick="openModal('membersModal')" class="p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-left transition-colors flex items-start space-x-3 group">
               <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 group-hover:bg-amber-100 flex items-center justify-center text-lg shrink-0 transition-colors">
@@ -728,7 +719,6 @@
             </button>
           </div>
 
-          <!-- 대형 엑셀 파일 드래그 앤 드롭 업로드 구역 -->
           <div id="excelDropTarget" onclick="document.getElementById('excelFileInput').click()" class="border-2 border-dashed border-amber-300 hover:border-amber-500 bg-amber-50/30 hover:bg-amber-50/70 rounded-2xl p-8 sm:p-11 text-center cursor-pointer transition-all space-y-3">
             <input type="file" id="excelFileInput" accept=".xlsx, .xls" class="hidden" onchange="handleExcelUpload(this)">
             <div class="w-14 h-14 mx-auto rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-2xl shadow-xs">
@@ -763,13 +753,13 @@
         <p>• <b>원작자 / Copyright:</b> © 2026 <b>Sung soo Kim</b>. All Rights Reserved.</p>
         <p>• <b>라이선스 규격:</b> Open Education License (MIT License 기반). 전국 교육기관 및 공공도서관은 비영리 목적으로 본 소프트웨어를 영구히 무상 사용할 수 있습니다.</p>
         <p>• <b>법적 면책 조항:</b> 본 프로그램은 "있는 그대로" 제공되며 명시적이거나 묵시적인 어떠한 보증도 제공하지 않습니다. 각 기관의 데이터 백업과 관리에 대한 법적 책임은 해당 이용 기관에 귀속됩니다.</p>
-        <p>• <b>소프트웨어 버전:</b> 꿈빛 (Ggumbit) v1.16</p>
+        <p>• <b>소프트웨어 버전:</b> 꿈빛 (Ggumbit) v1.17</p>
       </div>
     </details>
   </footer>
 
   <!-- ============================================================= -->
-  <!-- [모달 1: 표지 (웰컴 게이트) - 화이트 미니멀] -->
+  <!-- [모달 1: 표지 (웰컴 게이트) - 화이트 미니멀 최우선 보존] -->
   <!-- ============================================================= -->
   <div id="coverModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
     <div id="coverCardContainer" class="bg-white w-full max-w-md rounded-3xl p-6 sm:p-8 text-slate-800 border border-slate-200 shadow-2xl relative overflow-hidden flex flex-col justify-between min-h-[480px]">
@@ -843,7 +833,7 @@
       <!-- 하단 저작권 및 관리자 통로 -->
       <div class="pt-2 flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-100">
         <div class="flex items-center space-x-1.5">
-          <span class="font-bold text-slate-600">꿈빛 v1.16</span>
+          <span class="font-bold text-slate-600">꿈빛 v1.17</span>
           <span>·</span>
           <span>© 2026 Sung soo Kim</span>
         </div>
@@ -988,7 +978,6 @@
         </button>
       </div>
 
-      <!-- 새 위원 등록 폼 -->
       <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
         <div class="text-xs font-bold text-slate-700">새 봉사위원 등록</div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1002,7 +991,6 @@
         </div>
       </div>
 
-      <!-- 위원 목록 테이블 -->
       <div class="flex-grow overflow-y-auto border border-slate-200 rounded-xl">
         <table class="w-full text-left text-xs text-slate-700">
           <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold sticky top-0">
@@ -1047,17 +1035,13 @@
         </button>
       </div>
 
-      <!-- 주차 선택 탭 & 안내 -->
       <div class="flex items-center justify-between flex-wrap gap-2 pt-1">
-        <div id="scheduleAssignWeekTabs" class="flex items-center space-x-1.5">
-          <!-- 동적 주차 탭 버튼 (1주차, 2주차...) -->
-        </div>
+        <div id="scheduleAssignWeekTabs" class="flex items-center space-x-1.5"></div>
         <span id="scheduleAssignCycleInfo" class="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
           주기 로딩 중...
         </span>
       </div>
 
-      <!-- 배정 테이블 영역 -->
       <div class="flex-grow overflow-y-auto border border-slate-200 rounded-xl">
         <table class="w-full text-left text-xs text-slate-700">
           <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold sticky top-0 z-10">
@@ -1074,7 +1058,6 @@
         </table>
       </div>
 
-      <!-- 하단 버튼 -->
       <div class="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
         <span class="text-slate-400">※ 변경 사항은 상세 순번표와 구글 시트에 실시간 반영됩니다.</span>
         <button type="button" onclick="closeModal('scheduleAssignmentModal')" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold shadow-xs transition-colors">
@@ -1200,19 +1183,17 @@
       </div>
 
       <div class="flex-grow overflow-y-auto space-y-3.5 text-xs leading-relaxed text-slate-600 pr-1">
-        <!-- 모바일 앱 설치 안내 카드 -->
         <div class="p-3.5 bg-amber-50/70 border border-amber-200 rounded-xl space-y-1.5">
           <h4 class="font-bold text-amber-950 text-xs flex items-center space-x-1.5">
             <i class="fa-solid fa-mobile-screen-button text-amber-600"></i>
             <span>스마트폰 홈 화면에 '꿈빛' 앱으로 설치하기</span>
           </h4>
           <p class="text-[11px] text-amber-900 leading-relaxed">
-            • <b>삼성 인터넷 / 크롬:</b> 우측 상단 메뉴(⋮) ➔ <b>[홈 화면에 추가]</b> 또는 <b>[앱 설치]</b> 선택 시 펼쳐진 책 아이콘의 <b>[꿈빛]</b> 앱이 설치됩니다.<br>
-            • <b>아이폰 (Safari):</b> 하단 공유 버튼(⎋) ➔ <b>[홈 화면에 추가]</b>를 누르면 주소창 없이 앱처럼 구동됩니다.
+            • <b>안드로이드 (크롬/삼성인터넷):</b> 화면 상단의 <b>[📲 지금 홈 화면에 앱 추가하기]</b> 버튼을 누르면 원클릭으로 설치됩니다.<br>
+            • <b>아이폰 (Safari):</b> 하단 공유 버튼(⎋) ➔ <b>[홈 화면에 추가]</b>를 누르면 주소창 없이 진짜 앱처럼 구동됩니다.
           </p>
         </div>
 
-        <!-- 5단계 연동 가이드 요약 -->
         <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
           <h4 class="font-bold text-slate-800 text-xs">🧭 구글 시트 초기 연동 5단계 요약</h4>
           <ol class="list-decimal list-inside space-y-1 text-[11px] text-slate-600">
@@ -1229,13 +1210,54 @@
           <p>• <b>원작자 / Copyright:</b> © 2026 <b>Sung soo Kim</b>. All Rights Reserved.</p>
           <p>• <b>라이선스 규격:</b> Open Education License (MIT License 기반). 전국 교육기관 및 공공도서관은 비영리 목적으로 본 소프트웨어를 영구히 무상 사용할 수 있습니다.</p>
           <p>• <b>법적 면책 조항:</b> 본 프로그램은 "있는 그대로" 제공되며 명시적이거나 묵시적인 어떠한 보증도 제공하지 않습니다. 각 기관의 데이터 백업과 관리에 대한 법적 책임은 해당 이용 기관에 귀속됩니다.</p>
-          <p>• <b>소프트웨어 버전:</b> 꿈빛 (Ggumbit) v1.16</p>
+          <p>• <b>소프트웨어 버전:</b> 꿈빛 (Ggumbit) v1.17</p>
         </div>
       </div>
 
       <div class="flex justify-end pt-2 border-t border-slate-100">
         <button type="button" onclick="closeModal('manualModal')" class="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold">확인 완료</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ============================================================= -->
+  <!-- [모달 11: 신설 - iOS 아이폰 홈 화면 추가 안내 모달] -->
+  <!-- ============================================================= -->
+  <div id="iosInstallGuideModal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-sm rounded-3xl p-6 border border-slate-200 shadow-2xl space-y-4 text-center">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-2">
+          <span class="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-sm font-bold">
+            <i class="fa-brands fa-apple text-base"></i>
+          </span>
+          <h3 class="font-bold text-sm text-slate-900">아이폰 홈 화면에 추가하기</h3>
+        </div>
+        <button type="button" onclick="closeModal('iosInstallGuideModal')" class="text-slate-400 hover:text-slate-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3.5 text-left text-xs text-slate-600 py-1">
+        <div class="p-3.5 bg-amber-50/80 rounded-2xl border border-amber-200 flex items-start space-x-3">
+          <span class="w-6 h-6 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">1</span>
+          <div>
+            <p class="font-bold text-slate-900 text-xs">화면 하단 [공유 버튼 ⎋] 누르기</p>
+            <p class="text-[11px] text-slate-500 mt-0.5">Safari 브라우저 맨 아래 중앙에 있는 네모 상자 화살표 아이콘을 터치합니다.</p>
+          </div>
+        </div>
+
+        <div class="p-3.5 bg-amber-50/80 rounded-2xl border border-amber-200 flex items-start space-x-3">
+          <span class="w-6 h-6 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">2</span>
+          <div>
+            <p class="font-bold text-slate-900 text-xs">[홈 화면에 추가] 선택</p>
+            <p class="text-[11px] text-slate-500 mt-0.5">메뉴를 위로 살짝 올려 '홈 화면에 추가'를 누르면 책 모양의 <b>[꿈빛]</b> 앱이 설치됩니다.</p>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" onclick="closeModal('iosInstallGuideModal')" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition-colors shadow-xs">
+        확인했습니다
+      </button>
     </div>
   </div>
 
@@ -1319,7 +1341,10 @@
     let connectedSheetUrl = '';
     let connectedSheetId = '';
 
-    // 운영 파라미터 (v1.15 가변 엔진)
+    // PWA 홈 화면 설치 엔진 전역 프롬프트 변수
+    let deferredInstallPrompt = null;
+
+    // 운영 파라미터 (v1.17 가변 엔진)
     let cycleType = '2주';
     let slotCapacity = 2; // N인 무제한 직접 입력
     let operatingDays = ['월', '화', '수', '목', '금'];
@@ -1407,8 +1432,51 @@
     }
 
     // -------------------------------------------------------------
-    // [4] URL 파라미터 및 네비게이션 가드
+    // [4] 환경 감지 및 PWA 자가치유 (Auto-Healing) 엔진
     // -------------------------------------------------------------
+    function isKakaoTalkBrowser() {
+      return /KAKAOTALK/i.test(navigator.userAgent);
+    }
+
+    function isIosDevice() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    }
+
+    function isStandaloneApp() {
+      return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (window.navigator.standalone === true);
+    }
+
+    // PWA 매니페스트에 학교 시트 키를 각인하여 홈 화면 아이콘을 자가치유형으로 생성
+    function updateDynamicPwaManifest() {
+      const manifestEl = document.getElementById('pwaManifestLink');
+      if (!manifestEl) return;
+
+      const currentGas = gasApiUrl || safeStorage.getItem('lib_gas_url') || '';
+      let targetStartUrl = '.';
+      if (currentGas) {
+        targetStartUrl = './?lib=' + encodeURIComponent(btoa(currentGas));
+      }
+
+      const dynamicManifest = {
+        name: "꿈빛",
+        short_name: "꿈빛",
+        start_url: targetStartUrl,
+        display: "standalone",
+        background_color: "#ffffff",
+        theme_color: "#f59e0b",
+        icons: [
+          {
+            src: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='42' fill='%23f59e0b'/><path d='M44 64c14-8 34-8 52 4v72c-18-12-38-12-52-4V64zm104 0c-14-8-34-8-52 4v72c18-12 38-12 52-4V64z' fill='%23ffffff'/></svg>",
+            sizes: "192x192",
+            type: "image/svg+xml"
+          }
+        ]
+      };
+
+      const manifestStr = 'data:application/manifest+json;utf-8,' + encodeURIComponent(JSON.stringify(dynamicManifest));
+      manifestEl.setAttribute('href', manifestStr);
+    }
+
     function initUrlParameters() {
       try {
         const urlParams = new URLSearchParams(window.location.search);
@@ -1423,18 +1491,22 @@
             showToast('🔗 학교 전용 시트 연동 키가 감지되어 자동 동기화되었습니다.');
           }
         }
-        if (window.location.search) {
+
+        // 카카오톡 내부 브라우저인 경우 '다른 브라우저로 열기' 시 파라미터가 유실되지 않도록 주소창 클린 생략!
+        if (!isKakaoTalkBrowser() && window.location.search) {
           const cleanUrl = window.location.origin + window.location.pathname;
           window.history.replaceState({}, document.title, cleanUrl);
         }
       } catch (e) {}
+
+      updateDynamicPwaManifest();
     }
 
     function decodeLibParam(param) {
       if (!param) return '';
       try {
         if (param.startsWith('http')) return param;
-        const decoded = atob(param);
+        const decoded = atob(decodeURIComponent(param));
         if (decoded.startsWith('http')) return decoded;
       } catch (e) {}
       return param;
@@ -1449,9 +1521,9 @@
 
       window.addEventListener('popstate', function(e) {
         const activeModals = [
-          'qrCodeModal', 'manualModal', 'resetModal', 'disconnectModal',
-          'substituteAcceptModal', 'substituteRequestModal', 'membersModal',
-          'scheduleAssignmentModal', 'adminLoginModal', 'coverModal'
+          'iosInstallGuideModal', 'qrCodeModal', 'manualModal', 'resetModal',
+          'disconnectModal', 'substituteAcceptModal', 'substituteRequestModal',
+          'membersModal', 'scheduleAssignmentModal', 'adminLoginModal', 'coverModal'
         ];
 
         for (const mId of activeModals) {
@@ -1478,6 +1550,100 @@
           } catch (err) {}
         }
       });
+    }
+
+    // -------------------------------------------------------------
+    // [4-1] PWA 인앱 설치 배너 및 이벤트 엔진
+    // -------------------------------------------------------------
+    function initPwaInstallEngine() {
+      // 안드로이드/크롬 계열 beforeinstallprompt 가로채기
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredInstallPrompt = e;
+        renderPwaInstallBanner();
+      });
+
+      renderPwaInstallBanner();
+    }
+
+    function renderPwaInstallBanner() {
+      const banner = document.getElementById('pwaInstallBanner');
+      if (!banner) return;
+
+      // 이미 홈 화면 아이콘을 통해 PWA 앱(전체화면)으로 접속한 경우 완전히 숨김
+      if (isStandaloneApp()) {
+        banner.classList.add('hidden');
+        return;
+      }
+
+      // 1. 카카오톡 인앱 브라우저 내부에서 열린 경우
+      if (isKakaoTalkBrowser()) {
+        banner.className = 'rounded-2xl border border-amber-300 bg-amber-50/90 p-4 sm:p-5 shadow-xs space-y-2';
+        banner.innerHTML = `
+          <div class="flex items-start space-x-3">
+            <span class="w-9 h-9 rounded-xl bg-amber-400 text-amber-950 flex items-center justify-center text-sm font-bold shrink-0 mt-0.5">
+              <i class="fa-solid fa-comment"></i>
+            </span>
+            <div class="flex-grow">
+              <h4 class="font-extrabold text-xs sm:text-sm text-amber-950">카카오톡 화면 안에서 열려 있습니다</h4>
+              <p class="text-[11px] text-amber-900 mt-0.5 leading-relaxed">
+                스마트폰 홈 화면에 진짜 앱으로 설치하시려면 <b>우측 상단 메뉴(⋮ 또는 전체)</b>를 누르고 <b>[다른 브라우저로 열기]</b>를 선택해 주세요.
+              </p>
+            </div>
+          </div>
+        `;
+        banner.classList.remove('hidden');
+        return;
+      }
+
+      // 2. 일반 모바일 브라우저 (크롬, 삼성인터넷, 사파리 등)
+      banner.className = 'rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 via-white to-amber-50/40 p-4 sm:p-5 shadow-xs';
+      banner.innerHTML = `
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-lg shadow-xs shrink-0">
+              <i class="fa-solid fa-book-open-reader"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-1.5">
+                <h4 class="font-extrabold text-xs sm:text-sm text-slate-900">[꿈빛]을 스마트폰 홈 화면에 앱으로 추가하세요!</h4>
+                <span class="text-[10px] font-bold px-1.5 py-0.2 bg-amber-100 text-amber-800 rounded">추천</span>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-0.5">주소창 없이 시원한 전체화면으로 열리며, 우리 학교 시트 연동이 평생 유지됩니다.</p>
+            </div>
+          </div>
+          <button type="button" onclick="handlePwaInstallButtonClick()" class="w-full sm:w-auto px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-extrabold rounded-xl text-xs transition-all shadow-xs flex items-center justify-center space-x-1.5 shrink-0">
+            <i class="fa-solid fa-mobile-screen-button"></i>
+            <span>지금 홈 화면에 앱 추가하기</span>
+          </button>
+        </div>
+      `;
+      banner.classList.remove('hidden');
+    }
+
+    function handlePwaInstallButtonClick() {
+      // 1. 안드로이드 계열 (deferredInstallPrompt 가용 시)
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        deferredInstallPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            showToast('🎉 꿈빛 앱이 홈 화면에 성공적으로 추가되었습니다!');
+            const banner = document.getElementById('pwaInstallBanner');
+            if (banner) banner.classList.add('hidden');
+          }
+          deferredInstallPrompt = null;
+        });
+        return;
+      }
+
+      // 2. iOS 사파리 환경
+      if (isIosDevice()) {
+        openModal('iosInstallGuideModal');
+        return;
+      }
+
+      // 3. 브라우저 메뉴 수동 추가 안내
+      showToast('브라우저 우측 상단 메뉴(⋮)에서 [홈 화면에 추가] 또는 [앱 설치]를 선택해 주세요.');
     }
 
     // -------------------------------------------------------------
@@ -1540,6 +1706,7 @@
           }
 
           renderAllViews();
+          updateDynamicPwaManifest();
           showToast('🟢 구글 스프레드시트 원본과 실시간 동기화되었습니다.');
         })
         .catch(() => {
@@ -1576,10 +1743,11 @@
 
       const base64Gas = btoa(gasApiUrl);
       const cleanOrigin = window.location.origin + window.location.pathname;
-      const fullShareUrl = `${cleanOrigin}?lib=${base64Gas}`;
+      const fullShareUrl = `${cleanOrigin}?lib=${encodeURIComponent(base64Gas)}`;
 
       urlInput.value = fullShareUrl;
       shareCard.classList.remove('hidden');
+      updateDynamicPwaManifest();
     }
 
     function downloadCurrentSheetAsExcel() {
@@ -1631,6 +1799,7 @@
       const dedicatedCard = document.getElementById('dedicatedSchoolShareCard');
       if (dedicatedCard) dedicatedCard.classList.add('hidden');
 
+      updateDynamicPwaManifest();
       showToast('🔌 구글 스프레드시트 연동이 해제되었습니다. 원본 시트는 드라이브에 안전하게 보존되었습니다.');
     }
 
@@ -1774,7 +1943,7 @@
               ${shareUrl}
             </div>
             <div style="font-size: 11px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 12px;">
-              꿈빛 (Ggumbit) v1.16 도서관 봉사인력 관리 시스템 · (c) 2026 Sung soo Kim
+              꿈빛 (Ggumbit) v1.17 도서관 봉사인력 관리 시스템 · (c) 2026 Sung soo Kim
             </div>
           </div>
         </div>
@@ -2230,7 +2399,6 @@
       if (titleEl) titleEl.textContent = `${calendarYear}년 ${calendarMonth}월`;
       if (btnText) btnText.textContent = `📊 구글 시트에 ${calendarMonth}월 배정표 탭 생성`;
 
-      // 관리자 로그인 상태에만 시트 배정표 탭 생성 버튼 노출
       if (expBtn) {
         if (isAdminLoggedIn) {
           expBtn.classList.remove('hidden');
@@ -2325,7 +2493,6 @@
     }
 
     function exportCurrentCalendarToGoogleSheet() {
-      // 관리자 권한 필수 가드
       if (!isAdminLoggedIn) {
         showToast('⚠️ 관리자(사서교사)만 구글 시트에 배정표 탭을 생성할 수 있습니다.');
         openModal('adminLoginModal');
@@ -3235,7 +3402,7 @@
     }
 
     function copyBackendCodeToClipboard() {
-      showToast('📋 Apps Script 백엔드 v1.07 코드가 복사되었습니다. (구글 시트 편집기에 붙여넣기)');
+      showToast('📋 Apps Script 백엔드 v1.08 코드가 복사되었습니다. (구글 시트 편집기에 붙여넣기)');
     }
 
     function openResetModal() {
@@ -3333,7 +3500,7 @@
               <span>사서교사 확인: __________________ (서명)</span>
             </div>
           </div>
-          <p style="text-align: right; font-size: 10px; color: #94a3b8; margin-top: 24px;">꿈빛 (Ggumbit) v1.16 · Author Sung soo Kim</p>
+          <p style="text-align: right; font-size: 10px; color: #94a3b8; margin-top: 24px;">꿈빛 (Ggumbit) v1.17 · Author Sung soo Kim</p>
         </div>
       `;
 
@@ -3341,7 +3508,7 @@
     }
 
     // -------------------------------------------------------------
-    // [15] 웰컴 게이트 및 인증 제어
+    // [15] 웰컴 게이트 및 인증 제어 (대문 최우선 가동)
     // -------------------------------------------------------------
     function initGateModal() {
       const savedUser = safeStorage.getItem('lib_my_name');
@@ -3609,7 +3776,7 @@
     }
 
     // -------------------------------------------------------------
-    // [17] 시스템 기동 초기화
+    // [17] 시스템 기동 초기화 (순차적 무결성 체결)
     // -------------------------------------------------------------
     window.addEventListener('DOMContentLoaded', function() {
       currentDateStr = formatDate(new Date());
@@ -3617,8 +3784,11 @@
       initUrlParameters();
       initNavigationHistory();
       initExcelDragAndDrop();
+      initPwaInstallEngine();
       updateCycleCalibrationPreview();
       renderAllViews();
+      
+      // 최우선 대문(웰컴 게이트) 기동
       initGateModal();
 
       if (gasApiUrl) {
