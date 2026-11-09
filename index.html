@@ -13,7 +13,7 @@
   ==============================================================================
   [프로그램 정보(Program Information)]
   Project: 꿈빛 (Ggumbit) - 도서관 봉사인력 자원관리 프로그램
-  Version: v1.15 (Frontend Integrity & Zero-Error Clean Build)
+  Version: v1.16 (대문 상시 가동, 관리자 전용 시트 생성 가드, 월별 달력 데이터 완비)
   Author / Copyright: (c) 2026 Sung soo Kim. All Rights Reserved.
   License: Open Education License (Based on MIT License with Non-Commercial Recommendation)
   
@@ -23,7 +23,7 @@
   제공하지 않습니다. 이용 과정에서 발생하는 데이터 관리 책임은 각 이용 기관에 있습니다.
   ==============================================================================
   -->
-  <title>꿈빛 - 도서관 봉사인력 관리 시스템 v1.15</title>
+  <title>꿈빛 - 도서관 봉사인력 관리 시스템 v1.16</title>
 
   <!-- PWA Web App Manifest (Data URI) -->
   <link rel="manifest" href="data:application/manifest+json;utf-8,%7B%22name%22%3A%22%EA%BF%88%EB%B9%9B%22%2C%22short_name%22%3A%22%EA%BF%88%EB%B9%9B%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23ffffff%22%2C%22theme_color%22%3A%22%23f59e0b%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%3Butf8%2C%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20192%20192'%3E%3Crect%20width%3D'192'%20height%3D'192'%20rx%3D'42'%20fill%3D'%23f59e0b'%2F%3E%3Cpath%20d%3D'M44%2064c14-8%2034-8%2052%204v72c-18-12-38-12-52-4V64zm104%200c-14-8-34-8-52%204v72c18-12%2038-12%2052-4V64z'%20fill%3D'%23ffffff'%2F%3E%3C%2Fsvg%3E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
@@ -68,7 +68,7 @@
         <div>
           <div class="flex items-center space-x-1.5">
             <span class="font-extrabold text-lg text-slate-900 tracking-tight">꿈빛</span>
-            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-md border border-amber-200/60 font-mono">v1.15</span>
+            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-md border border-amber-200/60 font-mono">v1.16</span>
           </div>
           <p id="topBarOrgName" class="text-xs text-slate-500 font-medium truncate max-w-[150px] sm:max-w-xs">꿈빛도서관</p>
         </div>
@@ -202,8 +202,8 @@
           </button>
         </div>
 
-        <!-- 원클릭 구글 시트 배정표 탭 생성 단추 -->
-        <button id="exportCalendarToGasBtn" onclick="exportCurrentCalendarToGoogleSheet()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors shadow-2xs flex items-center space-x-1.5">
+        <!-- 원클릭 구글 시트 배정표 탭 생성 단추 (관리자 전용: 기본 숨김) -->
+        <button id="exportCalendarToGasBtn" onclick="exportCurrentCalendarToGoogleSheet()" class="hidden px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors shadow-2xs flex items-center space-x-1.5">
           <i class="fa-solid fa-table text-emerald-200"></i>
           <span id="exportCalendarBtnText">📊 구글 시트에 11월 배정표 탭 생성</span>
         </button>
@@ -504,7 +504,7 @@
             </div>
           </div>
           <div class="flex items-center space-x-2">
-            <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 font-mono">v1.15 가변</span>
+            <span class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 font-mono">v1.16 가변</span>
             <i id="accordionIcon-3" class="fa-solid fa-chevron-up text-slate-400 text-xs transition-transform duration-200"></i>
           </div>
         </button>
@@ -763,7 +763,7 @@
         <p>• <b>원작자 / Copyright:</b> © 2026 <b>Sung soo Kim</b>. All Rights Reserved.</p>
         <p>• <b>라이선스 규격:</b> Open Education License (MIT License 기반). 전국 교육기관 및 공공도서관은 비영리 목적으로 본 소프트웨어를 영구히 무상 사용할 수 있습니다.</p>
         <p>• <b>법적 면책 조항:</b> 본 프로그램은 "있는 그대로" 제공되며 명시적이거나 묵시적인 어떠한 보증도 제공하지 않습니다. 각 기관의 데이터 백업과 관리에 대한 법적 책임은 해당 이용 기관에 귀속됩니다.</p>
-        <p>• <b>소프트웨어 버전:</b> 꿈빛 (Ggumbit) v1.15</p>
+        <p>• <b>소프트웨어 버전:</b> 꿈빛 (Ggumbit) v1.16</p>
       </div>
     </details>
   </footer>
@@ -843,7 +843,7 @@
       <!-- 하단 저작권 및 관리자 통로 -->
       <div class="pt-2 flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-100">
         <div class="flex items-center space-x-1.5">
-          <span class="font-bold text-slate-600">꿈빛 v1.15</span>
+          <span class="font-bold text-slate-600">꿈빛 v1.16</span>
           <span>·</span>
           <span>© 2026 Sung soo Kim</span>
         </div>
@@ -1229,7 +1229,7 @@
           <p>• <b>원작자 / Copyright:</b> © 2026 <b>Sung soo Kim</b>. All Rights Reserved.</p>
           <p>• <b>라이선스 규격:</b> Open Education License (MIT License 기반). 전국 교육기관 및 공공도서관은 비영리 목적으로 본 소프트웨어를 영구히 무상 사용할 수 있습니다.</p>
           <p>• <b>법적 면책 조항:</b> 본 프로그램은 "있는 그대로" 제공되며 명시적이거나 묵시적인 어떠한 보증도 제공하지 않습니다. 각 기관의 데이터 백업과 관리에 대한 법적 책임은 해당 이용 기관에 귀속됩니다.</p>
-          <p>• <b>소프트웨어 버전:</b> 꿈빛 (Ggumbit) v1.15</p>
+          <p>• <b>소프트웨어 버전:</b> 꿈빛 (Ggumbit) v1.16</p>
         </div>
       </div>
 
@@ -1774,7 +1774,7 @@
               ${shareUrl}
             </div>
             <div style="font-size: 11px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 12px;">
-              꿈빛 (Ggumbit) v1.15 도서관 봉사인력 관리 시스템 · (c) 2026 Sung soo Kim
+              꿈빛 (Ggumbit) v1.16 도서관 봉사인력 관리 시스템 · (c) 2026 Sung soo Kim
             </div>
           </div>
         </div>
@@ -2224,10 +2224,20 @@
       const container = document.getElementById('calendarGridContainer');
       const titleEl = document.getElementById('calendarMonthTitle');
       const btnText = document.getElementById('exportCalendarBtnText');
+      const expBtn = document.getElementById('exportCalendarToGasBtn');
       if (!container) return;
 
       if (titleEl) titleEl.textContent = `${calendarYear}년 ${calendarMonth}월`;
       if (btnText) btnText.textContent = `📊 구글 시트에 ${calendarMonth}월 배정표 탭 생성`;
+
+      // 관리자 로그인 상태에만 시트 배정표 탭 생성 버튼 노출
+      if (expBtn) {
+        if (isAdminLoggedIn) {
+          expBtn.classList.remove('hidden');
+        } else {
+          expBtn.classList.add('hidden');
+        }
+      }
 
       const firstDay = new Date(calendarYear, calendarMonth - 1, 1).getDay();
       const lastDate = new Date(calendarYear, calendarMonth, 0).getDate();
@@ -2315,6 +2325,13 @@
     }
 
     function exportCurrentCalendarToGoogleSheet() {
+      // 관리자 권한 필수 가드
+      if (!isAdminLoggedIn) {
+        showToast('⚠️ 관리자(사서교사)만 구글 시트에 배정표 탭을 생성할 수 있습니다.');
+        openModal('adminLoginModal');
+        return;
+      }
+
       if (!gasApiUrl) {
         showToast('먼저 [도서관 설정]에서 구글 시트를 연동해 주세요.');
         return;
@@ -2368,7 +2385,51 @@
         }
       }
 
-      showToast(`⏳ 구글 시트에 [${calendarYear}-${String(calendarMonth).padStart(2,'0')}] 탭 생성 요청 중...`);
+      // 7열 격자 달력 탭용 데이터(gridRows) 동시 조립
+      const gridRows = [];
+      let weekGrid = ['', '', '', '', '', '', ''];
+
+      for (let d = 1; d <= lastDate; d++) {
+        const curDate = new Date(calendarYear, calendarMonth - 1, d);
+        const dow = curDate.getDay();
+        const dayShort = dayNames[dow];
+        const dateStr = formatDate(curDate);
+        const status = checkDayStatusClient(curDate, dateStr);
+
+        if (status.isClosed) {
+          weekGrid[dow] = `${d}일\n(${status.title})`;
+        } else {
+          const weekCycle = calculateContinuousWeekCycle(curDate, cycleBaseDate, cycleBaseWeek, cycleType);
+          let cellText = `${d}일 [${weekCycle}주]\n`;
+
+          timeSlots.forEach(slot => {
+            const sNorm = normalizeTimeStr(slot.startTime);
+            const rMatch = rosterData.find(r => r.week === weekCycle && r.day.startsWith(dayShort) && normalizeTimeStr(r.time) === sNorm);
+            const workers = [];
+
+            for (let r = 1; r <= cap; r++) {
+              const k = `${dateStr}_${sNorm}_${r}`;
+              const rec = overrideLog[k];
+              const orig = rMatch ? (rMatch[`name${r}`] || (r === 1 ? rMatch.name1 : (r === 2 ? rMatch.name2 : ''))) : '';
+              const eff = (rec && rec.status === 'ACCEPTED' && rec.substitute) ? rec.substitute : (rec?.requester || orig || '공석');
+              if (eff && eff !== '공석') workers.push(eff);
+            }
+
+            if (workers.length > 0) {
+              cellText += `${slot.startTime.slice(0, 5)} ${workers.join('/')}\n`;
+            }
+          });
+
+          weekGrid[dow] = cellText.trim();
+        }
+
+        if (dow === 6 || d === lastDate) {
+          gridRows.push(weekGrid);
+          weekGrid = ['', '', '', '', '', '', ''];
+        }
+      }
+
+      showToast(`⏳ 구글 시트에 [${calendarYear}-${String(calendarMonth).padStart(2,'0')}] 배정표 및 달력 탭 생성 요청 중...`);
 
       fetch(gasApiUrl, {
         method: 'POST',
@@ -2379,10 +2440,11 @@
           year: calendarYear,
           month: calendarMonth,
           slotCapacity: cap,
-          scheduleRows: scheduleRows
+          scheduleRows: scheduleRows,
+          gridRows: gridRows
         })
       }).then(() => {
-        showToast(`🎉 구글 시트에 [${calendarYear}-${String(calendarMonth).padStart(2,'0')} 봉사배정표] 탭이 생성되었습니다!`);
+        showToast(`🎉 구글 시트에 [${calendarYear}-${String(calendarMonth).padStart(2,'0')} 봉사배정표] 및 달력 탭이 생성되었습니다!`);
       }).catch(() => {
         showToast('배정표 생성 통신 완료');
       });
@@ -3271,7 +3333,7 @@
               <span>사서교사 확인: __________________ (서명)</span>
             </div>
           </div>
-          <p style="text-align: right; font-size: 10px; color: #94a3b8; margin-top: 24px;">꿈빛 (Ggumbit) v1.15 · Author Sung soo Kim</p>
+          <p style="text-align: right; font-size: 10px; color: #94a3b8; margin-top: 24px;">꿈빛 (Ggumbit) v1.16 · Author Sung soo Kim</p>
         </div>
       `;
 
@@ -3293,6 +3355,7 @@
         if (firstSec) firstSec.classList.add('hidden');
         if (retSec) retSec.classList.remove('hidden');
         if (savedUserText) savedUserText.textContent = savedUser;
+        openModal('coverModal', false);
       } else {
         if (firstSec) firstSec.classList.remove('hidden');
         if (retSec) retSec.classList.add('hidden');
