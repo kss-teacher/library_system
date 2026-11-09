@@ -2,7 +2,7 @@
  * ==============================================================================
  * [프로그램 정보]
  * Project: 꿈빛 (Ggumbit) - 도서관 봉사인력 자원관리 시스템
- * Version: Google Apps Script 클라우드 백엔드 엔진 v1.09 (관리자 계정 adminName/adminId/adminPassword 양방향 동기화)
+ * Version: Google Apps Script 클라우드 백엔드 엔진 v1.10 (무결성 디버깅 & 계정/출석 양방향 동기화)
  * Author / Copyright: (c) 2026 Sung soo Kim. All Rights Reserved.
  * License: Open Education License (Based on MIT License)
  * ==============================================================================
@@ -124,7 +124,7 @@ function doGet(e) {
 
     const payload = {
       status: 'success',
-      spreadsheetId: ss.getId(), // [v1.07] 원터치 엑셀 백업 다운로드 직결용 공식 고유 ID
+      spreadsheetId: ss.getId(),
       spreadsheetUrl: ss.getUrl(),
       libraryName: config.libraryName,
       adminName: config.adminName,
@@ -174,6 +174,12 @@ function doPost(e) {
     // 2. 시스템 기본 파라미터 및 관리자 계정 저장 (양방향 동기화 지원)
     if (action === 'saveSystemConfig' || action === 'saveSettings' || action === 'saveAdminAccount') {
       const sheet = ss.getSheetByName('시스템 설정') || ss.insertSheet('시스템 설정');
+      
+      // 헤더 부재 시 자동 생성 가드
+      if (sheet.getLastRow() === 0) {
+        sheet.appendRow(['항목키', '설정값']);
+      }
+      
       const data = sheet.getDataRange().getDisplayValues();
       const updateKey = (key, val) => {
         let found = false;
@@ -184,7 +190,9 @@ function doPost(e) {
             break;
           }
         }
-        if (!found) sheet.appendRow([key, val]);
+        if (!found) {
+          sheet.appendRow([key, val]);
+        }
       };
 
       if (postData.libraryName) updateKey('libraryName', postData.libraryName);
@@ -522,7 +530,7 @@ function resetNewSemesterSheets(ss, slotCapacity) {
 
   clearTab('봉사자 정보', ['순번', '이름', '연락처']);
 
-  // N인 가변 정원 헤더 동적 생성 (3~4인이 2인으로 강제 축소되는 결함 완벽 차단)
+  // N인 가변 정원 헤더 동적 생성
   const rosterHeader = ['순번', '주차', '요일', '시간대'];
   for (let r = 1; r <= cap; r++) {
     rosterHeader.push(r === 1 ? '봉사위원 1 (정)' : (r === 2 ? '봉사위원 2 (부)' : '봉사위원 ' + r));
@@ -590,12 +598,10 @@ function createMonthlySheet(year, month, slotCapacity, scheduleRows, gridRows) {
     dataRange.setValues(finalScheduleRows);
     dataRange.setVerticalAlignment('middle');
 
-    // 1~3열(날짜, 요일, 주차) 및 봉사위원 열 중앙 정렬, 비고 좌측 정렬
     sheet.getRange(2, 1, finalScheduleRows.length, 3).setHorizontalAlignment('center');
     sheet.getRange(2, 5, finalScheduleRows.length, cap).setHorizontalAlignment('center');
     sheet.getRange(2, 4 + cap + 1, finalScheduleRows.length, 1).setHorizontalAlignment('left');
 
-    // 행 높이 및 줄무늬 스타일링
     for (let r = 2; r <= finalScheduleRows.length + 1; r++) {
       sheet.setRowHeight(r, 28);
       if (r % 2 === 1) {
@@ -604,7 +610,6 @@ function createMonthlySheet(year, month, slotCapacity, scheduleRows, gridRows) {
     }
   }
 
-  // 최적화된 고정 열 너비 부여
   const colWidths = [115, 75, 85, 140];
   for (let r = 1; r <= cap; r++) colWidths.push(130);
   colWidths.push(220); // 비고
@@ -615,7 +620,6 @@ function createMonthlySheet(year, month, slotCapacity, scheduleRows, gridRows) {
 
   SpreadsheetApp.flush();
 
-  // 달력형 그리드 탭 동시 생성
   createMonthlyCalendarGridSheet(ss, year, month, cap, finalGridRows);
 } // [end of createMonthlySheet]
 
@@ -644,7 +648,6 @@ function createMonthlyCalendarGridSheet(ss, year, month, slotCapacity, gridRows)
     .setHorizontalAlignment('center')
     .setVerticalAlignment('middle');
 
-  // 일요일 빨강, 토요일 파랑 헤더 강조
   gSheet.getRange(1, 1).setBackground('#e11d48');
   gSheet.getRange(1, 7).setBackground('#2563eb');
 
@@ -724,7 +727,6 @@ function generateMonthlyDataFromSheet(ss, year, month, cap, config) {
   const rosterRes = findRosterColumns(ss.getSheetByName('봉사자 순번') || ss.insertSheet('봉사자 순번'));
   const roster = rosterRes.roster || [];
   
-  // 변경 기록 수집
   const overrides = {};
   const logSheet = ss.getSheetByName('출석 및 변경 기록');
   if (logSheet) {
@@ -758,7 +760,6 @@ function generateMonthlyDataFromSheet(ss, year, month, cap, config) {
       scheduleRows.push(row);
       weekGrid[dow] = d + '일\n(' + dayShort + '요휴관)';
     } else {
-      // 주차 계산
       const bDate = new Date(config.cycleBaseDate || '2026-03-02');
       const diffWeeks = Math.floor((curDate - bDate) / (7 * 24 * 60 * 60 * 1000));
       const limit = (config.cycleType === '1주') ? 1 : ((config.cycleType === '1달') ? 4 : 2);
