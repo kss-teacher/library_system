@@ -2,7 +2,7 @@
  * ==============================================================================
  * [프로그램 정보]
  * Project: 꿈빛 (Ggumbit) - 도서관 봉사인력 자원관리 시스템
- * Version: Google Apps Script 클라우드 백엔드 엔진 v1.05
+ * Version: Google Apps Script 클라우드 백엔드 엔진 v1.06
  * Author / Copyright: (c) 2026 Sung soo Kim. All Rights Reserved.
  * License: Open Education License (Based on MIT License)
  * ==============================================================================
@@ -37,7 +37,9 @@ function resetNewSemesterMenu() {
   const ui = SpreadsheetApp.getUi();
   const res = ui.prompt('신학기 초기화', '정말 초기화하시겠습니까? "초기화"를 입력하세요.', ui.ButtonSet.OK_CANCEL);
   if (res.getSelectedButton() === ui.Button.OK && res.getResponseText().trim() === '초기화') {
-    resetNewSemesterSheets(SpreadsheetApp.getActiveSpreadsheet());
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const config = getSystemConfig(ss.getSheetByName('시스템 설정'));
+    resetNewSemesterSheets(ss, config.slotCapacity || 2);
     ui.alert('초기화가 완료되었습니다.');
   }
 }
@@ -118,6 +120,7 @@ function doGet(e) {
 
     const payload = {
       status: 'success',
+      spreadsheetId: ss.getId(), // [v1.06] 원터치 엑셀 백업 다운로드 직결용 공식 고유 ID
       spreadsheetUrl: ss.getUrl(),
       libraryName: config.libraryName,
       adminName: config.adminName,
@@ -158,7 +161,8 @@ function doPost(e) {
 
     // 1. 5대 표준 탭 자동 구성
     if (action === 'setupStandardSheets') {
-      setupStandardSheets(ss);
+      const cap = Math.max(1, parseInt(postData.slotCapacity, 10) || 2);
+      setupStandardSheets(ss, cap);
       return ContentService.createTextOutput(JSON.stringify({ status: 'success' }))
         .setMimeType(ContentService.MimeType.JSON);
     }
@@ -324,9 +328,10 @@ function doPost(e) {
         .setMimeType(ContentService.MimeType.JSON);
     }
 
-    // 8. 신학기 시트 탭 안전 초기화
+    // 8. 신학기 시트 탭 안전 초기화 (N인 가변 정원 헤더 완비)
     if (action === 'resetNewSemester') {
-      resetNewSemesterSheets(ss);
+      const cap = Math.max(1, parseInt(postData.slotCapacity, 10) || 2);
+      resetNewSemesterSheets(ss, cap);
       return ContentService.createTextOutput(JSON.stringify({ status: 'success' }))
         .setMimeType(ContentService.MimeType.JSON);
     }
@@ -448,9 +453,11 @@ function getSystemConfig(sheet) {
 }
 
 // -------------------------------------------------------------
-// [5] 표준 5대 탭 자동 구성 및 신학기 초기화
+// [5] 표준 5대 탭 자동 구성 및 신학기 초기화 (N인 가변 정원 완비)
 // -------------------------------------------------------------
-function setupStandardSheets(ss) {
+function setupStandardSheets(ss, slotCapacity) {
+  const cap = Math.max(1, parseInt(slotCapacity, 10) || 2);
+
   // 1. 시스템 설정
   let s1 = ss.getSheetByName('시스템 설정') || ss.insertSheet('시스템 설정');
   if (s1.getLastRow() === 0) {
@@ -460,7 +467,7 @@ function setupStandardSheets(ss) {
     s1.appendRow(['adminId', 'admin']);
     s1.appendRow(['adminPassword', 'admin1234']);
     s1.appendRow(['cycleType', '2주']);
-    s1.appendRow(['slotCapacity', '2']);
+    s1.appendRow(['slotCapacity', String(cap)]);
     s1.appendRow(['operatingDays', '["월","화","수","목","금"]']);
     s1.appendRow(['autoHolidaysClose', 'true']);
     s1.appendRow(['cycleBaseDate', Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd')]);
@@ -473,10 +480,14 @@ function setupStandardSheets(ss) {
     s2.appendRow(['순번', '이름', '연락처']);
   }
 
-  // 3. 봉사자 순번
+  // 3. 봉사자 순번 (N인 동적 헤더)
   let s3 = ss.getSheetByName('봉사자 순번') || ss.insertSheet('봉사자 순번');
   if (s3.getLastRow() === 0) {
-    s3.appendRow(['순번', '주차', '요일', '시간대', '봉사위원 1 (정)', '봉사위원 2 (부)']);
+    const rosterHeader = ['순번', '주차', '요일', '시간대'];
+    for (let r = 1; r <= cap; r++) {
+      rosterHeader.push(r === 1 ? '봉사위원 1 (정)' : (r === 2 ? '봉사위원 2 (부)' : '봉사위원 ' + r));
+    }
+    s3.appendRow(rosterHeader);
   }
 
   // 4. 출석부
@@ -492,7 +503,8 @@ function setupStandardSheets(ss) {
   }
 }
 
-function resetNewSemesterSheets(ss) {
+function resetNewSemesterSheets(ss, slotCapacity) {
+  const cap = Math.max(1, parseInt(slotCapacity, 10) || 2);
   const clearTab = (name, headers) => {
     const s = ss.getSheetByName(name);
     if (s) {
@@ -500,14 +512,22 @@ function resetNewSemesterSheets(ss) {
       if (headers) s.appendRow(headers);
     }
   };
+
   clearTab('봉사자 정보', ['순번', '이름', '연락처']);
-  clearTab('봉사자 순번', ['순번', '주차', '요일', '시간대', '봉사위원 1 (정)', '봉사위원 2 (부)']);
+
+  // N인 가변 정원 헤더 동적 생성 (3~4인이 2인으로 강제 축소되는 결함 완벽 차단)
+  const rosterHeader = ['순번', '주차', '요일', '시간대'];
+  for (let r = 1; r <= cap; r++) {
+    rosterHeader.push(r === 1 ? '봉사위원 1 (정)' : (r === 2 ? '봉사위원 2 (부)' : '봉사위원 ' + r));
+  }
+  clearTab('봉사자 순번', rosterHeader);
+
   clearTab('출석부', ['날짜', '시간', '이름', '출석확인']);
   clearTab('출석 및 변경 기록', ['기록일시', '슬롯키', '상태', '요청자', '대타/교체자', '사유']);
 }
 
 // -------------------------------------------------------------
-// [6] 월별 배정표 및 7열 격자 달력 탭 동시 생성 엔진 (v1.05 고도화)
+// [6] 월별 배정표 및 7열 격자 달력 탭 동시 생성 엔진
 // -------------------------------------------------------------
 function createMonthlySheet(year, month, slotCapacity, scheduleRows, gridRows) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -537,7 +557,7 @@ function createMonthlySheet(year, month, slotCapacity, scheduleRows, gridRows) {
     .setVerticalAlignment('middle');
   sheet.setRowHeight(1, 36);
 
-  // 세부 배정 데이터가 웹앱에서 전달되지 않았을 경우, 스프레드시트 원본 데이터로 자동 조립(Fallback)
+  // 세부 배정 데이터 조립 (Fallback 지원)
   let finalScheduleRows = scheduleRows;
   let finalGridRows = gridRows;
 
@@ -567,7 +587,7 @@ function createMonthlySheet(year, month, slotCapacity, scheduleRows, gridRows) {
     }
   }
 
-  // 최적화된 고정 열 너비 부여 (글자 잘림 및 압축 방지)
+  // 최적화된 고정 열 너비 부여
   const colWidths = [115, 75, 85, 140];
   for (let r = 1; r <= cap; r++) colWidths.push(130);
   colWidths.push(220); // 비고
@@ -585,7 +605,7 @@ function createMonthlySheet(year, month, slotCapacity, scheduleRows, gridRows) {
 function createMonthlyCalendarGridSheet(ss, year, month, slotCapacity, gridRows) {
   const gridSheetName = year + '-' + String(month).padStart(2, '0') + ' 달력';
   let gSheet = ss.getSheetByName(gridSheetName);
-  if (gSheet) ss.deleteSheet(gSheet); // 🟢 Sheet 객체 전달로 결함 해결
+  if (gSheet) ss.deleteSheet(gSheet);
   gSheet = ss.insertSheet(gridSheetName);
 
   const headers = ['일', '월', '화', '수', '목', '금', '토'];
@@ -621,7 +641,7 @@ function createMonthlyCalendarGridSheet(ss, year, month, slotCapacity, gridRows)
 }
 
 // -------------------------------------------------------------
-// [7] 스프레드시트 원본 데이터 기반 월간 일정 자동 생성기 (신설)
+// [7] 스프레드시트 원본 데이터 기반 월간 일정 자동 생성기
 // -------------------------------------------------------------
 function generateMonthlyDataFromSheet(ss, year, month, cap, config) {
   const rosterRes = findRosterColumns(ss.getSheetByName('봉사자 순번') || ss.insertSheet('봉사자 순번'));
