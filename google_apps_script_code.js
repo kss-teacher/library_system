@@ -2,7 +2,7 @@
  * ==============================================================================
  * [프로그램 정보]
  * Project: 꿈빛 (Ggumbit) - 도서관 봉사인력 자원관리 시스템
- * Version: Google Apps Script 클라우드 백엔드 엔진 v1.07 (구문 무결성 정밀 보강)
+ * Version: Google Apps Script 클라우드 백엔드 엔진 v1.08 (월별 달력 데이터 복원 및 서식 강화)
  * Author / Copyright: (c) 2026 Sung soo Kim. All Rights Reserved.
  * License: Open Education License (Based on MIT License)
  * ==============================================================================
@@ -540,8 +540,16 @@ function createMonthlySheet(year, month, slotCapacity, scheduleRows, gridRows) {
   const sheetName = year + '-' + String(month).padStart(2, '0') + ' 봉사배정표';
   
   let sheet = ss.getSheetByName(sheetName);
-  if (sheet) ss.deleteSheet(sheet);
-  sheet = ss.insertSheet(sheetName);
+  if (sheet) {
+    try {
+      ss.deleteSheet(sheet);
+      sheet = ss.insertSheet(sheetName);
+    } catch (e) {
+      sheet.clear();
+    }
+  } else {
+    sheet = ss.insertSheet(sheetName);
+  }
 
   // 헤더 정의
   const header = ['활동 날짜', '요일', '순번 주차', '시간대'];
@@ -561,7 +569,7 @@ function createMonthlySheet(year, month, slotCapacity, scheduleRows, gridRows) {
     .setVerticalAlignment('middle');
   sheet.setRowHeight(1, 36);
 
-  // 세부 배정 데이터 조립 (Fallback 지원)
+  // 세부 배정 데이터 조립 (Fallback 및 그리드 데이터 복원 안전망)
   let finalScheduleRows = scheduleRows;
   let finalGridRows = gridRows;
 
@@ -569,6 +577,8 @@ function createMonthlySheet(year, month, slotCapacity, scheduleRows, gridRows) {
     const generated = generateMonthlyDataFromSheet(ss, year, month, cap, config);
     finalScheduleRows = generated.scheduleRows;
     finalGridRows = generated.gridRows;
+  } else if (!finalGridRows || finalGridRows.length === 0) {
+    finalGridRows = buildGridRowsFromSchedule(year, month, cap, finalScheduleRows);
   }
 
   // 데이터 적재 및 셀 서식 적용
@@ -609,8 +619,16 @@ function createMonthlySheet(year, month, slotCapacity, scheduleRows, gridRows) {
 function createMonthlyCalendarGridSheet(ss, year, month, slotCapacity, gridRows) {
   const gridSheetName = year + '-' + String(month).padStart(2, '0') + ' 달력';
   let gSheet = ss.getSheetByName(gridSheetName);
-  if (gSheet) ss.deleteSheet(gSheet);
-  gSheet = ss.insertSheet(gridSheetName);
+  if (gSheet) {
+    try {
+      ss.deleteSheet(gSheet);
+      gSheet = ss.insertSheet(gridSheetName);
+    } catch (e) {
+      gSheet.clear();
+    }
+  } else {
+    gSheet = ss.insertSheet(gridSheetName);
+  }
 
   const headers = ['일', '월', '화', '수', '목', '금', '토'];
   gSheet.appendRow(headers);
@@ -643,6 +661,58 @@ function createMonthlyCalendarGridSheet(ss, year, month, slotCapacity, gridRows)
 
   SpreadsheetApp.flush();
 } // [end of createMonthlyCalendarGridSheet]
+
+function buildGridRowsFromSchedule(year, month, cap, scheduleRows) {
+  const lastDay = new Date(year, month, 0).getDate();
+  const dayMap = {};
+
+  scheduleRows.forEach(row => {
+    const dateStr = String(row[0] || '').trim();
+    if (!dateStr || !dateStr.includes('-')) return;
+    const parts = dateStr.split('-');
+    const d = parseInt(parts[2], 10);
+    if (isNaN(d)) return;
+
+    if (!dayMap[d]) {
+      const isClosed = String(row[2] || '').trim() === '-' || String(row[row.length - 1] || '').includes('휴관');
+      if (isClosed) {
+        const note = String(row[row.length - 1] || '휴관');
+        dayMap[d] = d + '일\n(' + note + ')';
+        return;
+      } else {
+        const weekStr = String(row[2] || '');
+        dayMap[d] = d + '일 [' + weekStr + ']\n';
+      }
+    }
+
+    if (String(row[2] || '').trim() !== '-') {
+      const timeStr = String(row[3] || '').slice(0, 5);
+      const workers = [];
+      for (let r = 4; r < 4 + cap; r++) {
+        const w = String(row[r] || '').trim();
+        if (w && w !== '공석' && w !== '-') workers.push(w);
+      }
+      if (workers.length > 0) {
+        dayMap[d] += timeStr + ' ' + workers.join('/') + '\n';
+      }
+    }
+  });
+
+  const gridRows = [];
+  let weekGrid = ['', '', '', '', '', '', ''];
+
+  for (let d = 1; d <= lastDay; d++) {
+    const curDate = new Date(year, month - 1, d);
+    const dow = curDate.getDay();
+    weekGrid[dow] = (dayMap[d] || (d + '일')).trim();
+
+    if (dow === 6 || d === lastDay) {
+      gridRows.push(weekGrid);
+      weekGrid = ['', '', '', '', '', '', ''];
+    }
+  }
+  return gridRows;
+} // [end of buildGridRowsFromSchedule]
 
 // -------------------------------------------------------------
 // [7] 스프레드시트 원본 데이터 기반 월간 일정 자동 생성기
