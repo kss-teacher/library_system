@@ -2,7 +2,7 @@
  * ==============================================================================
  * [프로그램 정보]
  * Project: 꿈빛 (Ggumbit) - 도서관 봉사인력 자원관리 시스템
- * Version: Google Apps Script 클라우드 백엔드 엔진 v1.08 (월별 달력 데이터 복원 및 서식 강화)
+ * Version: Google Apps Script 클라우드 백엔드 엔진 v1.09 (관리자 계정 adminName/adminId/adminPassword 양방향 동기화)
  * Author / Copyright: (c) 2026 Sung soo Kim. All Rights Reserved.
  * License: Open Education License (Based on MIT License)
  * ==============================================================================
@@ -171,8 +171,8 @@ function doPost(e) {
         .setMimeType(ContentService.MimeType.JSON);
     }
 
-    // 2. 시스템 기본 파라미터 저장
-    if (action === 'saveSystemConfig' || action === 'saveSettings') {
+    // 2. 시스템 기본 파라미터 및 관리자 계정 저장 (양방향 동기화 지원)
+    if (action === 'saveSystemConfig' || action === 'saveSettings' || action === 'saveAdminAccount') {
       const sheet = ss.getSheetByName('시스템 설정') || ss.insertSheet('시스템 설정');
       const data = sheet.getDataRange().getDisplayValues();
       const updateKey = (key, val) => {
@@ -188,6 +188,9 @@ function doPost(e) {
       };
 
       if (postData.libraryName) updateKey('libraryName', postData.libraryName);
+      if (postData.adminName) updateKey('adminName', postData.adminName);
+      if (postData.adminId) updateKey('adminId', postData.adminId);
+      if (postData.adminPassword) updateKey('adminPassword', postData.adminPassword);
       if (postData.cycleType) updateKey('cycleType', postData.cycleType);
       if (postData.cycleBaseDate) updateKey('cycleBaseDate', postData.cycleBaseDate);
       if (postData.cycleBaseWeek !== undefined) updateKey('cycleBaseWeek', String(postData.cycleBaseWeek));
