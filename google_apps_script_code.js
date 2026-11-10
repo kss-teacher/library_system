@@ -2,7 +2,7 @@
  * ==============================================================================
  * [프로그램 정보]
  * Project: 꿈빛 (Ggumbit) - 도서관 봉사인력 자원관리 시스템
- * Version: Google Apps Script 클라우드 백엔드 엔진 v1.10 (무결성 디버깅 & 계정/출석 양방향 동기화)
+ * Version: Google Apps Script 클라우드 백엔드 엔진 v1.10 (B2:도서관, B3:성함, B4:아이디, B5:비밀번호 다이렉트 고정셀 & flush() 완비)
  * Author / Copyright: (c) 2026 Sung soo Kim. All Rights Reserved.
  * License: Open Education License (Based on MIT License)
  * ==============================================================================
@@ -124,7 +124,7 @@ function doGet(e) {
 
     const payload = {
       status: 'success',
-      spreadsheetId: ss.getId(),
+      spreadsheetId: ss.getId(), // [v1.07] 원터치 엑셀 백업 다운로드 직결용 공식 고유 ID
       spreadsheetUrl: ss.getUrl(),
       libraryName: config.libraryName,
       adminName: config.adminName,
@@ -171,43 +171,98 @@ function doPost(e) {
         .setMimeType(ContentService.MimeType.JSON);
     }
 
-    // 2. 시스템 기본 파라미터 및 관리자 계정 저장 (양방향 동기화 지원)
+    // 2. 시스템 설정 및 관리자 계정 저장 (B2~B5 고정셀 정렬 & flush 장착)
     if (action === 'saveSystemConfig' || action === 'saveSettings' || action === 'saveAdminAccount') {
       const sheet = ss.getSheetByName('시스템 설정') || ss.insertSheet('시스템 설정');
       
-      // 헤더 부재 시 자동 생성 가드
-      if (sheet.getLastRow() === 0) {
+      // 기존 데이터 로드
+      let data = sheet.getDataRange().getDisplayValues();
+      if (data.length === 0 || !data[0][0]) {
         sheet.appendRow(['항목키', '설정값']);
+        data = [['항목키', '설정값']];
       }
-      
-      const data = sheet.getDataRange().getDisplayValues();
-      const updateKey = (key, val) => {
-        let found = false;
-        for (let i = 1; i < data.length; i++) {
-          if (String(data[i][0]).trim() === key) {
-            sheet.getRange(i + 1, 2).setValue(val);
-            found = true;
-            break;
-          }
-        }
-        if (!found) {
-          sheet.appendRow([key, val]);
-        }
-      };
 
-      if (postData.libraryName) updateKey('libraryName', postData.libraryName);
-      if (postData.adminName) updateKey('adminName', postData.adminName);
-      if (postData.adminId) updateKey('adminId', postData.adminId);
-      if (postData.adminPassword) updateKey('adminPassword', postData.adminPassword);
-      if (postData.cycleType) updateKey('cycleType', postData.cycleType);
-      if (postData.cycleBaseDate) updateKey('cycleBaseDate', postData.cycleBaseDate);
-      if (postData.cycleBaseWeek !== undefined) updateKey('cycleBaseWeek', String(postData.cycleBaseWeek));
-      if (postData.slotCapacity !== undefined) updateKey('slotCapacity', String(postData.slotCapacity));
-      if (postData.operatingDays) updateKey('operatingDays', JSON.stringify(postData.operatingDays));
-      if (postData.autoHolidaysClose !== undefined) updateKey('autoHolidaysClose', String(postData.autoHolidaysClose));
-      if (postData.timeSlots) updateKey('timeSlots', JSON.stringify(postData.timeSlots));
+      // 키-값 맵 구성
+      const configMap = {};
+      for (let i = 1; i < data.length; i++) {
+        const k = String(data[i][0] || '').trim();
+        const v = String(data[i][1] || '').trim();
+        if (k) configMap[k] = v;
+      }
 
-      return ContentService.createTextOutput(JSON.stringify({ status: 'success' }))
+      // 4대 핵심 계정 및 도서관 정보 업데이트
+      if (postData.libraryName !== undefined && postData.libraryName !== null && String(postData.libraryName).trim() !== '') {
+        configMap['libraryName'] = String(postData.libraryName).trim();
+      }
+      if (postData.adminName !== undefined && postData.adminName !== null && String(postData.adminName).trim() !== '') {
+        configMap['adminName'] = String(postData.adminName).trim();
+      }
+      if (postData.adminId !== undefined && postData.adminId !== null && String(postData.adminId).trim() !== '') {
+        configMap['adminId'] = String(postData.adminId).trim();
+      }
+      if (postData.adminPassword !== undefined && postData.adminPassword !== null && String(postData.adminPassword).trim() !== '') {
+        configMap['adminPassword'] = String(postData.adminPassword).trim();
+      }
+
+      if (postData.cycleType) configMap['cycleType'] = postData.cycleType;
+      if (postData.cycleBaseDate) configMap['cycleBaseDate'] = postData.cycleBaseDate;
+      if (postData.cycleBaseWeek !== undefined) configMap['cycleBaseWeek'] = String(postData.cycleBaseWeek);
+      if (postData.slotCapacity !== undefined) configMap['slotCapacity'] = String(postData.slotCapacity);
+      if (postData.operatingDays) configMap['operatingDays'] = JSON.stringify(postData.operatingDays);
+      if (postData.autoHolidaysClose !== undefined) configMap['autoHolidaysClose'] = String(postData.autoHolidaysClose);
+      if (postData.timeSlots) configMap['timeSlots'] = JSON.stringify(postData.timeSlots);
+
+      // 기본값 Fallback 보장
+      if (!configMap['libraryName']) configMap['libraryName'] = '꿈빛도서관';
+      if (!configMap['adminName']) configMap['adminName'] = '사서교사';
+      if (!configMap['adminId']) configMap['adminId'] = 'admin';
+      if (!configMap['adminPassword']) configMap['adminPassword'] = 'admin1234';
+
+      // 순서 고정 배열: Row 2(B2)는 libraryName, Row 3(B3)는 adminName, Row 4(B4)는 adminId, Row 5(B5)는 adminPassword
+      const orderedKeys = [
+        'libraryName',      // Row 2 -> B2
+        'adminName',        // Row 3 -> B3
+        'adminId',          // Row 4 -> B4
+        'adminPassword',    // Row 5 -> B5
+        'cycleType',        // Row 6 -> B6
+        'slotCapacity',     // Row 7 -> B7
+        'operatingDays',    // Row 8 -> B8
+        'autoHolidaysClose',// Row 9 -> B9
+        'cycleBaseDate',    // Row 10 -> B10
+        'cycleBaseWeek',    // Row 11 -> B11
+        'timeSlots'         // Row 12 -> B12
+      ];
+
+      const rowsToWrite = [['항목키', '설정값']];
+      const writtenKeySet = {};
+
+      orderedKeys.forEach(k => {
+        if (configMap[k] !== undefined) {
+          rowsToWrite.push([k, configMap[k]]);
+          writtenKeySet[k] = true;
+        }
+      });
+
+      // 기타 사용자 정의 키가 있다면 아래에 안전하게 보존
+      Object.keys(configMap).forEach(k => {
+        if (!writtenKeySet[k]) {
+          rowsToWrite.push([k, configMap[k]]);
+        }
+      });
+
+      sheet.clearContents();
+      sheet.getRange(1, 1, rowsToWrite.length, 2).setValues(rowsToWrite);
+
+      // 서식 지정 및 고정 컬럼 폭
+      sheet.getRange(1, 1, 1, 2).setBackground('#334155').setFontColor('#ffffff').setFontWeight('bold');
+      sheet.getRange(2, 1, rowsToWrite.length - 1, 1).setFontWeight('bold').setFontColor('#475569');
+      sheet.setColumnWidth(1, 160);
+      sheet.setColumnWidth(2, 340);
+
+      // 🚨 핵심: 변경 사항 즉시 시트에 박아 넣는 강제 플러시
+      SpreadsheetApp.flush();
+
+      return ContentService.createTextOutput(JSON.stringify({ status: 'success', message: 'config_saved_flushed' }))
         .setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -251,6 +306,8 @@ function doPost(e) {
           rosterSheet.getRange(2, 1, rRows.length, header.length).setValues(rRows);
         }
 
+        SpreadsheetApp.flush();
+
         return ContentService.createTextOutput(JSON.stringify({ status: 'success', message: 'excel_batch_saved' }))
           .setMimeType(ContentService.MimeType.JSON);
 
@@ -272,6 +329,7 @@ function doPost(e) {
       if (rows.length > 0) {
         sheet.getRange(2, 1, rows.length, 3).setValues(rows);
       }
+      SpreadsheetApp.flush();
       return ContentService.createTextOutput(JSON.stringify({ status: 'success' }))
         .setMimeType(ContentService.MimeType.JSON);
     }
@@ -300,6 +358,7 @@ function doPost(e) {
       if (rows.length > 0) {
         sheet.getRange(2, 1, rows.length, header.length).setValues(rows);
       }
+      SpreadsheetApp.flush();
       return ContentService.createTextOutput(JSON.stringify({ status: 'success' }))
         .setMimeType(ContentService.MimeType.JSON);
     }
@@ -316,6 +375,7 @@ function doPost(e) {
       }
 
       sheet.appendRow([timeStr, k, d.status || '', d.requester || '', d.substitute || '', d.reason || '']);
+      SpreadsheetApp.flush();
       return ContentService.createTextOutput(JSON.stringify({ status: 'success' }))
         .setMimeType(ContentService.MimeType.JSON);
     }
@@ -327,6 +387,7 @@ function doPost(e) {
         sheet.appendRow(['날짜', '시간', '이름', '출석확인']);
       }
       sheet.appendRow([postData.date, normalizeTimeStr(postData.time), postData.name, postData.status]);
+      SpreadsheetApp.flush();
       return ContentService.createTextOutput(JSON.stringify({ status: 'success' }))
         .setMimeType(ContentService.MimeType.JSON);
     }
@@ -464,6 +525,21 @@ function getSystemConfig(sheet) {
       try { config.timeSlots = JSON.parse(v); } catch (e) {}
     }
   }
+
+  // 💡 다이렉트 고정 셀 직결 감지 (사서 선생님이 시트 B2~B5를 직접 수정하여 계정을 복구하는 경우)
+  if (data.length >= 2 && data[1] && data[1][1] && (String(data[1][0]).trim() === 'libraryName' || !data[1][0])) {
+    config.libraryName = String(data[1][1]).trim();
+  }
+  if (data.length >= 3 && data[2] && data[2][1] && (String(data[2][0]).trim() === 'adminName' || !data[2][0])) {
+    config.adminName = String(data[2][1]).trim();
+  }
+  if (data.length >= 4 && data[3] && data[3][1] && (String(data[3][0]).trim() === 'adminId' || !data[3][0])) {
+    config.adminId = String(data[3][1]).trim();
+  }
+  if (data.length >= 5 && data[4] && data[4][1] && (String(data[4][0]).trim() === 'adminPassword' || !data[4][0])) {
+    config.adminPassword = String(data[4][1]).trim();
+  }
+
   return config;
 } // [end of getSystemConfig]
 
@@ -473,20 +549,27 @@ function getSystemConfig(sheet) {
 function setupStandardSheets(ss, slotCapacity) {
   const cap = Math.max(1, parseInt(slotCapacity, 10) || 2);
 
-  // 1. 시스템 설정
+  // 1. 시스템 설정 (B2:도서관, B3:성함, B4:아이디, B5:비밀번호 고정 배치)
   let s1 = ss.getSheetByName('시스템 설정') || ss.insertSheet('시스템 설정');
   if (s1.getLastRow() === 0) {
-    s1.appendRow(['항목키', '설정값']);
-    s1.appendRow(['libraryName', '꿈빛도서관']);
-    s1.appendRow(['adminName', '사서교사']);
-    s1.appendRow(['adminId', 'admin']);
-    s1.appendRow(['adminPassword', 'admin1234']);
-    s1.appendRow(['cycleType', '2주']);
-    s1.appendRow(['slotCapacity', String(cap)]);
-    s1.appendRow(['operatingDays', '["월","화","수","목","금"]']);
-    s1.appendRow(['autoHolidaysClose', 'true']);
-    s1.appendRow(['cycleBaseDate', Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd')]);
-    s1.appendRow(['cycleBaseWeek', '1']);
+    const defaultRows = [
+      ['항목키', '설정값'],
+      ['libraryName', '꿈빛도서관'],
+      ['adminName', '사서교사'],
+      ['adminId', 'admin'],
+      ['adminPassword', 'admin1234'],
+      ['cycleType', '2주'],
+      ['slotCapacity', String(cap)],
+      ['operatingDays', '["월","화","수","목","금"]'],
+      ['autoHolidaysClose', 'true'],
+      ['cycleBaseDate', Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd')],
+      ['cycleBaseWeek', '1']
+    ];
+    s1.getRange(1, 1, defaultRows.length, 2).setValues(defaultRows);
+    s1.getRange(1, 1, 1, 2).setBackground('#334155').setFontColor('#ffffff').setFontWeight('bold');
+    s1.getRange(2, 1, defaultRows.length - 1, 1).setFontWeight('bold').setFontColor('#475569');
+    s1.setColumnWidth(1, 160);
+    s1.setColumnWidth(2, 340);
   }
 
   // 2. 봉사자 정보
@@ -516,6 +599,8 @@ function setupStandardSheets(ss, slotCapacity) {
   if (s5.getLastRow() === 0) {
     s5.appendRow(['기록일시', '슬롯키', '상태', '요청자', '대타/교체자', '사유']);
   }
+
+  SpreadsheetApp.flush();
 } // [end of setupStandardSheets]
 
 function resetNewSemesterSheets(ss, slotCapacity) {
@@ -530,7 +615,6 @@ function resetNewSemesterSheets(ss, slotCapacity) {
 
   clearTab('봉사자 정보', ['순번', '이름', '연락처']);
 
-  // N인 가변 정원 헤더 동적 생성
   const rosterHeader = ['순번', '주차', '요일', '시간대'];
   for (let r = 1; r <= cap; r++) {
     rosterHeader.push(r === 1 ? '봉사위원 1 (정)' : (r === 2 ? '봉사위원 2 (부)' : '봉사위원 ' + r));
@@ -539,6 +623,8 @@ function resetNewSemesterSheets(ss, slotCapacity) {
 
   clearTab('출석부', ['날짜', '시간', '이름', '출석확인']);
   clearTab('출석 및 변경 기록', ['기록일시', '슬롯키', '상태', '요청자', '대타/교체자', '사유']);
+
+  SpreadsheetApp.flush();
 } // [end of resetNewSemesterSheets]
 
 // -------------------------------------------------------------
@@ -580,7 +666,7 @@ function createMonthlySheet(year, month, slotCapacity, scheduleRows, gridRows) {
     .setVerticalAlignment('middle');
   sheet.setRowHeight(1, 36);
 
-  // 세부 배정 데이터 조립 (Fallback 및 그리드 데이터 복원 안전망)
+  // 세부 배정 데이터 조립
   let finalScheduleRows = scheduleRows;
   let finalGridRows = gridRows;
 
@@ -612,7 +698,7 @@ function createMonthlySheet(year, month, slotCapacity, scheduleRows, gridRows) {
 
   const colWidths = [115, 75, 85, 140];
   for (let r = 1; r <= cap; r++) colWidths.push(130);
-  colWidths.push(220); // 비고
+  colWidths.push(220);
 
   for (let c = 1; c <= header.length; c++) {
     sheet.setColumnWidth(c, colWidths[c - 1] || 120);
