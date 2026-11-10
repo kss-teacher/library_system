@@ -260,8 +260,8 @@
               <th class="p-3 text-center w-16">주차</th>
               <th class="p-3 text-center w-16">요일</th>
               <th class="p-3 text-center w-24">시간</th>
-              <th class="p-3 min-w-[86px]">봉사위원 1 (정)</th>
-              <th class="p-3 min-w-[86px]">봉사위원 2 (부)</th>
+              <th class="p-3 min-w-[86px]">봉사위원 1</th>
+              <th class="p-3 min-w-[86px]">봉사위원 2</th>
             </tr>
           </thead>
           <tbody id="rosterTableBody" class="divide-y divide-slate-100">
@@ -1054,8 +1054,8 @@
             <tr>
               <th class="p-2.5 text-center w-20">요일</th>
               <th class="p-2.5 w-32">시간대</th>
-              <th class="p-2.5">봉사위원 1 (정)</th>
-              <th class="p-2.5">봉사위원 2 (부)</th>
+              <th class="p-2.5">봉사위원 1</th>
+              <th class="p-2.5">봉사위원 2</th>
             </tr>
           </thead>
           <tbody id="scheduleAssignTableBody" class="divide-y divide-slate-100">
@@ -2066,7 +2066,7 @@
                       cardStyle = 'border-2 border-amber-400 bg-amber-50/50 rounded-xl p-3.5 shadow-2xs flex flex-col justify-between space-y-3';
                     }
 
-                    const roleLabel = (w.roleIdx === 1) ? '봉사위원 1 (정)' : (w.roleIdx === 2 ? '봉사위원 2 (부)' : `봉사위원 ${w.roleIdx}`);
+                    const roleLabel = (w.roleIdx === 1) ? '봉사위원 1' : (w.roleIdx === 2 ? '봉사위원 2' : `봉사위원 ${w.roleIdx}`);
 
                     return `
                       <div class="${cardStyle}">
@@ -2641,7 +2641,7 @@
           <th class="p-3 text-center w-24">시간</th>
         `;
         for (let r = 1; r <= cap; r++) {
-          const roleLabel = (r === 1) ? '봉사위원 1 (정)' : (r === 2 ? '봉사위원 2 (부)' : `봉사위원 ${r}`);
+          const roleLabel = (r === 1) ? '봉사위원 1' : (r === 2 ? '봉사위원 2' : `봉사위원 ${r}`);
           thHtml += `<th class="p-3 min-w-[86px]">${roleLabel}</th>`;
         }
         thead.innerHTML = thHtml;
@@ -2810,7 +2810,7 @@
           <th class="p-2.5 w-32">시간대</th>
         `;
         for (let r = 1; r <= cap; r++) {
-          const roleLabel = (r === 1) ? '봉사위원 1 (정)' : (r === 2 ? '봉사위원 2 (부)' : `봉사위원 ${r}`);
+          const roleLabel = (r === 1) ? '봉사위원 1' : (r === 2 ? '봉사위원 2' : `봉사위원 ${r}`);
           thHtml += `<th class="p-2.5">${roleLabel}</th>`;
         }
         thead.innerHTML = thHtml;
@@ -2941,7 +2941,7 @@
       // 2. [봉사자 순번] 탭
       const rosterHeaders = ['순번', '주차', '요일', '시간대'];
       for (let r = 1; r <= cap; r++) {
-        rosterHeaders.push(r === 1 ? '봉사위원 1 (정)' : (r === 2 ? '봉사위원 2 (부)' : `봉사위원 ${r}`));
+        rosterHeaders.push(r === 1 ? '봉사위원 1' : (r === 2 ? '봉사위원 2' : `봉사위원 ${r}`));
       }
       const rosterRows = [rosterHeaders];
 
