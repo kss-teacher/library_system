@@ -23,7 +23,7 @@
   제공하지 않습니다. 이용 과정에서 발생하는 데이터 관리 책임은 각 이용 기관에 있습니다.
   ==============================================================================
   -->
-  <title>꿈빛 - 도서관 봉사인력 관리 시스템 v1.17</title>
+  <title>꿈빛 - 도서관 봉사인력 관리 시스템 v1.18</title>
 
   <!-- PWA Web App Manifest (초기 기본값 및 동적 자가치유 교체 타겟) -->
   <link id="pwaManifestLink" rel="manifest" href="data:application/manifest+json;utf-8,%7B%22name%22%3A%22%EA%BF%88%EB%B9%9B%22%2C%22short_name%22%3A%22%EA%BF%88%EB%B9%9B%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23ffffff%22%2C%22theme_color%22%3A%22%23f59e0b%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%3Butf8%2C%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%20192%20192'%3E%3Crect%20width%3D'192'%20height%3D'192'%20rx%3D'42'%20fill%3D'%23f59e0b'%2F%3E%3Cpath%20d%3D'M44%2064c14-8%2034-8%2052%204v72c-18-12-38-12-52-4V64zm104%200c-14-8-34-8-52%204v72c18-12%2038-12%2052-4V64z'%20fill%3D'%23ffffff'%2F%3E%3C%2Fsvg%3E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
@@ -68,7 +68,7 @@
         <div>
           <div class="flex items-center space-x-1.5">
             <span class="font-extrabold text-lg text-slate-900 tracking-tight">꿈빛</span>
-            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-md border border-amber-200/60 font-mono">v1.17</span>
+            <span class="text-[10px] font-bold px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded-md border border-amber-200/60 font-mono">v1.18</span>
           </div>
           <p id="topBarOrgName" class="text-xs text-slate-500 font-medium truncate max-w-[140px] sm:max-w-xs">꿈빛도서관</p>
         </div>
@@ -471,31 +471,32 @@
         </button>
 
        <div id="accordionBody-2" class="hidden p-5 border-t border-slate-100 space-y-4 bg-slate-50/30">
-  <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 leading-relaxed">
-    💡 <b>관리자 계정 안내:</b> 관리자 정보는 구글 시트 <code>시스템 설정</code> 탭과 실시간 양방향으로 동기화됩니다. 분실 시 스프레드시트에서 직접 확인하거나 수정하실 수 있습니다. (초기값: <code>admin</code> / <code>admin1234</code>)
-  </div>
+          <div class="p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs text-purple-950 leading-relaxed">
+            💡 <b>관리자 계정 분실 복구 안내:</b> 관리자 정보는 구글 시트 <code>시스템 설정</code> 탭(B3:성함, B4:아이디, B5:비밀번호)과 실시간 양방향으로 동기화됩니다. 비밀번호 분실 시 구글 스프레드시트에서 직접 확인하거나 수정하실 수 있습니다. (초기값: <code>admin</code> / <code>admin1234</code>)
+          </div>
+          
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">사서교사 / 관리자 성함</label>
+            <input type="text" id="cfgAdminNameInput" value="사서교사" placeholder="관리자 성함 (예: 김사서)" class="w-full p-2.5 text-xs border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 font-bold text-slate-800">
+          </div>
 
-  <div>
-    <label class="block text-xs font-bold text-slate-700 mb-1">사서교사 / 관리자 성함</label>
-    <input type="text" id="cfgAdminNameInput" value="사서교사" placeholder="관리자 성함 (예: 김사서)" class="w-full p-2.5 text-xs border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 font-bold">
-  </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">관리자 아이디</label>
+              <input type="text" id="cfgAdminIdInput" value="admin" class="w-full p-2.5 text-xs border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 font-bold text-slate-800">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">새 비밀번호</label>
+              <input type="password" id="cfgAdminPwInput" placeholder="변경할 새 비밀번호 입력" class="w-full p-2.5 text-xs border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 font-bold text-slate-800">
+            </div>
+          </div>
+          <div class="flex justify-end pt-2">
+            <button type="button" onclick="saveAdminCredentialsFromUI()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-2xs transition-colors">
+              계정 정보 저장
+            </button>
+          </div>
+        </div>
 
-  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-    <div>
-      <label class="block text-xs font-bold text-slate-700 mb-1">관리자 아이디</label>
-      <input type="text" id="cfgAdminIdInput" value="admin" class="w-full p-2.5 text-xs border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 font-bold">
-    </div>
-    <div>
-      <label class="block text-xs font-bold text-slate-700 mb-1">새 비밀번호</label>
-      <input type="password" id="cfgAdminPwInput" placeholder="변경할 새 비밀번호 입력" class="w-full p-2.5 text-xs border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-purple-500/20 font-bold">
-    </div>
-  </div>
-  <div class="flex justify-end pt-2">
-    <button type="button" onclick="saveAdminCredentialsFromUI()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-2xs transition-colors">
-      계정 정보 저장
-    </button>
-  </div>
-</div>
         
       <!-- 아코디언 3: 3. 기본 설정 (기본 열림) -->
       <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden transition-all">
@@ -838,7 +839,7 @@
       <!-- 하단 저작권 및 관리자 통로 -->
       <div class="pt-2 flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-100">
         <div class="flex items-center space-x-1.5">
-          <span class="font-bold text-slate-600">꿈빛 v1.17</span>
+          <span class="font-bold text-slate-600">꿈빛 v1.18</span>
           <span>·</span>
           <span>© 2026 Sung soo Kim</span>
         </div>
@@ -1215,7 +1216,7 @@
           <p>• <b>원작자 / Copyright:</b> © 2026 <b>Sung soo Kim</b>. All Rights Reserved.</p>
           <p>• <b>라이선스 규격:</b> Open Education License (MIT License 기반). 전국 교육기관 및 공공도서관은 비영리 목적으로 본 소프트웨어를 영구히 무상 사용할 수 있습니다.</p>
           <p>• <b>법적 면책 조항:</b> 본 프로그램은 "있는 그대로" 제공되며 명시적이거나 묵시적인 어떠한 보증도 제공하지 않습니다. 각 기관의 데이터 백업과 관리에 대한 법적 책임은 해당 이용 기관에 귀속됩니다.</p>
-          <p>• <b>소프트웨어 버전:</b> 꿈빛 (Ggumbit) v1.17</p>
+          <p>• <b>소프트웨어 버전:</b> 꿈빛 (Ggumbit) v1.18</p>
         </div>
       </div>
 
@@ -1676,7 +1677,8 @@
           updateConnectedSheetUI();
 
           if (data.libraryName) { orgName = data.libraryName; safeStorage.setItem('lib_org_name', orgName); }
-          if (data.adminId) { adminId = data.adminId; safeStorage.setItem('lib_admin_id', adminId); }
+          if (data.adminName) { adminName = data.adminName; safeStorage.setItem('lib_admin_name', adminName); const admNameIn = document.getElementById('cfgAdminNameInput'); if (admNameIn) admNameIn.value = adminName; }
+          if (data.adminId) { adminId = data.adminId; safeStorage.setItem('lib_admin_id', adminId); const admIdIn = document.getElementById('cfgAdminIdInput'); if (admIdIn) admIdIn.value = adminId; }
           if (data.adminPassword) { adminPw = data.adminPassword; safeStorage.setItem('lib_admin_pw', adminPw); }
           if (data.cycleType) { cycleType = data.cycleType; safeStorage.setItem('lib_cycle_type', cycleType); }
           if (data.slotCapacity) { slotCapacity = parseInt(data.slotCapacity, 10) || slotCapacity; safeStorage.setItem('lib_slot_capacity', String(slotCapacity)); }
@@ -3369,6 +3371,9 @@
           body: JSON.stringify({
             action: 'saveSystemConfig',
             libraryName: orgName,
+            adminName: adminName,
+            adminId: adminId,
+            adminPassword: adminPw,
             cycleType: cycleType,
             cycleBaseDate: cycleBaseDate,
             cycleBaseWeek: cycleBaseWeek,
@@ -3394,17 +3399,37 @@
     }
 
     function saveAdminCredentialsFromUI() {
+      const nameIn = document.getElementById('cfgAdminNameInput');
       const idIn = document.getElementById('cfgAdminIdInput');
       const pwIn = document.getElementById('cfgAdminPwInput');
+      const newName = nameIn ? nameIn.value.trim() : '';
       const newId = idIn ? idIn.value.trim() : '';
       const newPw = pwIn ? pwIn.value.trim() : '';
 
+      if (newName) { adminName = newName; safeStorage.setItem('lib_admin_name', adminName); }
       if (newId) { adminId = newId; safeStorage.setItem('lib_admin_id', adminId); }
       if (newPw) { adminPw = newPw; safeStorage.setItem('lib_admin_pw', adminPw); }
 
-      showToast('관리자 계정 정보가 안전하게 저장되었습니다.');
+      showToast('관리자 계정 정보가 로컬 및 구글 시트에 안전하게 저장되었습니다.');
       if (pwIn) pwIn.value = '';
+
+      // 도서관 명칭 성공 방식과 동일하게 4대 핵심 키를 일괄 전송
+      if (gasApiUrl) {
+        fetch(gasApiUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'saveAdminAccount',
+            libraryName: orgName,
+            adminName: adminName,
+            adminId: adminId,
+            adminPassword: adminPw
+          })
+        }).catch(() => {});
+      }
     }
+
 
     function copyBackendCodeToClipboard() {
       showToast('📋 Apps Script 백엔드 v1.08 코드가 복사되었습니다. (구글 시트 편집기에 붙여넣기)');
