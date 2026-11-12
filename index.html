@@ -1370,6 +1370,7 @@
     let rosterData = [];
     let overrideLog = {};
     let attendanceLog = {};
+    let serverTodayKst = '';
     let myVolunteerName = '';
     let calendarYear = 2026;
     let calendarMonth = 11;
@@ -1384,11 +1385,31 @@
     // -------------------------------------------------------------
     // [3] 날짜 및 시간 유틸리티
     // -------------------------------------------------------------
-    function formatDate(d) {
+function formatDate(d) {
       const y = d.getFullYear();
       const m = String(d.getMonth() + 1).padStart(2, '0');
       const day = String(d.getDate()).padStart(2, '0');
       return `${y}-${m}-${day}`;
+    }
+
+    function getKoreaTodayStr() {
+      if (serverTodayKst && /^\d{4}-\d{2}-\d{2}$/.test(serverTodayKst)) {
+        return serverTodayKst;
+      }
+      try {
+        const parts = new Intl.DateTimeFormat('en-US', {
+          timeZone: 'Asia/Seoul',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).formatToParts(new Date());
+        const y = parts.find(p => p.type === 'year').value;
+        const m = parts.find(p => p.type === 'month').value;
+        const d = parts.find(p => p.type === 'day').value;
+        return `${y}-${m}-${d}`;
+      } catch (e) {
+        return formatDate(new Date());
+      }
     }
 
     function parseDate(s) {
@@ -1706,8 +1727,52 @@
             safeStorage.setItem('lib_cache_overrides', JSON.stringify(overrideLog));
           }
 
+          if (data.serverTodayKst) {
+            serverTodayKst = String(data.serverTodayKst).trim();
+          }
+
           if (data.attendance && typeof data.attendance === 'object') {
-            attendanceLog = data.attendance;
+            const mergedAttendance = { ...data.attendance };
+            let pendingMap = {};
+            try {
+              pendingMap = JSON.parse(safeStorage.getItem('lib_pending_attendance') || '{}');
+            } catch (e) {}
+
+            let hasPendingChanges = false;
+            Object.keys(pendingMap).forEach(pKey => {
+              const pRec = pendingMap[pKey];
+              const serverRec = mergedAttendance[pKey] || (pRec.name ? mergedAttendance[`${pRec.date}_${pRec.time}_${pRec.name}`] : null);
+              if (serverRec && serverRec.status === pRec.status) {
+                delete pendingMap[pKey];
+                hasPendingChanges = true;
+              } else if (pRec && pRec.status === 'O') {
+                mergedAttendance[pKey] = pRec;
+                if (pRec.name && pRec.name !== '공석') {
+                  mergedAttendance[`${pRec.date}_${pRec.time}_${pRec.name}`] = pRec;
+                }
+                fetch(gasApiUrl, {
+                  method: 'POST',
+                  mode: 'no-cors',
+                  keepalive: true,
+                  headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                  body: JSON.stringify({
+                    action: 'saveAttendanceCheck',
+                    slotKey: pRec.slotKey,
+                    date: pRec.date,
+                    time: pRec.time,
+                    roleIdx: pRec.roleIdx,
+                    name: pRec.name,
+                    status: 'O',
+                    isAdmin: false
+                  })
+                }).catch(() => {});
+              }
+            });
+
+            if (hasPendingChanges) {
+              safeStorage.setItem('lib_pending_attendance', JSON.stringify(pendingMap));
+            }
+            attendanceLog = mergedAttendance;
             safeStorage.setItem('lib_cache_attendance', JSON.stringify(attendanceLog));
           }
 
@@ -2002,6 +2067,7 @@
 
       const myName = safeStorage.getItem('lib_my_name') || myVolunteerName || '';
       const cap = Math.max(1, parseInt(slotCapacity, 10) || 2);
+      const isTodayKst = (currentDateStr === getKoreaTodayStr());
 
       let cardsHtml = '';
 
@@ -2110,10 +2176,22 @@
                               ${w.isReq && w.rec?.reason ? `<p class="text-[11px] text-rose-600 font-medium mt-0.5">사유: ${w.rec.reason}</p>` : ''}
                             </div>
 
-                            <button onclick="toggleAttendanceCheck('${w.key}', '${w.effName}')" class="px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center space-x-1.5 ${w.isAtt ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'}">
-                              <i class="fa-solid ${w.isAtt ? 'fa-circle-check text-emerald-200' : 'fa-circle text-slate-400'} text-xs"></i>
-                              <span>${w.isAtt ? '출석확인 (O)' : '미출석 (X)'}</span>
-                            </button>
+                            ${isAdminLoggedIn
+  ? `<button type="button" onclick="toggleAttendanceCheck('${w.key}', '${w.effName}')" class="px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center space-x-1.5 ${w.isAtt ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'}">
+      <i class="fa-solid ${w.isAtt ? 'fa-circle-check text-emerald-200' : 'fa-circle text-slate-400'} text-xs"></i>
+      <span>${w.isAtt ? '출석확인 (O)' : '미출석 (X)'}</span>
+    </button>`
+  : (w.isAtt
+      ? `<button type="button" disabled class="px-3 py-1.5 rounded-xl font-bold text-xs flex items-center space-x-1.5 bg-emerald-600 text-white shadow-xs cursor-not-allowed opacity-95">
+          <i class="fa-solid fa-circle-check text-emerald-200 text-xs"></i>
+          <span>출석완료 (O)</span>
+        </button>`
+      : `<button type="button" onclick="toggleAttendanceCheck('${w.key}', '${w.effName}')" class="px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center space-x-1.5 ${isTodayKst ? 'bg-slate-100 hover:bg-amber-50 hover:border-amber-300 text-slate-700 border border-slate-200' : 'bg-slate-100 text-slate-400 border border-slate-200'}">
+          <i class="fa-solid fa-circle text-slate-400 text-xs"></i>
+          <span>미출석 (X)</span>
+        </button>`
+    )
+}
                           </div>
                         </div>
 
