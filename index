@@ -2031,10 +2031,11 @@
           const isAcc = (rec && rec.status === 'ACCEPTED');
           const effName = isAcc ? rec.substitute : (isReq ? (rec.requester || origName) : origName);
 
-          const isAtt = !!(attendanceLog[key] && attendanceLog[key].status !== 'X');
+          const attRec = attendanceLog[key] || (effName && effName !== '공석' ? attendanceLog[`${currentDateStr}_${sNorm}_${effName}`] : null);
+          const isAtt = !!(attRec && attRec.status === 'O');
           const isMy = (myName && (effName === myName || (isReq && rec.requester === myName)));
           const isEmpty = (!effName || effName === '공석');
-
+          
           return { roleIdx, key, rec, origName, isReq, isAcc, effName, isAtt, isMy, isEmpty };
         });
 
@@ -2187,7 +2188,7 @@
     // -------------------------------------------------------------
     // [8] 출석체크 및 대타 보안 제어
     // -------------------------------------------------------------
-    function toggleAttendanceCheck(slotKey, workerName) {
+   function toggleAttendanceCheck(slotKey, workerName) {
       const myName = safeStorage.getItem('lib_my_name') || myVolunteerName || '';
 
       if (!isAdminLoggedIn) {
@@ -2202,14 +2203,29 @@
         }
       }
 
-      const isCurrentlyAtt = !!(attendanceLog[slotKey] && attendanceLog[slotKey].status !== 'X');
+      const parts = slotKey.split('_');
+      const datePart = parts[0] || currentDateStr;
+      const timePart = parts[1] || '';
+      const rolePart = parts[2] || '1';
+      const fallbackKey = `${datePart}_${timePart}_${workerName}`;
+
+      const prevRec = attendanceLog[slotKey] || attendanceLog[fallbackKey];
+      const isCurrentlyAtt = !!(prevRec && prevRec.status === 'O');
       const newStatus = isCurrentlyAtt ? 'X' : 'O';
 
-      attendanceLog[slotKey] = {
-        date: currentDateStr,
+      const recordObj = {
+        slotKey: slotKey,
+        date: datePart,
+        time: timePart,
+        roleIdx: rolePart,
         name: workerName,
         status: newStatus
       };
+
+      attendanceLog[slotKey] = recordObj;
+      if (workerName && workerName !== '공석') {
+        attendanceLog[fallbackKey] = recordObj;
+      }
       safeStorage.setItem('lib_cache_attendance', JSON.stringify(attendanceLog));
       renderTodaySlots();
 
@@ -2220,11 +2236,14 @@
         fetch(gasApiUrl, {
           method: 'POST',
           mode: 'no-cors',
+          keepalive: true,
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
           body: JSON.stringify({
             action: 'saveAttendanceCheck',
-            date: currentDateStr,
-            time: slotKey.split('_')[1] || '',
+            slotKey: slotKey,
+            date: datePart,
+            time: timePart,
+            roleIdx: rolePart,
             name: workerName,
             status: newStatus
           })
