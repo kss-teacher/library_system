@@ -1,7 +1,7 @@
 /**
  * ==============================================================================
  * Project: 꿈빛 (Ggumbit) - 도서관 봉사인력 자원관리 시스템 (Google Apps Script)
- * Version: v1.12 (44.1단계: 출석부 slotKey 영구 보존, 텍스트(@) 고정, Upsert 및 이중 매핑)
+ * Version: v1.13 (45.1단계: 출석부 6열 자동 복구, 동일인 1회 출석 제한, KST 당일 및 잠금 검증)
  * Author / Copyright: (c) 2026 Sung soo Kim. All Rights Reserved.
  * ==============================================================================
  */
@@ -15,17 +15,18 @@ const SHEET_NAMES = {
 };
 
 /**
- * [0] 초기 권한 승인 및 시스템 점검용 테스트 함수
- * Apps Script 편집기 상단에서 이 함수를 선택하고 [실행]을 누르면 권한 승인이 완료됩니다.
+ * [0] 초기 권한 승인, 시스템 점검 및 밀린 출석부 행 즉시 복구 함수
+ * Apps Script 편집기 상단에서 이 함수를 선택하고 [실행]을 누르면 권한 승인과 시트 정비가 완료됩니다.
  */
 function testSystem() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   setupStandardSheets_(ss, 2);
-  Logger.log('꿈빛 백엔드 v1.12 초기화 및 권한 점검 완료: ' + ss.getName());
+  SpreadsheetApp.flush();
+  Logger.log('꿈빛 백엔드 v1.13 초기화 및 출석부 6열 정렬 점검 완료: ' + ss.getName());
 } // [end of testSystem]
 
 /**
- * [1] 웹앱 GET 요청 처리 (데이터 조회 및 실시간 동기화)
+ * [1] 웹앱 GET 요청 처리 (데이터 조회 및 한국 표준시 기준 오늘 날짜 제공)
  */
 function doGet(e) {
   try {
@@ -38,10 +39,12 @@ function doGet(e) {
       const roster = getRosterList_(ss);
       const overrides = getOverridesMap_(ss);
       const attendance = getAttendanceMap_(ss);
+      const serverTodayKst = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
 
       const result = {
         status: 'success',
-        version: 'v1.12',
+        version: 'v1.13',
+        serverTodayKst: serverTodayKst,
         spreadsheetUrl: ss.getUrl(),
         spreadsheetId: ss.getId(),
         libraryName: config.libraryName || '꿈빛도서관',
@@ -128,9 +131,9 @@ function doPost(e) {
     }
 
     if (action === 'saveAttendanceCheck') {
-      saveAttendanceCheck_(ss, payload);
+      const saveRes = saveAttendanceCheck_(ss, payload);
       SpreadsheetApp.flush();
-      return createJsonResponse_({ status: 'success', message: '출석 상태 영구 저장 완료' });
+      return createJsonResponse_(saveRes);
     }
 
     if (action === 'setOverride') {
@@ -216,7 +219,7 @@ function setupStandardSheets_(ss, slotCapacity) {
     styleHeaderRow_(rosSheet, headers.length, '#e0e7ff');
   }
 
-  // 4. 출석부 탭 (6열 slotKey 영구 보존 규격)
+  // 4. 출석부 탭 (6열 slotKey 영구 보존 및 밀린 행 자동 복구 규격)
   let attSheet = ss.getSheetByName(SHEET_NAMES.ATTENDANCE);
   if (!attSheet) {
     attSheet = ss.insertSheet(SHEET_NAMES.ATTENDANCE);
@@ -257,13 +260,11 @@ function getSystemConfig_(ss) {
   const lastRow = sheet.getLastRow();
   const values = sheet.getRange(1, 1, lastRow, 2).getDisplayValues();
 
-  // B2~B5 고정 셀 우선 확인
   if (values.length >= 2 && values[1][1]) cfg.libraryName = String(values[1][1]).trim();
   if (values.length >= 3 && values[2][1]) cfg.adminName = String(values[2][1]).trim();
   if (values.length >= 4 && values[3][1]) cfg.adminId = String(values[3][1]).trim();
   if (values.length >= 5 && values[4][1]) cfg.adminPassword = String(values[4][1]).trim();
 
-  // 전체 행 키-값 매핑 (한글 별칭 포함)
   for (let i = 1; i < values.length; i++) {
     const rawKey = String(values[i][0] || '').trim();
     const val = String(values[i][1] || '').trim();
@@ -354,9 +355,6 @@ function saveAdminAccount_(ss, payload) {
   }
 } // [end of saveAdminAccount_]
 
-/**
- * 설정 키-값 행 갱신 헬퍼 (지정 고정 행 또는 기존 키 검색 후 텍스트 서식 저장)
- */
 function upsertConfigKey_(sheet, keyName, valueStr, preferredRow, descStr) {
   const lastRow = sheet.getLastRow();
   if (lastRow >= 2) {
@@ -370,7 +368,6 @@ function upsertConfigKey_(sheet, keyName, valueStr, preferredRow, descStr) {
     }
   }
 
-  // 기존 키가 없으면 preferredRow가 비어있거나 기본 키 자리일 때 기록, 아니면 맨 아래 추가
   const targetRow = (preferredRow && sheet.getRange(preferredRow, 1).getDisplayValue() === '')
     ? preferredRow
     : Math.max(lastRow + 1, preferredRow || 2);
@@ -495,59 +492,129 @@ function saveRosterList_(ss, roster, slotCapacity) {
 } // [end of saveRosterList_]
 
 /**
- * [9] 출석부 스키마 자동 보정 및 영구 Upsert 저장 (44.1 핵심 엔진)
- * 컬럼 구조: [슬롯키(slotKey), 활동일자, 시간대, 슬롯순번, 봉사위원 성함, 출석상태]
+ * [9] 출석부 6열 스키마 보장, 밀린 행 자동 복구 및 중복 병합 엔진
+ * 표준 열 순서: [1: 슬롯키(slotKey), 2: 활동일자, 3: 시간대, 4: 슬롯순번, 5: 봉사위원 성함, 6: 출석상태]
  */
 function ensureAttendanceSheetSchema_(sheet) {
   const expectedHeaders = ['슬롯키(slotKey)', '활동일자', '시간대', '슬롯순번', '봉사위원 성함', '출석상태'];
   const lastRow = sheet.getLastRow();
 
   if (lastRow === 0) {
-    sheet.getRange(1, 1, 1, expectedHeaders.length).setValues([expectedHeaders]);
-    styleHeaderRow_(sheet, expectedHeaders.length, '#dcfce7');
-    sheet.setColumnWidth(1, 190);
-    sheet.setColumnWidth(2, 110);
-    sheet.setColumnWidth(3, 90);
-    sheet.setColumnWidth(4, 80);
-    sheet.setColumnWidth(5, 130);
-    sheet.setColumnWidth(6, 100);
+    sheet.getRange(1, 1, 1, 6).setValues([expectedHeaders]);
+    styleHeaderRow_(sheet, 6, '#dcfce7');
+    formatAttendanceColumns_(sheet);
     return;
   }
 
+  // 1행 헤더가 다르더라도 기존 2행 이하 데이터를 추출해 6열 표준 구조로 정규화
   const colAHeader = String(sheet.getRange(1, 1).getDisplayValue() || '').trim();
-  if (colAHeader !== '슬롯키(slotKey)') {
-    // 구버전 출석부 탭을 데이터 손실 없이 6열 표준 구조로 자동 마이그레이션
-    if (lastRow === 1) {
+  const hasValidHeader = (colAHeader === '슬롯키(slotKey)');
+
+  if (lastRow === 1) {
+    if (!hasValidHeader) {
       sheet.clearContents();
-      sheet.getRange(1, 1, 1, expectedHeaders.length).setValues([expectedHeaders]);
-      styleHeaderRow_(sheet, expectedHeaders.length, '#dcfce7');
+      sheet.getRange(1, 1, 1, 6).setValues([expectedHeaders]);
+      styleHeaderRow_(sheet, 6, '#dcfce7');
+      formatAttendanceColumns_(sheet);
+    }
+    return;
+  }
+
+  const maxCols = Math.max(6, sheet.getLastColumn());
+  const rawValues = sheet.getRange(2, 1, lastRow - 1, maxCols).getDisplayValues();
+  const normalizedMap = {};
+  const orderedKeys = [];
+  let needsRewrite = !hasValidHeader;
+
+  for (let i = 0; i < rawValues.length; i++) {
+    const row = rawValues[i];
+    const c0 = String(row[0] || '').trim();
+    const c1 = String(row[1] || '').trim();
+    const c2 = String(row[2] || '').trim();
+    const c3 = String(row[3] || '').trim();
+    const c4 = String(row[4] || '').trim();
+    const c5 = String(row[5] || '').trim();
+
+    if (!c0 && !c1 && !c2 && !c3 && !c4 && !c5) {
+      needsRewrite = true;
+      continue;
+    }
+
+    let slotKey = '';
+    let dateStr = '';
+    let timeStr = '';
+    let roleIdx = '1';
+    let workerName = '';
+    let status = 'O';
+
+    // [밀린 4열 행 감지] c0가 날짜(예: 2026-11-12)이고 '_'가 없으며 c4·c5가 비어 있는 경우
+    if (c0 && c0.indexOf('_') === -1 && /^\d{4}[-./]\d{1,2}[-./]\d{1,2}/.test(c0)) {
+      needsRewrite = true;
+      dateStr = normalizeDateStr_(c0);
+      timeStr = normalizeTimeStr_(c1);
+      workerName = c2;
+      status = (c3.toUpperCase() === 'X') ? 'X' : 'O';
+      roleIdx = '1';
+      slotKey = dateStr + '_' + timeStr + '_' + roleIdx;
     } else {
-      const oldCols = Math.max(4, sheet.getLastColumn());
-      const oldValues = sheet.getRange(2, 1, lastRow - 1, oldCols).getDisplayValues();
-      const migratedRows = [];
+      // 정상 6열 구조 파싱
+      const parts = c0.split('_');
+      dateStr = normalizeDateStr_(c1 || parts[0] || '');
+      timeStr = normalizeTimeStr_(c2 || parts[1] || '');
+      roleIdx = String(c3 || parts[2] || '1').trim() || '1';
+      workerName = c4;
+      status = (c5.toUpperCase() === 'X') ? 'X' : 'O';
+      slotKey = (dateStr && timeStr) ? (dateStr + '_' + timeStr + '_' + roleIdx) : c0;
 
-      for (let i = 0; i < oldValues.length; i++) {
-        const dStr = normalizeDateStr_(oldValues[i][0]);
-        const tStr = normalizeTimeStr_(oldValues[i][1]);
-        const wName = String(oldValues[i][2] || '').trim();
-        const st = String(oldValues[i][3] || 'O').trim().toUpperCase();
-        if (dStr && tStr) {
-          const sKey = dStr + '_' + tStr + '_1';
-          migratedRows.push([sKey, dStr, tStr, '1', wName, st === 'X' ? 'X' : 'O']);
-        }
+      if (c0 !== slotKey || c1 !== dateStr || c2 !== timeStr || c3 !== roleIdx || c5 !== status) {
+        needsRewrite = true;
       }
+    }
 
-      sheet.clearContents();
-      sheet.getRange(1, 1, 1, expectedHeaders.length).setValues([expectedHeaders]);
-      styleHeaderRow_(sheet, expectedHeaders.length, '#dcfce7');
-      if (migratedRows.length > 0) {
-        sheet.getRange(2, 1, migratedRows.length, expectedHeaders.length)
-          .setNumberFormat('@')
-          .setValues(migratedRows);
+    if (!dateStr || !timeStr) {
+      needsRewrite = true;
+      continue;
+    }
+
+    // 동일인·동일시간대 중복 행 병합 키 (날짜_시간_성함 또는 슬롯키)
+    const uniquePersonKey = workerName ? (dateStr + '_' + timeStr + '_' + workerName) : slotKey;
+    const cleanRow = [slotKey, dateStr, timeStr, roleIdx, workerName, status];
+
+    if (normalizedMap[uniquePersonKey]) {
+      needsRewrite = true;
+      // 이미 'O'가 기록되어 있으면 'O' 우선 보존
+      if (normalizedMap[uniquePersonKey][5] !== 'O' && status === 'O') {
+        normalizedMap[uniquePersonKey] = cleanRow;
+      } else if (normalizedMap[uniquePersonKey][5] === status) {
+        normalizedMap[uniquePersonKey] = cleanRow;
       }
+    } else {
+      normalizedMap[uniquePersonKey] = cleanRow;
+      orderedKeys.push(uniquePersonKey);
+    }
+  }
+
+  if (needsRewrite) {
+    sheet.clearContents();
+    sheet.getRange(1, 1, 1, 6).setValues([expectedHeaders]);
+    styleHeaderRow_(sheet, 6, '#dcfce7');
+    formatAttendanceColumns_(sheet);
+
+    const finalRows = orderedKeys.map(function(k) { return normalizedMap[k]; });
+    if (finalRows.length > 0) {
+      sheet.getRange(2, 1, finalRows.length, 6).setNumberFormat('@').setValues(finalRows);
     }
   }
 } // [end of ensureAttendanceSheetSchema_]
+
+function formatAttendanceColumns_(sheet) {
+  sheet.setColumnWidth(1, 195);
+  sheet.setColumnWidth(2, 115);
+  sheet.setColumnWidth(3, 90);
+  sheet.setColumnWidth(4, 85);
+  sheet.setColumnWidth(5, 130);
+  sheet.setColumnWidth(6, 95);
+} // [end of formatAttendanceColumns_]
 
 function saveAttendanceCheck_(ss, payload) {
   let sheet = ss.getSheetByName(SHEET_NAMES.ATTENDANCE);
@@ -560,6 +627,7 @@ function saveAttendanceCheck_(ss, payload) {
   const timeStr = normalizeTimeStr_(payload.time || '');
   const workerName = String(payload.name || '').trim();
   const status = (String(payload.status || 'O').trim().toUpperCase() === 'X') ? 'X' : 'O';
+  const isAdminReq = (payload.isAdmin === true);
 
   let slotKey = String(payload.slotKey || '').trim();
   let roleIdx = String(payload.roleIdx || '').trim();
@@ -581,10 +649,19 @@ function saveAttendanceCheck_(ss, payload) {
   const finalDate = dateStr || slotKey.split('_')[0] || '';
   const finalTime = timeStr || slotKey.split('_')[1] || '';
   const finalRole = roleIdx || slotKey.split('_')[2] || '1';
-  const rowPayload = [slotKey, finalDate, finalTime, finalRole, workerName, status];
 
+  // 일반 사용자(isAdmin === false)인 경우 한국 표준시(KST) 기준 '오늘'만 출석 허용
+  if (payload.isAdmin === false) {
+    const todayKst = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
+    if (finalDate && finalDate !== todayKst) {
+      return { status: 'error', message: '오늘 봉사만 출석이 됩니다.' };
+    }
+  }
+
+  const rowPayload = [slotKey, finalDate, finalTime, finalRole, workerName, status];
   const lastRow = sheet.getLastRow();
   const matchedRows = [];
+  let alreadyConfirmedO = false;
 
   if (lastRow >= 2) {
     const existing = sheet.getRange(2, 1, lastRow - 1, 6).getDisplayValues();
@@ -593,19 +670,29 @@ function saveAttendanceCheck_(ss, payload) {
       const exDate = normalizeDateStr_(existing[i][1]);
       const exTime = normalizeTimeStr_(existing[i][2]);
       const exName = String(existing[i][4] || '').trim();
+      const exStatus = String(existing[i][5] || '').trim().toUpperCase();
 
-      if (exKey === slotKey || (exDate === finalDate && exTime === finalTime && exName === workerName)) {
+      const samePersonSameTime = (workerName && exDate === finalDate && exTime === finalTime && exName === workerName);
+      const sameSlot = (exKey === slotKey && (!workerName || !exName || exName === workerName));
+
+      if (samePersonSameTime || sameSlot) {
         matchedRows.push(i + 2);
+        if (exStatus === 'O') {
+          alreadyConfirmedO = true;
+        }
       }
     }
   }
 
+  // 일반 사용자는 이미 'O'로 확정된 출석을 'X'로 취소 불가
+  if (!isAdminReq && payload.isAdmin === false && alreadyConfirmedO && status === 'X') {
+    return { status: 'locked', message: '이미 출석 확인이 완료되었습니다.' };
+  }
+
   if (matchedRows.length > 0) {
-    // 첫 번째 일치 행을 최신 상태로 덮어쓰기(Upsert)
     const primaryRow = matchedRows[0];
     sheet.getRange(primaryRow, 1, 1, 6).setNumberFormat('@').setValues([rowPayload]);
 
-    // 혹시 누적된 중복 행이 있다면 아래에서 위로 정리
     for (let k = matchedRows.length - 1; k >= 1; k--) {
       sheet.deleteRow(matchedRows[k]);
     }
@@ -613,6 +700,19 @@ function saveAttendanceCheck_(ss, payload) {
     const nextRow = lastRow + 1;
     sheet.getRange(nextRow, 1, 1, 6).setNumberFormat('@').setValues([rowPayload]);
   }
+
+  return {
+    status: 'success',
+    message: status === 'O' ? '출석 상태 영구 저장 완료' : '출석 상태 변경 완료',
+    record: {
+      slotKey: slotKey,
+      date: finalDate,
+      time: finalTime,
+      roleIdx: finalRole,
+      name: workerName,
+      status: status
+    }
+  };
 } // [end of saveAttendanceCheck_]
 
 function getAttendanceMap_(ss) {
@@ -643,14 +743,17 @@ function getAttendanceMap_(ss) {
       status: status
     };
 
-    // 1차 기본 키: slotKey (예: 2026-11-12_08:30_1)
     if (slotKey) {
-      map[slotKey] = record;
+      if (!map[slotKey] || status === 'O') {
+        map[slotKey] = record;
+      }
     }
 
-    // 2차 폴백 키: 날짜_시간_성함 (예: 2026-11-12_08:30_김도서)
     if (dateStr && timeStr && name) {
-      map[dateStr + '_' + timeStr + '_' + name] = record;
+      const personKey = dateStr + '_' + timeStr + '_' + name;
+      if (!map[personKey] || status === 'O') {
+        map[personKey] = record;
+      }
     }
   }
 
@@ -744,7 +847,6 @@ function createMonthlySheets_(ss, payload) {
     gridRows = buildGridRowsFromSchedule_(year, month, scheduleRows, cap);
   }
 
-  // 1) [YYYY-MM 봉사배정표] 시트 생성
   const listTabName = ymStr + ' 봉사배정표';
   let listSheet = ss.getSheetByName(listTabName);
   if (listSheet) {
@@ -773,7 +875,6 @@ function createMonthlySheets_(ss, payload) {
       .setValues(normalizedList);
   }
 
-  // 2) [YYYY-MM 달력] 7열 격자 시트 생성
   const calTabName = ymStr + ' 달력';
   let calSheet = ss.getSheetByName(calTabName);
   if (calSheet) {
