@@ -1321,13 +1321,17 @@
       }
     }
 
-    function closeModal(modalId, updateHistory = true) {
+ function closeModal(modalId, updateHistory = true) {
       const modal = document.getElementById(modalId);
       if (modal) {
         modal.classList.add('hidden');
         if (updateHistory && history.state && history.state.modalId === modalId) {
           try { history.back(); } catch (e) {}
         }
+      }
+      // 관리자 로그인 취소 시 비인가 설정 화면 잔류 원천 방어
+      if (modalId === 'adminLoginModal' && !isAdminLoggedIn && currentActiveTab === 'admin') {
+        showTab('today', false);
       }
     }
 
@@ -3609,12 +3613,16 @@
       }
     }
 
-    function handleAdminHeaderButtonClick() {
+  function handleAdminHeaderButtonClick() {
       if (isAdminLoggedIn) {
         isAdminLoggedIn = false;
         document.getElementById('adminHeaderBtnText').textContent = '관리자';
         showToast('관리자 모드에서 로그아웃되었습니다.');
-        renderAllViews();
+        if (currentActiveTab === 'admin') {
+          showTab('today');
+        } else {
+          renderAllViews();
+        }
       } else {
         openModal('adminLoginModal');
       }
@@ -3678,7 +3686,13 @@
     // -------------------------------------------------------------
     // [16] 탭 전환 및 전역 뷰 갱신
     // -------------------------------------------------------------
-    function showTab(tabId, pushHistory = true) {
+function showTab(tabId, pushHistory = true) {
+      // [보안 가드] 관리자 미인증 시 설정 탭 진입 차단 (화면 전환 없이 로그인 모달만 호출)
+      if (tabId === 'admin' && !isAdminLoggedIn) {
+        openModal('adminLoginModal');
+        return;
+      }
+
       currentActiveTab = tabId;
 
       ['today', 'calendar', 'roster', 'my', 'admin'].forEach(t => {
@@ -3712,11 +3726,6 @@
       else if (tabId === 'calendar') renderCalendar();
       else if (tabId === 'roster') renderRosterTable();
       else if (tabId === 'my') renderMyTab();
-      else if (tabId === 'admin') {
-        if (!isAdminLoggedIn) {
-          openModal('adminLoginModal');
-        }
-      }
 
       if (pushHistory) {
         try {
