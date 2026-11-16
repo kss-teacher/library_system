@@ -1774,6 +1774,7 @@ function formatDate(d) {
             }
             attendanceLog = mergedAttendance;
             safeStorage.setItem('lib_cache_attendance', JSON.stringify(attendanceLog));
+            if (typeof renderSosFloatingBanner === 'function') renderSosFloatingBanner();
           }
 
           if (statusBadge) {
@@ -2125,7 +2126,7 @@ function formatDate(d) {
             <div class="p-4 sm:p-5">
               ${visibleWorkers.length === 0 ? `
                 <div class="p-4 rounded-xl bg-slate-50 border border-slate-100 text-center text-xs text-slate-400">
-                  배정된 활동 위원이 없습니다.
+                  배정된 활동 위원이 없습니다. ${renderEmptySlotAction(`${currentDateStr}_${typeof sNorm !== 'undefined' ? sNorm : (timeSlots && timeSlots[0] ? timeSlots[0].start : '09:00')}_1`)}
                 </div>
               ` : `
                 <div class="grid ${gridColsClass} gap-3.5">
@@ -2266,7 +2267,194 @@ function formatDate(d) {
     // -------------------------------------------------------------
     // [8] 출석체크 및 대타 보안 제어
     // -------------------------------------------------------------
-   function toggleAttendanceCheck(slotKey, workerName) {
+   // =========================================================================
+    // [46.2] 긴급 구인(SOS) 상단 플로팅 배너 & 선착순 지원 엔진
+    // =========================================================================
+    let isSosApplying = false;
+
+    function formatSosSlotLabel(slotKey) {
+      const parts = String(slotKey || '').split('_');
+      const dateStr = parts[0] || '';
+      const timeStr = parts[1] || '';
+      const dMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!dMatch) return `${dateStr} ${timeStr}`;
+      const dObj = new Date(parseInt(dMatch[1], 10), parseInt(dMatch[2], 10) - 1, parseInt(dMatch[3], 10));
+      const days = ['일', '월', '화', '수', '목', '금', '토'];
+      const dow = days[dObj.getDay()] || '';
+      return `${parseInt(dMatch[2], 10)}/${parseInt(dMatch[3], 10)}(${dow}) ${timeStr}`;
+    }
+
+    function renderEmptySlotAction(slotKey) {
+      const rec = overrideLog && overrideLog[slotKey];
+      const isSosOpen = !!(rec && rec.status === 'SOS_OPEN');
+
+      if (isAdminLoggedIn) {
+        if (isSosOpen) {
+          return `<button type="button" onclick="cancelSlotSOS('${slotKey}')" class="ml-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-300 transition-all">⏳ 구인중 (취소)</button>`;
+        }
+        return `<button type="button" onclick="requestSlotSOS('${slotKey}', '공석')" class="ml-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 transition-all">🚨 구인요청</button>`;
+      }
+
+      if (isSosOpen) {
+        return `<button type="button" onclick="applySlotSOS('${slotKey}')" class="ml-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-xs transition-all">✋ 긴급지원</button>`;
+      }
+      return '';
+    }
+
+    function renderSosFloatingBanner() {
+      const bannerEl = document.getElementById('sosFloatingBanner');
+      if (!bannerEl) return;
+
+      const openKeys = Object.keys(overrideLog || {})
+        .filter(k => overrideLog[k] && overrideLog[k].status === 'SOS_OPEN')
+        .sort();
+
+      // 활성화된 구인 요청이 없으면 배너 즉시 소멸
+      if (openKeys.length === 0) {
+        bannerEl.innerHTML = '';
+        return;
+      }
+
+      const targetKey = openKeys[0];
+      const label = formatSosSlotLabel(targetKey);
+      const extraBadge = openKeys.length > 1
+        ? `<span class="ml-1 px-1.5 py-0.5 text-[10px] font-extrabold bg-rose-100 text-rose-700 rounded-full">+${openKeys.length - 1}건</span>`
+        : '';
+
+      const actionBtn = isAdminLoggedIn
+        ? `<button type="button" onclick="cancelSlotSOS('${targetKey}')" class="shrink-0 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-all">구인취소</button>`
+        : `<button type="button" onclick="applySlotSOS('${targetKey}')" class="shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-xs transition-all">✋ 지원하기</button>`;
+
+      bannerEl.innerHTML = `
+        <div class="pointer-events-auto bg-white/95 backdrop-blur-md border-2 border-rose-400 shadow-lg rounded-2xl px-3.5 py-2.5 flex items-center justify-between gap-2.5">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="shrink-0 w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+            <div class="min-w-0">
+              <div class="text-[11px] font-extrabold text-rose-600 flex items-center">
+                <span>🚨 긴급 봉사 구인 요청</span>${extraBadge}
+              </div>
+              <div class="text-xs font-bold text-slate-800 truncate">${label} 공석 발생</div>
+            </div>
+          </div>
+          ${actionBtn}
+        </div>
+      `;
+    }
+
+    function requestSlotSOS(slotKey, origWorker) {
+      if (!isAdminLoggedIn) return;
+      overrideLog[slotKey] = {
+        status: 'SOS_OPEN',
+        requester: origWorker || '공석',
+        substitute: '',
+        reason: '긴급 구인'
+      };
+      renderSosFloatingBanner();
+      renderTodaySlots();
+      showToast('🚨 긴급 구인 알림이 발송되었습니다.');
+
+      if (gasApiUrl) {
+        fetch(gasApiUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          keepalive: true,
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'requestSOS',
+            slotKey: slotKey,
+            origWorker: origWorker || '공석'
+          })
+        }).catch(() => {});
+      }
+    }
+
+    function cancelSlotSOS(slotKey) {
+      if (!isAdminLoggedIn) return;
+      delete overrideLog[slotKey];
+      renderSosFloatingBanner();
+      renderTodaySlots();
+      showToast('⚪ 긴급 구인 요청이 취소되었습니다.');
+
+      if (gasApiUrl) {
+        fetch(gasApiUrl, {
+          method: 'POST',
+          mode: 'no-cors',
+          keepalive: true,
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'cancelSOS',
+            slotKey: slotKey
+          })
+        }).catch(() => {});
+      }
+    }
+
+    async function applySlotSOS(slotKey) {
+      const myName = safeStorage.getItem('lib_my_name') || myVolunteerName || '';
+      if (!myName) {
+        showToast('⚠️ 먼저 본인 확인(성함 등록)을 진행해 주세요.');
+        openModal('coverModal');
+        return;
+      }
+      if (isSosApplying) return;
+      isSosApplying = true;
+
+      try {
+        if (!gasApiUrl) {
+          showToast('⚠️ 구글 시트 연결 주소를 확인해 주세요.');
+          return;
+        }
+        const res = await fetch(gasApiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            action: 'applySOS',
+            slotKey: slotKey,
+            applicantName: myName
+          })
+        });
+        const data = await res.json();
+
+        if (data && data.status === 'success') {
+          showToast(data.message || '지원 감사합니다. 일정표를 확인해주세요.');
+          overrideLog[slotKey] = {
+            status: 'ACCEPTED',
+            requester: (overrideLog[slotKey] && overrideLog[slotKey].requester) || '공석',
+            substitute: myName,
+            reason: '긴급 구인 지원'
+          };
+        } else {
+          showToast((data && data.message) || '마감되었습니다. 지원 감사합니다.');
+          delete overrideLog[slotKey];
+        }
+        renderSosFloatingBanner();
+        renderTodaySlots();
+        if (typeof fetchGasData === 'function') fetchGasData();
+      } catch (e) {
+        // 통신 리다이렉트 환경 대비 시트 재조회로 최종 당첨 여부 판별
+        if (typeof fetchGasData === 'function') await fetchGasData();
+        const latest = overrideLog && overrideLog[slotKey];
+        if (latest && latest.status === 'ACCEPTED' && latest.substitute === myName) {
+          showToast('지원 감사합니다. 일정표를 확인해주세요.');
+        } else {
+          showToast('마감되었습니다. 지원 감사합니다.');
+        }
+        renderSosFloatingBanner();
+        renderTodaySlots();
+      } finally {
+        isSosApplying = false;
+      }
+    }
+
+    // 20초마다 백그라운드 무소음 동기화 (구인 발생/마감 즉시 반영)
+    setInterval(() => {
+      if (gasApiUrl && !document.hidden && typeof fetchGasData === 'function') {
+        fetchGasData();
+      }
+    }, 20000);
+    setTimeout(renderSosFloatingBanner, 600);
+
+    function toggleAttendanceCheck(slotKey, workerName) {
       const myName = safeStorage.getItem('lib_my_name') || myVolunteerName || '';
 
       if (!isAdminLoggedIn) {
@@ -3932,5 +4120,7 @@ function showTab(tabId, pushHistory = true) {
       }
     });
   </script>
+<!-- 46.2 긴급 구인(SOS) 상단 플로팅 알림 배너 -->
+  <div id="sosFloatingBanner" class="fixed top-3 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-md pointer-events-none transition-all duration-300"></div>
 </body>
 </html>
