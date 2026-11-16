@@ -2274,8 +2274,8 @@ function formatDate(d) {
     // -------------------------------------------------------------
     // [8] 출석체크 및 대타 보안 제어
     // -------------------------------------------------------------
-    // =========================================================================
-    // [56-3] 긴급 구인(SOS) · 개인 대타 요청 · 공석 전환 · 직권교체 통합 무결성 엔진 (최종 완결본)
+// =========================================================================
+    // [57] 긴급 구인(SOS) · 개인 대타 요청 · 공석 전환 · 직권교체 통합 무결성 엔진
     // =========================================================================
     let isSosApplying = false;
     window._sosMemoryGuard = window._sosMemoryGuard || {};
@@ -2317,6 +2317,18 @@ function formatDate(d) {
 
     function getCurrentVolunteerName() {
       return String(getSafeItem('lib_my_name') || (typeof myVolunteerName !== 'undefined' ? myVolunteerName : '') || '').trim();
+    }
+
+    // 배정 완료(ACCEPTED)나 취소(RESET)가 아닌 모든 구인·대타 대기 상태를 통합 판별
+    function isOpenRequestRec(rec) {
+      if (!rec || typeof rec !== 'object') return false;
+      const st = String(rec.status || '').trim().toUpperCase();
+      const sub = String(rec.substitute || '').trim();
+      if (!st || sub) return false;
+      if (st === 'ACCEPTED' || st === 'RESET' || st === 'CANCELLED' || st === 'REJECTED' || st === 'DONE' || st === 'COMPLETED') {
+        return false;
+      }
+      return true;
     }
 
     function getPendingOverrides() {
@@ -2411,23 +2423,25 @@ function formatDate(d) {
             }
             if (method === 'POST' && init && typeof init.body === 'string') {
               const bodyObj = JSON.parse(init.body);
-              if (bodyObj && bodyObj.slotKey && !bodyObj._internalRetry) {
-                const act = bodyObj.action || '';
+              const targetKey = bodyObj && (bodyObj.slotKey || bodyObj.key || bodyObj.slot);
+              if (bodyObj && targetKey && !bodyObj._internalRetry) {
+                const act = String(bodyObj.action || '').trim();
                 const dObj = (bodyObj.data && typeof bodyObj.data === 'object') ? bodyObj.data : bodyObj;
-                const st = dObj.status || '';
-                const sub = String(dObj.substitute || '').trim();
-                const prevSub = window._knownSubstitutes[bodyObj.slotKey] || '';
+                const st = String(dObj.status || '').trim();
+                const stUpper = st.toUpperCase();
+                const sub = String(dObj.substitute || dObj.sub || '').trim();
+                const prevSub = window._knownSubstitutes[targetKey] || '';
 
-                if (act === 'deleteOverride' || act === 'removeOverride' || (act === 'setOverride' && (!st || st === 'RESET' || st === 'CANCELLED'))) {
-                  purgeOverrideFromLocalCache(bodyObj.slotKey);
-                  if (window._latestServerOverrides && window._latestServerOverrides[bodyObj.slotKey]) {
-                    delete window._latestServerOverrides[bodyObj.slotKey];
+                if (act === 'deleteOverride' || act === 'removeOverride' || act === 'cancelSub' || (!st && act === 'setOverride') || stUpper === 'RESET' || stUpper === 'CANCELLED') {
+                  purgeOverrideFromLocalCache(targetKey);
+                  if (window._latestServerOverrides && window._latestServerOverrides[targetKey]) {
+                    delete window._latestServerOverrides[targetKey];
                   }
                   if (typeof overrideLog === 'object' && overrideLog !== null) {
-                    delete overrideLog[bodyObj.slotKey];
+                    delete overrideLog[targetKey];
                   }
                   const pending = getPendingOverrides();
-                  pending[bodyObj.slotKey] = {
+                  pending[targetKey] = {
                     action: 'resetSlot',
                     prevSubstitute: prevSub,
                     ts: Date.now()
@@ -2437,18 +2451,19 @@ function formatDate(d) {
                     if (typeof renderSosFloatingBanner === 'function') renderSosFloatingBanner();
                     if (typeof renderTodaySlots === 'function') renderTodaySlots();
                   }, 50);
-                } else if (act === 'setOverride' && st === 'PENDING') {
+                } else if (!sub && (stUpper === 'PENDING' || stUpper === 'REQUESTED' || stUpper === 'OPEN' || stUpper === 'WAITING' || stUpper === 'SUB_OPEN' || act.toLowerCase().indexOf('sub') !== -1 || act.toLowerCase().indexOf('request') !== -1)) {
+                  // 개인 대타 요청(PENDING/REQUESTED/OPEN 등 모든 대기 상태) 즉시 포착 및 플로팅 배너 활성화
                   const pendingRec = Object.assign({}, dObj, {
-                    status: 'PENDING',
-                    requester: dObj.requester || getCurrentVolunteerName() || '',
+                    status: st || 'PENDING',
+                    requester: dObj.requester || dObj.origWorker || getCurrentVolunteerName() || '',
                     substitute: '',
                     reason: dObj.reason || '대타 요청'
                   });
                   if (typeof overrideLog === 'object' && overrideLog !== null) {
-                    overrideLog[bodyObj.slotKey] = pendingRec;
+                    overrideLog[targetKey] = pendingRec;
                   }
                   const pending = getPendingOverrides();
-                  pending[bodyObj.slotKey] = {
+                  pending[targetKey] = {
                     action: 'requestPending',
                     record: pendingRec,
                     ts: Date.now()
@@ -2459,7 +2474,7 @@ function formatDate(d) {
                     if (typeof renderSosFloatingBanner === 'function') renderSosFloatingBanner();
                     if (typeof renderTodaySlots === 'function') renderTodaySlots();
                   }, 50);
-                } else if (act === 'setOverride' && (sub === '공석' || (st === 'ACCEPTED' && !sub))) {
+                } else if (act === 'setOverride' && (sub === '공석' || (stUpper === 'ACCEPTED' && !sub))) {
                   const vacantRec = {
                     status: 'ACCEPTED',
                     requester: dObj.requester || '',
@@ -2467,11 +2482,11 @@ function formatDate(d) {
                     reason: dObj.reason || '관리자 공석 처리'
                   };
                   if (typeof overrideLog === 'object' && overrideLog !== null) {
-                    overrideLog[bodyObj.slotKey] = vacantRec;
+                    overrideLog[targetKey] = vacantRec;
                   }
-                  window._knownSubstitutes[bodyObj.slotKey] = '공석';
+                  window._knownSubstitutes[targetKey] = '공석';
                   const pending = getPendingOverrides();
-                  pending[bodyObj.slotKey] = {
+                  pending[targetKey] = {
                     action: 'setVacant',
                     requester: vacantRec.requester,
                     reason: vacantRec.reason,
@@ -2483,7 +2498,7 @@ function formatDate(d) {
                     if (typeof renderSosFloatingBanner === 'function') renderSosFloatingBanner();
                     if (typeof renderTodaySlots === 'function') renderTodaySlots();
                   }, 50);
-                } else if (act === 'setOverride' && sub && sub !== '공석') {
+                } else if (sub && sub !== '공석') {
                   const assignedRec = Object.assign({}, dObj, {
                     status: st || 'ACCEPTED',
                     requester: dObj.requester || '',
@@ -2491,11 +2506,11 @@ function formatDate(d) {
                     reason: dObj.reason || ''
                   });
                   if (typeof overrideLog === 'object' && overrideLog !== null) {
-                    overrideLog[bodyObj.slotKey] = assignedRec;
+                    overrideLog[targetKey] = assignedRec;
                   }
-                  window._knownSubstitutes[bodyObj.slotKey] = sub;
+                  window._knownSubstitutes[targetKey] = sub;
                   const pending = getPendingOverrides();
-                  pending[bodyObj.slotKey] = {
+                  pending[targetKey] = {
                     action: 'setAssigned',
                     record: assignedRec,
                     ts: Date.now()
@@ -2608,7 +2623,7 @@ function formatDate(d) {
         } else if (item.action === 'requestPending') {
           const isHandledOnServer = !!(
             serverRec &&
-            (serverRec.status === 'PENDING' || serverRec.status === 'ACCEPTED' || serverRec.status === 'SOS_OPEN')
+            (isOpenRequestRec(serverRec) || serverRec.status === 'ACCEPTED')
           );
           if (canConfirmAgainstServer && isHandledOnServer) {
             delete pending[slotKey];
@@ -2637,7 +2652,7 @@ function formatDate(d) {
             merged[slotKey] = Object.assign({}, item.record);
           }
         } else if (item.action === 'cancelSOS' || item.action === 'resetSlot') {
-          const stillExistsOnServer = !!(serverRec && (serverRec.status === 'SOS_OPEN' || serverRec.status === 'PENDING' || serverRec.status === 'ACCEPTED'));
+          const stillExistsOnServer = !!(serverRec && (isOpenRequestRec(serverRec) || serverRec.status === 'ACCEPTED'));
           if (canConfirmAgainstServer && !stillExistsOnServer) {
             delete pending[slotKey];
             pendingChanged = true;
@@ -2774,421 +2789,7 @@ function formatDate(d) {
               }, false);
             } else if (item.action === 'resetSlot') {
               sendSosSignalToSheet(slotKey, {
-                action: 'setOverride',
-                slotKey: slotKey,
-                data: { status: 'RESET' },
-                _internalRetry: true
-              }, false);
-            } else {
-              sendSosSignalToSheet(slotKey, {
-                action: item.action,
-                slotKey: slotKey,
-                origWorker: item.origWorker || '공석',
-                _internalRetry: true
-              }, false);
-            }
-          }
-        });
-        if (updated) savePendingOverrides(pending);
-      }
-
-      if (typeof renderTodaySlots === 'function') renderTodaySlots();
-    }
-
-    function bootSosSyncGuard() {
-      hookRenderTodaySlots();
-      syncPendingOverridesWithServer(false);
-      renderSosFloatingBanner();
-    }
-
-    function formatSosSlotLabel(slotKey) {
-      const parts = String(slotKey || '').split('_');
-      const dateStr = parts[0] || '';
-      const timeStr = parts[1] || '';
-      const dMatch = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      if (!dMatch) return `${dateStr} ${timeStr}`;
-      const dObj = new Date(parseInt(dMatch[1], 10), parseInt(dMatch[2], 10) - 1, parseInt(dMatch[3], 10));
-      const days = ['일', '월', '화', '수', '목', '금', '토'];
-      const dow = days[dObj.getDay()] || '';
-      return `${parseInt(dMatch[2], 10)}/${parseInt(dMatch[3], 10)}(${dow}) ${timeStr}`;
-    }
-
-    function renderEmptySlotAction(slotKey) {
-      if (!slotKey || slotKey === 'undefined') return '';
-      const merged = getMergedOverrides(false);
-      const rec = merged[slotKey];
-      const isSosOpen = !!(rec && rec.status === 'SOS_OPEN');
-      const safeKey = escapeHtml(slotKey);
-
-      if (checkIsAdmin()) {
-        if (isSosOpen) {
-          return `<button type="button" onclick="cancelSlotSOS('${safeKey}')" class="ml-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-300 transition-all">⏳ 구인중 (취소)</button>`;
-        }
-        return `<button type="button" onclick="requestSlotSOS('${safeKey}', '공석')" class="ml-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 transition-all">🚨 구인요청</button>`;
-      }
-
-      if (isSosOpen) {
-        return `<button type="button" onclick="applySlotSOS('${safeKey}')" class="ml-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-xs transition-all">✋ 긴급지원</button>`;
-      }
-      return '';
-    }
-
-    // 교사 긴급 구인(SOS_OPEN)과 개인 대타 요청(PENDING)이 모두 공유하는 통합 플로팅 팝업
-    function renderSosFloatingBanner() {
-      const bannerEl = document.getElementById('sosFloatingBanner');
-      if (!bannerEl) return;
-
-      const merged = getMergedOverrides(false);
-      applyMergedStateToOverrideLog(merged);
-
-      const myName = getCurrentVolunteerName();
-      const openKeys = Object.keys(merged)
-        .filter(k => merged[k] && (merged[k].status === 'SOS_OPEN' || merged[k].status === 'PENDING'))
-        .sort((a, b) => {
-          if (!checkIsAdmin() && myName) {
-            const aMine = String(merged[a].requester || '').trim() === myName ? 1 : 0;
-            const bMine = String(merged[b].requester || '').trim() === myName ? 1 : 0;
-            if (aMine !== bMine) return aMine - bMine;
-          }
-          return a.localeCompare(b);
-        });
-
-      if (openKeys.length === 0) {
-        bannerEl.innerHTML = '';
-        return;
-      }
-
-      const targetKey = openKeys[0];
-      const targetRec = merged[targetKey];
-      const safeKey = escapeHtml(targetKey);
-      const isPersonalSub = targetRec.status === 'PENDING';
-      const label = escapeHtml(formatSosSlotLabel(targetKey));
-      const isMyRequest = !!(myName && targetRec.requester && String(targetRec.requester).trim() === myName);
-
-      const extraBadge = openKeys.length > 1
-        ? `<span class="ml-1 px-1.5 py-0.5 text-[10px] font-extrabold bg-rose-100 text-rose-700 rounded-full">+${openKeys.length - 1}건</span>`
-        : '';
-
-      const titleText = isPersonalSub ? '🙋 봉사 대타 요청' : '🚨 긴급 봉사 구인 요청';
-      const safeRequester = escapeHtml(targetRec.requester || '봉사위원');
-      const safeReason = escapeHtml(targetRec.reason || '');
-      const reasonSuffix = safeReason ? ` · ${safeReason}` : '';
-      const subText = isPersonalSub
-        ? `${label} (${safeRequester}님${reasonSuffix})`
-        : `${label} 공석 발생`;
-
-      const canCancel = checkIsAdmin() || isMyRequest;
-      const cancelLabel = isPersonalSub ? '요청취소' : '구인취소';
-      const actionBtn = canCancel
-        ? `<button type="button" onclick="cancelSlotSOS('${safeKey}')" class="shrink-0 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-all">${cancelLabel}</button>`
-        : `<button type="button" onclick="applySlotSOS('${safeKey}')" class="shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-xs transition-all">✋ 지원하기</button>`;
-
-      bannerEl.innerHTML = `
-        <div class="pointer-events-auto bg-white/95 backdrop-blur-md border-2 border-rose-400 shadow-lg rounded-2xl px-3.5 py-2.5 flex items-center justify-between gap-2.5">
-          <div class="flex items-center gap-2 min-w-0">
-            <span class="shrink-0 w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
-            <div class="min-w-0">
-              <div class="text-[11px] font-extrabold text-rose-600 flex items-center">
-                <span>${titleText}</span>${extraBadge}
-              </div>
-              <div class="text-xs font-bold text-slate-800 truncate">${subText}</div>
-            </div>
-          </div>
-          ${actionBtn}
-        </div>
-      `;
-    }
-
-    function requestSlotSOS(slotKey, origWorker) {
-      if (!checkIsAdmin()) return;
-      if (!slotKey || slotKey === 'undefined' || slotKey.indexOf('_') === -1) {
-        showToast('⚠️ 슬롯키가 올바르지 않습니다.');
-        return;
-      }
-
-      const existingCur = (typeof overrideLog === 'object' && overrideLog) ? overrideLog[slotKey] : null;
-      const preservedRequester = (existingCur && existingCur.requester && existingCur.requester !== '공석')
-        ? existingCur.requester
-        : (origWorker || '공석');
-      const prevSub = (existingCur && existingCur.substitute && existingCur.substitute !== '공석')
-        ? existingCur.substitute
-        : (window._knownSubstitutes[slotKey] || '');
-
-      if (typeof overrideLog === 'object' && overrideLog !== null) {
-        overrideLog[slotKey] = {
-          status: 'SOS_OPEN',
-          requester: preservedRequester,
-          substitute: '',
-          reason: '긴급 구인'
-        };
-      }
-      const pending = getPendingOverrides();
-      pending[slotKey] = {
-        action: 'requestSOS',
-        origWorker: preservedRequester,
-        prevSubstitute: prevSub,
-        ts: Date.now()
-      };
-      savePendingOverrides(pending);
-      persistOverrideCache(getMergedOverrides(false));
-
-      renderSosFloatingBanner();
-      if (typeof renderTodaySlots === 'function') renderTodaySlots();
-      showToast('🚨 구인 요청 전송 중...');
-
-      sendSosSignalToSheet(slotKey, {
-        action: 'requestSOS',
-        slotKey: slotKey,
-        origWorker: preservedRequester,
-        _internalRetry: true
-      }, true);
-    }
-
-    function cancelSlotSOS(slotKey) {
-      const merged = getMergedOverrides(false);
-      const cur = merged[slotKey];
-      const myName = getCurrentVolunteerName();
-      const isMyRequest = !!(myName && cur && cur.requester && String(cur.requester).trim() === myName);
-      if (!checkIsAdmin() && !isMyRequest) return;
-
-      const isPersonalPending = !!(cur && cur.status === 'PENDING');
-      const prevSub = window._knownSubstitutes[slotKey] || '';
-      if (typeof overrideLog === 'object' && overrideLog !== null) {
-        delete overrideLog[slotKey];
-      }
-      if (window._latestServerOverrides && window._latestServerOverrides[slotKey]) {
-        delete window._latestServerOverrides[slotKey];
-      }
-      delete window._knownSubstitutes[slotKey];
-      purgeOverrideFromLocalCache(slotKey);
-
-      const pending = getPendingOverrides();
-      pending[slotKey] = {
-        action: isPersonalPending ? 'resetSlot' : 'cancelSOS',
-        prevSubstitute: prevSub,
-        ts: Date.now()
-      };
-      savePendingOverrides(pending);
-      persistOverrideCache(getMergedOverrides(false));
-
-      renderSosFloatingBanner();
-      if (typeof renderTodaySlots === 'function') renderTodaySlots();
-      showToast('⚪ 취소 요청 전송 중...');
-
-      if (isPersonalPending) {
-        sendSosSignalToSheet(slotKey, {
-          action: 'setOverride',
-          slotKey: slotKey,
-          data: { status: 'RESET' },
-          _internalRetry: true
-        }, true);
-      } else {
-        sendSosSignalToSheet(slotKey, {
-          action: 'cancelSOS',
-          slotKey: slotKey,
-          _internalRetry: true
-        }, true);
-      }
-    }
-
-    async function applySlotSOS(slotKey) {
-      const myName = getCurrentVolunteerName();
-      if (!myName) {
-        showToast('⚠️ 먼저 본인 확인(성함 등록)을 진행해 주세요.');
-        if (typeof openModal === 'function') openModal('coverModal');
-        return;
-      }
-      if (isSosApplying) return;
-      isSosApplying = true;
-
-      try {
-        if (typeof gasApiUrl === 'undefined' || !gasApiUrl) {
-          showToast('⚠️ 구글 시트 연결 주소를 확인해 주세요.');
-          return;
-        }
-
-        const initialCur = getMergedOverrides(false)[slotKey];
-        const isPersonalPending = !!(initialCur && initialCur.status === 'PENDING');
-
-        // 개인 대타 요청(PENDING) 지원 시 동일 팝업 함수에서 바로 대타 수락(ACCEPTED) 처리
-        if (isPersonalPending) {
-          if (typeof fetchGasData === 'function') await fetchGasData();
-          const latestCur = getMergedOverrides(false)[slotKey];
-          if (!latestCur || latestCur.status !== 'PENDING') {
-            showToast('마감되었습니다. 지원 감사합니다.');
-            renderSosFloatingBanner();
-            if (typeof renderTodaySlots === 'function') renderTodaySlots();
-            return;
-          }
-          if (String(latestCur.requester || '').trim() === myName) {
-            showToast('⚠️ 본인의 대타 요청에는 지원할 수 없습니다.');
-            renderSosFloatingBanner();
-            return;
-          }
-
-          const acceptedRec = {
-            status: 'ACCEPTED',
-            requester: latestCur.requester || '',
-            substitute: myName,
-            reason: latestCur.reason || '대타 지원'
-          };
-          const resSub = await fetch(gasApiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-              action: 'setOverride',
-              slotKey: slotKey,
-              data: acceptedRec,
-              _internalRetry: true
-            })
-          });
-          const dSub = await resSub.json();
-          if (dSub && dSub.status === 'success') {
-            showToast('지원 감사합니다. 일정표를 확인해주세요.');
-            if (typeof overrideLog === 'object' && overrideLog !== null) {
-              overrideLog[slotKey] = acceptedRec;
-            }
-            if (window._latestServerOverrides) {
-              window._latestServerOverrides[slotKey] = acceptedRec;
-            }
-            window._knownSubstitutes[slotKey] = myName;
-            const pending = getPendingOverrides();
-            pending[slotKey] = {
-              action: 'setAssigned',
-              record: acceptedRec,
-              ts: Date.now()
-            };
-            savePendingOverrides(pending);
-            persistOverrideCache(getMergedOverrides(false));
-            renderSosFloatingBanner();
-            if (typeof renderTodaySlots === 'function') renderTodaySlots();
-            if (typeof fetchGasData === 'function') fetchGasData();
-          } else {
-            showToast((dSub && dSub.message) || '마감되었습니다. 지원 감사합니다.');
-          }
-          return;
-        }
-
-        const res = await fetch(gasApiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({
-            action: 'applySOS',
-            slotKey: slotKey,
-            applicantName: myName,
-            _internalRetry: true
-          })
-        });
-        let data = await res.json();
-
-        if (data && data.message && String(data.message).indexOf('Unknown POST action') !== -1) {
-          if (typeof fetchGasData === 'function') await fetchGasData();
-          const cur = (typeof overrideLog === 'object' && overrideLog !== null) ? overrideLog[slotKey] : null;
-          if (cur && cur.status === 'SOS_OPEN') {
-            const res2 = await fetch(gasApiUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-              body: JSON.stringify({
-                action: 'setOverride',
-                slotKey: slotKey,
-                data: {
-                  status: 'ACCEPTED',
-                  requester: cur.requester || '공석',
-                  substitute: myName,
-                  reason: '긴급 구인 지원'
-                },
-                _internalRetry: true
-              })
-            });
-            const d2 = await res2.json();
-            data = (d2 && d2.status === 'success')
-              ? { status: 'success', message: '지원 감사합니다. 일정표를 확인해주세요.' }
-              : { status: 'error', message: '마감되었습니다. 지원 감사합니다.' };
-          } else {
-            data = { status: 'error', message: '마감되었습니다. 지원 감사합니다.' };
-          }
-        }
-
-        const pending = getPendingOverrides();
-        if (data && data.status === 'success') {
-          showToast(data.message || '지원 감사합니다. 일정표를 확인해주세요.');
-          const acceptedRec = {
-            status: 'ACCEPTED',
-            requester: (overrideLog && overrideLog[slotKey] && overrideLog[slotKey].requester) || '공석',
-            substitute: myName,
-            reason: '긴급 구인 지원'
-          };
-          if (typeof overrideLog === 'object' && overrideLog !== null) {
-            overrideLog[slotKey] = acceptedRec;
-          }
-          if (window._latestServerOverrides) {
-            window._latestServerOverrides[slotKey] = acceptedRec;
-          }
-          window._knownSubstitutes[slotKey] = myName;
-          pending[slotKey] = {
-            action: 'setAssigned',
-            record: acceptedRec,
-            ts: Date.now()
-          };
-          savePendingOverrides(pending);
-        } else {
-          if (pending[slotKey]) {
-            delete pending[slotKey];
-            savePendingOverrides(pending);
-          }
-          showToast((data && data.message) || '마감되었습니다. 지원 감사합니다.');
-          if (typeof overrideLog === 'object' && overrideLog !== null) {
-            delete overrideLog[slotKey];
-          }
-          if (window._latestServerOverrides && window._latestServerOverrides[slotKey]) {
-            delete window._latestServerOverrides[slotKey];
-          }
-          delete window._knownSubstitutes[slotKey];
-          purgeOverrideFromLocalCache(slotKey);
-        }
-        persistOverrideCache(getMergedOverrides(false));
-        renderSosFloatingBanner();
-        if (typeof renderTodaySlots === 'function') renderTodaySlots();
-        if (typeof fetchGasData === 'function') fetchGasData();
-      } catch (e) {
-        if (typeof fetchGasData === 'function') await fetchGasData();
-        const merged = getMergedOverrides(true);
-        const latest = merged[slotKey];
-        if (latest && latest.status === 'ACCEPTED' && latest.substitute === myName) {
-          showToast('지원 감사합니다. 일정표를 확인해주세요.');
-        } else if (latest && latest.status === 'PENDING') {
-          showToast('⚠️ 일시적인 통신 오류입니다. 다시 시도해 주세요.');
-        } else {
-          showToast('마감되었습니다. 지원 감사합니다.');
-        }
-        persistOverrideCache(merged);
-        renderSosFloatingBanner();
-        if (typeof renderTodaySlots === 'function') renderTodaySlots();
-      } finally {
-        isSosApplying = false;
-      }
-    }
-
-    // 모든 전역 변수 초기화 완료 후 안전하게 복원 실행
-    window.addEventListener('DOMContentLoaded', bootSosSyncGuard);
-    setTimeout(bootSosSyncGuard, 150);
-    window.addEventListener('pageshow', bootSosSyncGuard);
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) {
-        bootSosSyncGuard();
-        if (typeof gasApiUrl !== 'undefined' && gasApiUrl && !isSosApplying && typeof fetchGasData === 'function') {
-          fetchGasData();
-        }
-      }
-    });
-
-    // 20초마다 백그라운드 무소음 동기화
-    setInterval(() => {
-      if (typeof gasApiUrl !== 'undefined' && gasApiUrl && !document.hidden && !isSosApplying && typeof fetchGasData === 'function') {
-        fetchGasData();
-      }
-      renderSosFloatingBanner();
-    }, 20000);
+                action
     
     function toggleAttendanceCheck(slotKey, workerName) {
       const myName = safeStorage.getItem('lib_my_name') || myVolunteerName || '';
