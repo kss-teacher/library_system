@@ -2126,7 +2126,7 @@ function formatDate(d) {
             <div class="p-4 sm:p-5">
               ${visibleWorkers.length === 0 ? `
                 <div class="p-4 rounded-xl bg-slate-50 border border-slate-100 text-center text-xs text-slate-400">
-                  배정된 활동 위원이 없습니다. ${renderEmptySlotAction(`${currentDateStr}_${typeof sNorm !== 'undefined' ? sNorm : (timeSlots && timeSlots[0] ? timeSlots[0].start : '09:00')}_1`)}
+                  배정된 활동 위원이 없습니다. 
                 </div>
               ` : `
                 <div class="grid ${gridColsClass} gap-3.5">
@@ -2171,7 +2171,7 @@ function formatDate(d) {
                           <div class="flex items-center justify-between pt-1">
                             <div>
                               <div class="font-extrabold text-sm sm:text-base text-slate-900 tracking-tight flex items-center space-x-1.5">
-                                <span>${w.effName || '공석'}</span>
+                                <span>${w.effName || '공석'}</span>${renderEmptySlotAction(`${currentDateStr}_${typeof sNorm !== 'undefined' ? sNorm : (timeSlots && timeSlots[0] ? timeSlots[0].start : '09:00')}_1`)}
                                 ${w.isMy ? '<span class="text-[10px] text-amber-700 font-bold bg-amber-100 px-1.5 py-0.2 rounded">[나]</span>' : ''}
                               </div>
                               ${w.isReq && w.rec?.reason ? `<p class="text-[11px] text-rose-600 font-medium mt-0.5">사유: ${w.rec.reason}</p>` : ''}
