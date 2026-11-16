@@ -1292,6 +1292,11 @@
 
     // 토스트 알림창
     function showToast(message) {
+      const _rawToastMsg = String(arguments[0] || '');
+      if (typeof isAdminLoggedIn !== 'undefined' && !isAdminLoggedIn && (_rawToastMsg.includes('구글 스프레드시트') || _rawToastMsg.includes('동기화') || _rawToastMsg.includes('연결되었습니다'))) {
+        return;
+      }
+      
       const existing = document.getElementById('toastNotification');
       if (existing) existing.remove();
 
@@ -4391,6 +4396,6 @@ function showTab(tabId, pushHistory = true) {
     });
   </script>
 <!-- 46.2 긴급 구인(SOS) 상단 플로팅 알림 배너 -->
-  <div id="sosFloatingBanner" class="fixed top-3 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-md pointer-events-none transition-all duration-300"></div>
+  <div id="sosFloatingBanner" class="fixed top-16 left-1/2 -translate-x-1/2 z-40 w-[94%] max-w-md pointer-events-none transition-all duration-300"></div>
 </body>
 </html>
