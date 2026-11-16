@@ -2268,10 +2268,12 @@ function formatDate(d) {
     // -------------------------------------------------------------
     // [8] 출석체크 및 대타 보안 제어
     // -------------------------------------------------------------
-    // =========================================================================
-    // [50] 긴급 구인(SOS) 무결성 엔진 (GET 캐시 무력화 + 실시간 병합 렌더링)
+   // =========================================================================
+    // [51] 긴급 구인(SOS) 무결성 엔진 (구버전 자동 호환 + 메모리 이중 보호)
     // =========================================================================
     let isSosApplying = false;
+    window._sosMemoryGuard = window._sosMemoryGuard || {};
+    window._sosCacheMemory = window._sosCacheMemory || {};
 
     // 1. 구글 시트 GET 요청 시 브라우저 옛날 캐시 응답 원천 차단
     if (!window._ggumbitFetchHooked) {
@@ -2293,33 +2295,36 @@ function formatDate(d) {
     }
 
     function getPendingOverrides() {
+      let stored = {};
       try {
-        return JSON.parse(safeStorage.getItem('lib_pending_overrides') || '{}') || {};
-      } catch (e) {
-        return {};
-      }
+        stored = JSON.parse(safeStorage.getItem('lib_pending_overrides') || '{}') || {};
+      } catch (e) {}
+      return Object.assign({}, stored, window._sosMemoryGuard);
     }
 
     function savePendingOverrides(map) {
+      window._sosMemoryGuard = Object.assign({}, map || {});
       try {
-        safeStorage.setItem('lib_pending_overrides', JSON.stringify(map || {}));
+        safeStorage.setItem('lib_pending_overrides', JSON.stringify(window._sosMemoryGuard));
       } catch (e) {}
     }
 
     function getCachedOverrides() {
+      let stored = {};
       try {
-        return JSON.parse(safeStorage.getItem('lib_cache_overrides') || '{}') || {};
+        stored = JSON.parse(safeStorage.getItem('lib_cache_overrides') || '{}') || {};
       } catch (e) {}
-      return {};
+      return Object.assign({}, stored, window._sosCacheMemory);
     }
 
     function persistOverrideCache(mergedMap) {
+      window._sosCacheMemory = Object.assign({}, mergedMap || {});
       try {
-        safeStorage.setItem('lib_cache_overrides', JSON.stringify(mergedMap || {}));
+        safeStorage.setItem('lib_cache_overrides', JSON.stringify(window._sosCacheMemory));
       } catch (e) {}
     }
 
-    // 2. 서버 데이터 + 로컬 캐시 + 미반영 보호 큐를 실시간 합산 (덮어쓰기 원천 차단)
+    // 2. 서버 데이터 + 로컬/메모리 캐시 + 미반영 보호 큐 실시간 합산
     function getMergedOverrides() {
       const merged = Object.assign(
         {},
@@ -2342,7 +2347,6 @@ function formatDate(d) {
 
         if (item.action === 'requestSOS') {
           if (serverRec && (serverRec.status === 'SOS_OPEN' || serverRec.status === 'ACCEPTED')) {
-            // 실제 구글 시트에서 확인되었을 때만 보호 큐 해제
             delete pending[slotKey];
             pendingChanged = true;
           } else {
@@ -2367,6 +2371,7 @@ function formatDate(d) {
       return merged;
     }
 
+    // 3. v1.19 전용 명령(requestSOS/cancelSOS) 실패 시 v1.13 호환 명령(setOverride)으로 자동 우회 저장
     async function sendSosSignalToSheet(slotKey, payloadObj, showConfirmToast = false) {
       if (!gasApiUrl) return false;
       try {
@@ -2376,20 +2381,55 @@ function formatDate(d) {
           body: JSON.stringify(payloadObj)
         });
         const data = await res.json();
+
         if (data && data.status === 'success') {
           if (showConfirmToast) {
             showToast(payloadObj.action === 'requestSOS'
               ? '✅ 구글 시트에 긴급 구인이 등록되었습니다.'
               : '✅ 구글 시트에 구인 취소가 반영되었습니다.');
           }
-          // 기록 직후 최신 시트 상태를 즉시 다시 읽어와 검증
           if (typeof fetchGasData === 'function') fetchGasData();
           return true;
+        }
+
+        // 구버전(/exec) URL로 연결되어 Unknown POST action이 반환된 경우 setOverride로 자동 전환
+        if (data && data.message && String(data.message).indexOf('Unknown POST action') !== -1) {
+          const fallbackBody = payloadObj.action === 'requestSOS'
+            ? {
+                action: 'setOverride',
+                slotKey: slotKey,
+                data: {
+                  status: 'SOS_OPEN',
+                  requester: payloadObj.origWorker || '공석',
+                  substitute: '',
+                  reason: '긴급 구인'
+                }
+              }
+            : {
+                action: 'setOverride',
+                slotKey: slotKey,
+                data: { status: 'RESET' }
+              };
+
+          const res2 = await fetch(gasApiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(fallbackBody)
+          });
+          const data2 = await res2.json();
+          if (data2 && data2.status === 'success') {
+            if (showConfirmToast) {
+              showToast(payloadObj.action === 'requestSOS'
+                ? '✅ 구글 시트에 긴급 구인이 등록되었습니다.'
+                : '✅ 구글 시트에 구인 취소가 반영되었습니다.');
+            }
+            if (typeof fetchGasData === 'function') fetchGasData();
+            return true;
+          }
         } else if (data && data.message) {
           showToast('⚠️ 시트 응답: ' + data.message);
         }
       } catch (e) {
-        // 리다이렉트 차단 시 no-cors 백업 전송
         try {
           fetch(gasApiUrl, {
             method: 'POST',
@@ -2411,7 +2451,6 @@ function formatDate(d) {
       }
       persistOverrideCache(merged);
 
-      // 아직 시트에 미반영된 항목이 있다면 즉시 재전송
       const pending = getPendingOverrides();
       const now = Date.now();
       let updated = false;
@@ -2472,7 +2511,6 @@ function formatDate(d) {
       const bannerEl = document.getElementById('sosFloatingBanner');
       if (!bannerEl) return;
 
-      // 항상 실시간 병합 맵을 기준으로 배너 표시 (fetchGasData 덮어쓰기에 면역)
       const merged = getMergedOverrides();
       const openKeys = Object.keys(merged)
         .filter(k => merged[k] && merged[k].status === 'SOS_OPEN')
@@ -2512,7 +2550,7 @@ function formatDate(d) {
     function requestSlotSOS(slotKey, origWorker) {
       if (!isAdminLoggedIn) return;
       if (!slotKey || slotKey === 'undefined' || slotKey.indexOf('_') === -1) {
-        showToast('⚠️ 슬롯키가 올바르지 않습니다. (3-A 버튼 변수 확인 필요)');
+        showToast('⚠️ 슬롯키가 올바르지 않습니다.');
         return;
       }
 
@@ -2591,7 +2629,35 @@ function formatDate(d) {
             applicantName: myName
           })
         });
-        const data = await res.json();
+        let data = await res.json();
+
+        // 구버전 URL 호환 처리
+        if (data && data.message && String(data.message).indexOf('Unknown POST action') !== -1) {
+          if (typeof fetchGasData === 'function') await fetchGasData();
+          const cur = (typeof overrideLog === 'object' && overrideLog !== null) ? overrideLog[slotKey] : null;
+          if (cur && cur.status === 'SOS_OPEN') {
+            const res2 = await fetch(gasApiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({
+                action: 'setOverride',
+                slotKey: slotKey,
+                data: {
+                  status: 'ACCEPTED',
+                  requester: cur.requester || '공석',
+                  substitute: myName,
+                  reason: '긴급 구인 지원'
+                }
+              })
+            });
+            const d2 = await res2.json();
+            data = (d2 && d2.status === 'success')
+              ? { status: 'success', message: '지원 감사합니다. 일정표를 확인해주세요.' }
+              : { status: 'error', message: '마감되었습니다. 지원 감사합니다.' };
+          } else {
+            data = { status: 'error', message: '마감되었습니다. 지원 감사합니다.' };
+          }
+        }
 
         const pending = getPendingOverrides();
         if (pending[slotKey]) {
