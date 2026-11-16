@@ -1772,9 +1772,9 @@ function formatDate(d) {
             if (hasPendingChanges) {
               safeStorage.setItem('lib_pending_attendance', JSON.stringify(pendingMap));
             }
-            attendanceLog = mergedAttendance;
+           attendanceLog = mergedAttendance;
             safeStorage.setItem('lib_cache_attendance', JSON.stringify(attendanceLog));
-            if (typeof syncPendingOverridesWithServer === 'function') syncPendingOverridesWithServer();
+            if (typeof syncPendingOverridesWithServer === 'function') syncPendingOverridesWithServer(true);
             if (typeof renderSosFloatingBanner === 'function') renderSosFloatingBanner();
           }
 
@@ -2609,7 +2609,6 @@ function formatDate(d) {
         fetchGasData();
       }
     }, 20000);
-
     
     function toggleAttendanceCheck(slotKey, workerName) {
       const myName = safeStorage.getItem('lib_my_name') || myVolunteerName || '';
