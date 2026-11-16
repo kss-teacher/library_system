@@ -2275,7 +2275,7 @@ function formatDate(d) {
     // [8] 출석체크 및 대타 보안 제어
     // -------------------------------------------------------------
     // =========================================================================
-    // [54-9] 긴급 구인(SOS) & 관리자 공석 전환 통합 무결성 엔진 (0.1% 예외 차단 완결본)
+    // [55] 긴급 구인(SOS) · 공석 전환 · 직권교체 통합 무결성 엔진
     // =========================================================================
     let isSosApplying = false;
     window._sosMemoryGuard = window._sosMemoryGuard || {};
@@ -2367,7 +2367,7 @@ function formatDate(d) {
       }
     }
 
-    // 1. 구글 시트 GET 원본 응답 직접 포착 & 캐시 차단 + POST 변경 보호 큐 동기화
+    // 1. 구글 시트 GET 원본 응답 포착 & 캐시 차단 + POST 변경(직권교체/공석/초기화) 보호 큐 동기화
     if (!window._ggumbitFetchHooked) {
       window._ggumbitFetchHooked = true;
       const _rawFetch = window.fetch.bind(window);
@@ -2445,21 +2445,24 @@ function formatDate(d) {
                     if (typeof renderTodaySlots === 'function') renderTodaySlots();
                   }, 50);
                 } else if (act === 'setOverride' && sub && sub !== '공석') {
-                  const pending = getPendingOverrides();
-                  if (pending[bodyObj.slotKey]) {
-                    delete pending[bodyObj.slotKey];
-                    savePendingOverrides(pending);
-                  }
-                  const assignedRec = {
+                  // 직권교체로 특정 봉사자를 배정한 경우 시트 반영 완료 시까지 보호 큐에 등록
+                  const assignedRec = Object.assign({}, dObj, {
                     status: st || 'ACCEPTED',
                     requester: dObj.requester || '',
                     substitute: sub,
                     reason: dObj.reason || ''
-                  };
+                  });
                   if (typeof overrideLog === 'object' && overrideLog !== null) {
                     overrideLog[bodyObj.slotKey] = assignedRec;
                   }
                   window._knownSubstitutes[bodyObj.slotKey] = sub;
+                  const pending = getPendingOverrides();
+                  pending[bodyObj.slotKey] = {
+                    action: 'setAssigned',
+                    record: assignedRec,
+                    ts: Date.now()
+                  };
+                  savePendingOverrides(pending);
                   persistOverrideCache(getMergedOverrides(false));
                   setTimeout(() => {
                     if (typeof renderSosFloatingBanner === 'function') renderSosFloatingBanner();
@@ -2516,7 +2519,7 @@ function formatDate(d) {
       }
     }
 
-    // 2. 첫 서버 동기화 이후에는 임시 캐시를 배제하고 시트 원본 + 보호 큐만으로 정밀 병합
+    // 2. 로컬 렌더링 시에는 직권교체 변경분(localBase)을 유지하고, 서버 확정 시에는 시트 원본 기준으로 검증
     function getMergedOverrides(isConfirmedFromServer = false) {
       const hasRawServer = !!(window._latestServerOverrides && typeof window._latestServerOverrides === 'object');
       const localBase = (typeof overrideLog === 'object' && overrideLog !== null && !Array.isArray(overrideLog))
@@ -2524,9 +2527,11 @@ function formatDate(d) {
         : {};
       const serverBase = hasRawServer ? Object.assign({}, window._latestServerOverrides) : localBase;
 
-      const merged = hasRawServer
+      const merged = isConfirmedFromServer
         ? Object.assign({}, serverBase)
-        : Object.assign({}, getCachedOverrides(), localBase);
+        : (hasRawServer
+            ? Object.assign({}, serverBase, localBase)
+            : Object.assign({}, getCachedOverrides(), localBase));
 
       const pending = getPendingOverrides();
       const now = Date.now();
@@ -2573,6 +2578,14 @@ function formatDate(d) {
               substitute: '공석',
               reason: item.reason || '관리자 공석 처리'
             };
+          }
+        } else if (item.action === 'setAssigned') {
+          const targetSub = item.record && item.record.substitute;
+          if (canConfirmAgainstServer && serverRec && serverRec.substitute === targetSub) {
+            delete pending[slotKey];
+            pendingChanged = true;
+          } else if (item.record) {
+            merged[slotKey] = Object.assign({}, item.record);
           }
         } else if (item.action === 'cancelSOS' || item.action === 'resetSlot') {
           const stillExistsOnServer = !!(serverRec && (serverRec.status === 'SOS_OPEN' || serverRec.status === 'ACCEPTED'));
@@ -2701,6 +2714,13 @@ function formatDate(d) {
                   substitute: '공석',
                   reason: item.reason || '관리자 공석 처리'
                 },
+                _internalRetry: true
+              }, false);
+            } else if (item.action === 'setAssigned' && item.record) {
+              sendSosSignalToSheet(slotKey, {
+                action: 'setOverride',
+                slotKey: slotKey,
+                data: item.record,
                 _internalRetry: true
               }, false);
             } else if (item.action === 'resetSlot') {
