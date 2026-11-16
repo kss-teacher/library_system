@@ -2275,7 +2275,7 @@ function formatDate(d) {
     // [8] 출석체크 및 대타 보안 제어
     // -------------------------------------------------------------
     // =========================================================================
-    // [55] 긴급 구인(SOS) · 공석 전환 · 직권교체 통합 무결성 엔진
+    // [56-3] 긴급 구인(SOS) · 개인 대타 요청 · 공석 전환 · 직권교체 통합 무결성 엔진 (최종 완결본)
     // =========================================================================
     let isSosApplying = false;
     window._sosMemoryGuard = window._sosMemoryGuard || {};
@@ -2285,6 +2285,15 @@ function formatDate(d) {
 
     function checkIsAdmin() {
       return typeof isAdminLoggedIn !== 'undefined' && !!isAdminLoggedIn;
+    }
+
+    function escapeHtml(str) {
+      return String(str == null ? '' : str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
 
     function getSafeItem(key) {
@@ -2304,6 +2313,10 @@ function formatDate(d) {
           localStorage.setItem(key, val);
         }
       } catch (e) {}
+    }
+
+    function getCurrentVolunteerName() {
+      return String(getSafeItem('lib_my_name') || (typeof myVolunteerName !== 'undefined' ? myVolunteerName : '') || '').trim();
     }
 
     function getPendingOverrides() {
@@ -2367,7 +2380,7 @@ function formatDate(d) {
       }
     }
 
-    // 1. 구글 시트 GET 원본 응답 포착 & 캐시 차단 + POST 변경(직권교체/공석/초기화) 보호 큐 동기화
+    // 1. 구글 시트 GET 원본 응답 포착 & 캐시 차단 + POST 변경(SOS/개인대타/공석/직권교체) 보호 큐 동기화
     if (!window._ggumbitFetchHooked) {
       window._ggumbitFetchHooked = true;
       const _rawFetch = window.fetch.bind(window);
@@ -2420,6 +2433,32 @@ function formatDate(d) {
                     ts: Date.now()
                   };
                   savePendingOverrides(pending);
+                  setTimeout(() => {
+                    if (typeof renderSosFloatingBanner === 'function') renderSosFloatingBanner();
+                    if (typeof renderTodaySlots === 'function') renderTodaySlots();
+                  }, 50);
+                } else if (act === 'setOverride' && st === 'PENDING') {
+                  const pendingRec = Object.assign({}, dObj, {
+                    status: 'PENDING',
+                    requester: dObj.requester || getCurrentVolunteerName() || '',
+                    substitute: '',
+                    reason: dObj.reason || '대타 요청'
+                  });
+                  if (typeof overrideLog === 'object' && overrideLog !== null) {
+                    overrideLog[bodyObj.slotKey] = pendingRec;
+                  }
+                  const pending = getPendingOverrides();
+                  pending[bodyObj.slotKey] = {
+                    action: 'requestPending',
+                    record: pendingRec,
+                    ts: Date.now()
+                  };
+                  savePendingOverrides(pending);
+                  persistOverrideCache(getMergedOverrides(false));
+                  setTimeout(() => {
+                    if (typeof renderSosFloatingBanner === 'function') renderSosFloatingBanner();
+                    if (typeof renderTodaySlots === 'function') renderTodaySlots();
+                  }, 50);
                 } else if (act === 'setOverride' && (sub === '공석' || (st === 'ACCEPTED' && !sub))) {
                   const vacantRec = {
                     status: 'ACCEPTED',
@@ -2445,7 +2484,6 @@ function formatDate(d) {
                     if (typeof renderTodaySlots === 'function') renderTodaySlots();
                   }, 50);
                 } else if (act === 'setOverride' && sub && sub !== '공석') {
-                  // 직권교체로 특정 봉사자를 배정한 경우 시트 반영 완료 시까지 보호 큐에 등록
                   const assignedRec = Object.assign({}, dObj, {
                     status: st || 'ACCEPTED',
                     requester: dObj.requester || '',
@@ -2519,7 +2557,7 @@ function formatDate(d) {
       }
     }
 
-    // 2. 로컬 렌더링 시에는 직권교체 변경분(localBase)을 유지하고, 서버 확정 시에는 시트 원본 기준으로 검증
+    // 2. 로컬 렌더링 시에는 현재 화면 상태(localBase) + 보호 큐를 기준으로 유지하고, 서버 확정 시에는 시트 원본 기준으로 검증
     function getMergedOverrides(isConfirmedFromServer = false) {
       const hasRawServer = !!(window._latestServerOverrides && typeof window._latestServerOverrides === 'object');
       const localBase = (typeof overrideLog === 'object' && overrideLog !== null && !Array.isArray(overrideLog))
@@ -2530,7 +2568,7 @@ function formatDate(d) {
       const merged = isConfirmedFromServer
         ? Object.assign({}, serverBase)
         : (hasRawServer
-            ? Object.assign({}, serverBase, localBase)
+            ? Object.assign({}, localBase)
             : Object.assign({}, getCachedOverrides(), localBase));
 
       const pending = getPendingOverrides();
@@ -2567,6 +2605,17 @@ function formatDate(d) {
               reason: '긴급 구인'
             };
           }
+        } else if (item.action === 'requestPending') {
+          const isHandledOnServer = !!(
+            serverRec &&
+            (serverRec.status === 'PENDING' || serverRec.status === 'ACCEPTED' || serverRec.status === 'SOS_OPEN')
+          );
+          if (canConfirmAgainstServer && isHandledOnServer) {
+            delete pending[slotKey];
+            pendingChanged = true;
+          } else if (item.record) {
+            merged[slotKey] = Object.assign({}, item.record);
+          }
         } else if (item.action === 'setVacant') {
           if (canConfirmAgainstServer && serverRec && serverRec.status === 'ACCEPTED' && serverRec.substitute === '공석') {
             delete pending[slotKey];
@@ -2588,7 +2637,7 @@ function formatDate(d) {
             merged[slotKey] = Object.assign({}, item.record);
           }
         } else if (item.action === 'cancelSOS' || item.action === 'resetSlot') {
-          const stillExistsOnServer = !!(serverRec && (serverRec.status === 'SOS_OPEN' || serverRec.status === 'ACCEPTED'));
+          const stillExistsOnServer = !!(serverRec && (serverRec.status === 'SOS_OPEN' || serverRec.status === 'PENDING' || serverRec.status === 'ACCEPTED'));
           if (canConfirmAgainstServer && !stillExistsOnServer) {
             delete pending[slotKey];
             pendingChanged = true;
@@ -2617,7 +2666,7 @@ function formatDate(d) {
           if (showConfirmToast) {
             showToast(payloadObj.action === 'requestSOS'
               ? '✅ 구글 시트에 긴급 구인이 등록되었습니다.'
-              : '✅ 구글 시트에 구인 취소가 반영되었습니다.');
+              : '✅ 구글 시트에 취소가 반영되었습니다.');
           }
           if (typeof fetchGasData === 'function') fetchGasData();
           return true;
@@ -2653,7 +2702,7 @@ function formatDate(d) {
             if (showConfirmToast) {
               showToast(payloadObj.action === 'requestSOS'
                 ? '✅ 구글 시트에 긴급 구인이 등록되었습니다.'
-                : '✅ 구글 시트에 구인 취소가 반영되었습니다.');
+                : '✅ 구글 시트에 취소가 반영되었습니다.');
             }
             if (typeof fetchGasData === 'function') fetchGasData();
             return true;
@@ -2716,7 +2765,7 @@ function formatDate(d) {
                 },
                 _internalRetry: true
               }, false);
-            } else if (item.action === 'setAssigned' && item.record) {
+            } else if ((item.action === 'setAssigned' || item.action === 'requestPending') && item.record) {
               sendSosSignalToSheet(slotKey, {
                 action: 'setOverride',
                 slotKey: slotKey,
@@ -2769,20 +2818,22 @@ function formatDate(d) {
       const merged = getMergedOverrides(false);
       const rec = merged[slotKey];
       const isSosOpen = !!(rec && rec.status === 'SOS_OPEN');
+      const safeKey = escapeHtml(slotKey);
 
       if (checkIsAdmin()) {
         if (isSosOpen) {
-          return `<button type="button" onclick="cancelSlotSOS('${slotKey}')" class="ml-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-300 transition-all">⏳ 구인중 (취소)</button>`;
+          return `<button type="button" onclick="cancelSlotSOS('${safeKey}')" class="ml-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-300 transition-all">⏳ 구인중 (취소)</button>`;
         }
-        return `<button type="button" onclick="requestSlotSOS('${slotKey}', '공석')" class="ml-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 transition-all">🚨 구인요청</button>`;
+        return `<button type="button" onclick="requestSlotSOS('${safeKey}', '공석')" class="ml-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 transition-all">🚨 구인요청</button>`;
       }
 
       if (isSosOpen) {
-        return `<button type="button" onclick="applySlotSOS('${slotKey}')" class="ml-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-xs transition-all">✋ 긴급지원</button>`;
+        return `<button type="button" onclick="applySlotSOS('${safeKey}')" class="ml-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-xs transition-all">✋ 긴급지원</button>`;
       }
       return '';
     }
 
+    // 교사 긴급 구인(SOS_OPEN)과 개인 대타 요청(PENDING)이 모두 공유하는 통합 플로팅 팝업
     function renderSosFloatingBanner() {
       const bannerEl = document.getElementById('sosFloatingBanner');
       if (!bannerEl) return;
@@ -2790,9 +2841,17 @@ function formatDate(d) {
       const merged = getMergedOverrides(false);
       applyMergedStateToOverrideLog(merged);
 
+      const myName = getCurrentVolunteerName();
       const openKeys = Object.keys(merged)
-        .filter(k => merged[k] && merged[k].status === 'SOS_OPEN')
-        .sort();
+        .filter(k => merged[k] && (merged[k].status === 'SOS_OPEN' || merged[k].status === 'PENDING'))
+        .sort((a, b) => {
+          if (!checkIsAdmin() && myName) {
+            const aMine = String(merged[a].requester || '').trim() === myName ? 1 : 0;
+            const bMine = String(merged[b].requester || '').trim() === myName ? 1 : 0;
+            if (aMine !== bMine) return aMine - bMine;
+          }
+          return a.localeCompare(b);
+        });
 
       if (openKeys.length === 0) {
         bannerEl.innerHTML = '';
@@ -2800,14 +2859,29 @@ function formatDate(d) {
       }
 
       const targetKey = openKeys[0];
-      const label = formatSosSlotLabel(targetKey);
+      const targetRec = merged[targetKey];
+      const safeKey = escapeHtml(targetKey);
+      const isPersonalSub = targetRec.status === 'PENDING';
+      const label = escapeHtml(formatSosSlotLabel(targetKey));
+      const isMyRequest = !!(myName && targetRec.requester && String(targetRec.requester).trim() === myName);
+
       const extraBadge = openKeys.length > 1
         ? `<span class="ml-1 px-1.5 py-0.5 text-[10px] font-extrabold bg-rose-100 text-rose-700 rounded-full">+${openKeys.length - 1}건</span>`
         : '';
 
-      const actionBtn = checkIsAdmin()
-        ? `<button type="button" onclick="cancelSlotSOS('${targetKey}')" class="shrink-0 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-all">구인취소</button>`
-        : `<button type="button" onclick="applySlotSOS('${targetKey}')" class="shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-xs transition-all">✋ 지원하기</button>`;
+      const titleText = isPersonalSub ? '🙋 봉사 대타 요청' : '🚨 긴급 봉사 구인 요청';
+      const safeRequester = escapeHtml(targetRec.requester || '봉사위원');
+      const safeReason = escapeHtml(targetRec.reason || '');
+      const reasonSuffix = safeReason ? ` · ${safeReason}` : '';
+      const subText = isPersonalSub
+        ? `${label} (${safeRequester}님${reasonSuffix})`
+        : `${label} 공석 발생`;
+
+      const canCancel = checkIsAdmin() || isMyRequest;
+      const cancelLabel = isPersonalSub ? '요청취소' : '구인취소';
+      const actionBtn = canCancel
+        ? `<button type="button" onclick="cancelSlotSOS('${safeKey}')" class="shrink-0 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-all">${cancelLabel}</button>`
+        : `<button type="button" onclick="applySlotSOS('${safeKey}')" class="shrink-0 px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-xs transition-all">✋ 지원하기</button>`;
 
       bannerEl.innerHTML = `
         <div class="pointer-events-auto bg-white/95 backdrop-blur-md border-2 border-rose-400 shadow-lg rounded-2xl px-3.5 py-2.5 flex items-center justify-between gap-2.5">
@@ -2815,9 +2889,9 @@ function formatDate(d) {
             <span class="shrink-0 w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
             <div class="min-w-0">
               <div class="text-[11px] font-extrabold text-rose-600 flex items-center">
-                <span>🚨 긴급 봉사 구인 요청</span>${extraBadge}
+                <span>${titleText}</span>${extraBadge}
               </div>
-              <div class="text-xs font-bold text-slate-800 truncate">${label} 공석 발생</div>
+              <div class="text-xs font-bold text-slate-800 truncate">${subText}</div>
             </div>
           </div>
           ${actionBtn}
@@ -2871,7 +2945,13 @@ function formatDate(d) {
     }
 
     function cancelSlotSOS(slotKey) {
-      if (!checkIsAdmin()) return;
+      const merged = getMergedOverrides(false);
+      const cur = merged[slotKey];
+      const myName = getCurrentVolunteerName();
+      const isMyRequest = !!(myName && cur && cur.requester && String(cur.requester).trim() === myName);
+      if (!checkIsAdmin() && !isMyRequest) return;
+
+      const isPersonalPending = !!(cur && cur.status === 'PENDING');
       const prevSub = window._knownSubstitutes[slotKey] || '';
       if (typeof overrideLog === 'object' && overrideLog !== null) {
         delete overrideLog[slotKey];
@@ -2884,7 +2964,7 @@ function formatDate(d) {
 
       const pending = getPendingOverrides();
       pending[slotKey] = {
-        action: 'cancelSOS',
+        action: isPersonalPending ? 'resetSlot' : 'cancelSOS',
         prevSubstitute: prevSub,
         ts: Date.now()
       };
@@ -2893,17 +2973,26 @@ function formatDate(d) {
 
       renderSosFloatingBanner();
       if (typeof renderTodaySlots === 'function') renderTodaySlots();
-      showToast('⚪ 구인 취소 전송 중...');
+      showToast('⚪ 취소 요청 전송 중...');
 
-      sendSosSignalToSheet(slotKey, {
-        action: 'cancelSOS',
-        slotKey: slotKey,
-        _internalRetry: true
-      }, true);
+      if (isPersonalPending) {
+        sendSosSignalToSheet(slotKey, {
+          action: 'setOverride',
+          slotKey: slotKey,
+          data: { status: 'RESET' },
+          _internalRetry: true
+        }, true);
+      } else {
+        sendSosSignalToSheet(slotKey, {
+          action: 'cancelSOS',
+          slotKey: slotKey,
+          _internalRetry: true
+        }, true);
+      }
     }
 
     async function applySlotSOS(slotKey) {
-      const myName = getSafeItem('lib_my_name') || (typeof myVolunteerName !== 'undefined' ? myVolunteerName : '') || '';
+      const myName = getCurrentVolunteerName();
       if (!myName) {
         showToast('⚠️ 먼저 본인 확인(성함 등록)을 진행해 주세요.');
         if (typeof openModal === 'function') openModal('coverModal');
@@ -2917,6 +3006,69 @@ function formatDate(d) {
           showToast('⚠️ 구글 시트 연결 주소를 확인해 주세요.');
           return;
         }
+
+        const initialCur = getMergedOverrides(false)[slotKey];
+        const isPersonalPending = !!(initialCur && initialCur.status === 'PENDING');
+
+        // 개인 대타 요청(PENDING) 지원 시 동일 팝업 함수에서 바로 대타 수락(ACCEPTED) 처리
+        if (isPersonalPending) {
+          if (typeof fetchGasData === 'function') await fetchGasData();
+          const latestCur = getMergedOverrides(false)[slotKey];
+          if (!latestCur || latestCur.status !== 'PENDING') {
+            showToast('마감되었습니다. 지원 감사합니다.');
+            renderSosFloatingBanner();
+            if (typeof renderTodaySlots === 'function') renderTodaySlots();
+            return;
+          }
+          if (String(latestCur.requester || '').trim() === myName) {
+            showToast('⚠️ 본인의 대타 요청에는 지원할 수 없습니다.');
+            renderSosFloatingBanner();
+            return;
+          }
+
+          const acceptedRec = {
+            status: 'ACCEPTED',
+            requester: latestCur.requester || '',
+            substitute: myName,
+            reason: latestCur.reason || '대타 지원'
+          };
+          const resSub = await fetch(gasApiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              action: 'setOverride',
+              slotKey: slotKey,
+              data: acceptedRec,
+              _internalRetry: true
+            })
+          });
+          const dSub = await resSub.json();
+          if (dSub && dSub.status === 'success') {
+            showToast('지원 감사합니다. 일정표를 확인해주세요.');
+            if (typeof overrideLog === 'object' && overrideLog !== null) {
+              overrideLog[slotKey] = acceptedRec;
+            }
+            if (window._latestServerOverrides) {
+              window._latestServerOverrides[slotKey] = acceptedRec;
+            }
+            window._knownSubstitutes[slotKey] = myName;
+            const pending = getPendingOverrides();
+            pending[slotKey] = {
+              action: 'setAssigned',
+              record: acceptedRec,
+              ts: Date.now()
+            };
+            savePendingOverrides(pending);
+            persistOverrideCache(getMergedOverrides(false));
+            renderSosFloatingBanner();
+            if (typeof renderTodaySlots === 'function') renderTodaySlots();
+            if (typeof fetchGasData === 'function') fetchGasData();
+          } else {
+            showToast((dSub && dSub.message) || '마감되었습니다. 지원 감사합니다.');
+          }
+          return;
+        }
+
         const res = await fetch(gasApiUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -2958,11 +3110,6 @@ function formatDate(d) {
         }
 
         const pending = getPendingOverrides();
-        if (pending[slotKey]) {
-          delete pending[slotKey];
-          savePendingOverrides(pending);
-        }
-
         if (data && data.status === 'success') {
           showToast(data.message || '지원 감사합니다. 일정표를 확인해주세요.');
           const acceptedRec = {
@@ -2978,7 +3125,17 @@ function formatDate(d) {
             window._latestServerOverrides[slotKey] = acceptedRec;
           }
           window._knownSubstitutes[slotKey] = myName;
+          pending[slotKey] = {
+            action: 'setAssigned',
+            record: acceptedRec,
+            ts: Date.now()
+          };
+          savePendingOverrides(pending);
         } else {
+          if (pending[slotKey]) {
+            delete pending[slotKey];
+            savePendingOverrides(pending);
+          }
           showToast((data && data.message) || '마감되었습니다. 지원 감사합니다.');
           if (typeof overrideLog === 'object' && overrideLog !== null) {
             delete overrideLog[slotKey];
@@ -2999,6 +3156,8 @@ function formatDate(d) {
         const latest = merged[slotKey];
         if (latest && latest.status === 'ACCEPTED' && latest.substitute === myName) {
           showToast('지원 감사합니다. 일정표를 확인해주세요.');
+        } else if (latest && latest.status === 'PENDING') {
+          showToast('⚠️ 일시적인 통신 오류입니다. 다시 시도해 주세요.');
         } else {
           showToast('마감되었습니다. 지원 감사합니다.');
         }
