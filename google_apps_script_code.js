@@ -1,7 +1,7 @@
 /**
  * ==============================================================================
  * Project: 꿈빛 (Ggumbit) - 도서관 봉사인력 자원관리 시스템 (Google Apps Script)
- * Version: v1.14 (46.1단계: 긴급 구인 SOS 선착순 잠금(Lock) 트랜잭션 및 안내 문구 확정)
+ * Version: v1.19 (출석부 6열 영구 보존, KST 당일 출석 제한, 긴급 구인 SOS 선착순 엔진 통합)
  * Author / Copyright: (c) 2026 Sung soo Kim. All Rights Reserved.
  * ==============================================================================
  */
@@ -21,7 +21,7 @@ function testSystem() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   setupStandardSheets_(ss, 2);
   SpreadsheetApp.flush();
-  Logger.log('꿈빛 백엔드 v1.14 초기화(SOS 선착순 모듈 탑재) 완료: ' + ss.getName());
+  Logger.log('꿈빛 백엔드 v1.19 초기화 및 시스템 점검 완료: ' + ss.getName());
 } // [end of testSystem]
 
 /**
@@ -42,7 +42,7 @@ function doGet(e) {
 
       const result = {
         status: 'success',
-        version: 'v1.14',
+        version: 'v1.19',
         serverTodayKst: serverTodayKst,
         spreadsheetUrl: ss.getUrl(),
         spreadsheetId: ss.getId(),
@@ -78,7 +78,6 @@ function doGet(e) {
 function doPost(e) {
   const lock = LockService.getScriptLock();
   try {
-    // 다수가 동시 접속해도 최대 10초 대기시키며 1명씩 순차 처리 (선착순 완벽 보장)
     lock.waitLock(10000);
   } catch (lockErr) {
     return createJsonResponse_({ status: 'error', message: '서버가 혼잡합니다. 잠시 후 다시 시도해주세요.' });
@@ -142,21 +141,18 @@ function doPost(e) {
       return createJsonResponse_({ status: 'success', message: '대타 및 변경 이력 반영 완료' });
     }
 
-    // 🚨 46.1: 긴급 구인(SOS) 관리자 요청
     if (action === 'requestSOS') {
       const res = requestSOS_(ss, payload);
       SpreadsheetApp.flush();
       return createJsonResponse_(res);
     }
 
-    // 🚨 46.1: 긴급 구인(SOS) 봉사자 선착순 지원
     if (action === 'applySOS') {
       const res = applySOS_(ss, payload);
       SpreadsheetApp.flush();
       return createJsonResponse_(res);
     }
 
-    // 🚨 46.1: 긴급 구인(SOS) 관리자 취소
     if (action === 'cancelSOS') {
       setOverrideRecord_(ss, payload.slotKey, { status: 'RESET' });
       SpreadsheetApp.flush();
@@ -185,7 +181,7 @@ function doPost(e) {
 } // [end of doPost]
 
 /**
- * [2-1] 🚨 46.1 긴급 구인(SOS) 코어 엔진
+ * [2-1] 긴급 구인(SOS) 코어 엔진
  */
 function requestSOS_(ss, payload) {
   const slotKey = String(payload.slotKey || '').trim();
@@ -214,7 +210,6 @@ function applySOS_(ss, payload) {
   let currentStatus = '';
   let requester = '';
 
-  // 1. 해당 슬롯키의 상태를 시트에서 직접 스캔 (락(Lock)이 걸려있어 완벽히 원자적 탐색 보장)
   if (lastRow >= 2) {
     const keys = sheet.getRange(2, 1, lastRow - 1, 3).getDisplayValues();
     for (let i = 0; i < keys.length; i++) {
@@ -227,15 +222,13 @@ function applySOS_(ss, payload) {
     }
   }
 
-  // 2. 다른 사람이 먼저 차지하지 않고 'SOS_OPEN' 상태일 때만 ACCEPTED로 전환
   if (foundRow > 0 && currentStatus === 'SOS_OPEN') {
     const nowStr = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss');
-    sheet.getRange(foundRow, 2, 1, 5).setValues([
+    sheet.getRange(foundRow, 2, 1, 5).setNumberFormat('@').setValues([
       ['ACCEPTED', requester, applicantName, '긴급 구인 지원', nowStr]
     ]);
     return { status: 'success', message: '지원 감사합니다. 일정표를 확인해주세요.' };
   } else {
-    // 이미 누군가 차지했거나 취소된 경우 차단
     return { status: 'error', message: '마감되었습니다. 지원 감사합니다.' };
   }
 } // [end of applySOS_]
